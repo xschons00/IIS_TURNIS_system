@@ -22,17 +22,6 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN node --version
 RUN npm --version
 
-# Set working directory
-WORKDIR /app
-
-# Copy package.json and install React
-COPY package*.json ./
-
-#RUN npm install
-
-# Copy rest of the source
-COPY . .
-
 
 # Default command
 CMD ["php", "-a", "node"]
