@@ -1,0 +1,57 @@
+# https://gist.github.com/System-Glitch/c53ca30a579dc60c7ea6333a40caec2c
+
+
+services:
+  php:
+    build: .
+    container_name: php
+    expose:
+      - "9000"
+    volumes:
+      - .:/var/www/html
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  nginx:
+    image: nginx:mainline-alpine
+    container_name: nginx
+    depends_on:
+      php:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/var/www/html/laravel
+      - ./nginx_config.conf:/etc/nginx/conf.d/site.conf
+    networks:
+      - backend
+    restart: on-failure
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db_name
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: secret
+    volumes:
+      - databaseVolume:/var/lib/mysql
+    networks:
+      - backend
+    ports:
+      - "3306:3306"
+    restart: on-failure
+
+volumes:
+  databaseVolume:
+
+networks:
+  backend:
+    driver: bridge
