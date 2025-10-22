@@ -8,7 +8,7 @@ ked sa dokonci tak v novom terminaly napis : <br>
 - ```docker compose exec php bash```<br>
 
 v php terminaly napis :<br>
-  ```cp .env.example .env```
+- ```cp .env.example .env```
 - ```composer install```<br>
 - ```sudo chown -R www-data:www-data /var/www/html/storage```<br>
 - ```sudo chown -R www-data:www-data /var/www/html/bootstrap/cache```<br>
