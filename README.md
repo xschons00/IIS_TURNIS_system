@@ -15,7 +15,7 @@ v php terminaly napis :<br>
 - ```sudo chmod -R 775 /var/www/html/storage```<br>
 - ```sudo chmod -R 775 /var/www/html/bootstrap/cache```<br>
 - ```php artisan view:clear``` <br>
-- ```php artisan migrate --migrate --ansi``` <br>
+- ```php artisan migrate --graceful --ansi``` <br>
 - ```npm install```
 
 
