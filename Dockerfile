@@ -29,6 +29,12 @@ RUN docker-php-ext-install \
     mysqli \
     zip
 
+# --- Node.js and npm (for React / Vite) ---
+# Use NodeSource setup script for latest LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN mkdir -p /var/www/html/storage && chown -R www-data:www-data /var/www/html
 
