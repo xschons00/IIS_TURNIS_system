@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe - Vytvorenie týmu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Header */
+        .header {
+            background: #e0e0e0;
+            padding: 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .user-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #d0d0d0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-item {
+            padding: 5px 10px;
+            border: 1px solid #666;
+        }
+        .nav-item.active {
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 15px 20px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Page Header */
+        .page-header {
+            background: #f0f0f0;
+            padding: 30px 20px;
+            border-bottom: 2px solid #333;
+        }
+        .page-header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .page-header p {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Form Container */
+        .form-container {
+            padding: 30px;
+        }
+        
+        /* Form Section */
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #999;
+            background: #fafafa;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #999;
+        }
+        
+        /* Form Group */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .form-label .required {
+            color: #d00;
+            margin-left: 3px;
+        }
+        .form-label .optional {
+            color: #666;
+            font-weight: normal;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #666;
+            font-size: 14px;
+        }
+        .form-input:focus {
+            border-color: #333;
+            outline: none;
+        }
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #666;
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #666;
+            font-size: 14px;
+            background: white;
+        }
+        .form-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Logo Upload */
+        .logo-upload {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .logo-preview {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #666;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 32px;
+            color: #999;
+            flex-shrink: 0;
+        }
+        .logo-controls {
+            flex: 1;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .file-input-label:hover {
+            background: #f0f0f0;
+        }
+        
+        /* Members Section */
+        .members-list {
+            border: 2px solid #999;
+            background: white;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .member-item {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .member-item:last-child {
+            border-bottom: none;
+        }
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #666;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .member-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .member-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .member-email {
+            font-size: 12px;
+            color: #666;
+        }
+        .member-role {
+            padding: 3px 8px;
+            border: 1px solid #d00;
+            background: #fee;
+            color: #d00;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .btn-remove {
+            padding: 6px 12px;
+            border: 2px solid #d00;
+            background: white;
+            color: #d00;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-remove:hover {
+            background: #fee;
+        }
+        .empty-members {
+            padding: 40px;
+            text-align: center;
+            color: #999;
+        }
+        
+        /* Add Member Form */
+        .add-member-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .add-member-form .form-input {
+            flex: 1;
+        }
+        .btn-add {
+            padding: 10px 20px;
+            border: 2px solid #333;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            padding: 20px;
+            border-top: 2px solid #333;
+            background: #f8f8f8;
+        }
+        .btn-large {
+            padding: 12px 30px;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-secondary {
+            background: #999;
+            color: white;
+            border-color: #999;
+        }
+        
+        @media (max-width: 768px) {
+            .logo-upload {
+                flex-direction: column;
+            }
+            .add-member-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🏆 ŠTUDENTSKÉ TURNAJE</div>
+            <div class="user-info">
+                <span>Prihlásený ako: Marián Kováč</span>
+                <button class="btn">Odhlásiť</button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav">
+            <div class="nav-item">Domov</div>
+            <div class="nav-item">Turnaje</div>
+            <div class="nav-item active">Tímy</div>
+            <div class="nav-item">Hráči</div>
+            <div class="nav-item">Štatistiky</div>
+        </div>
+        
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            Domov > Tímy > Vytvoriť nový tím
+        </div>
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>➕ Vytvoriť nový tím</h1>
+            <p>Vytvorte tím a pozvite členov. Po vytvorení sa stanete správcom tímu.</p>
+        </div>
+        
+        <!-- Form -->
+        <form>
+            <div class="form-container">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <div class="section-title">📋 Základné informácie</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Názov týmu<span class="required">*</span>
+                        </label>
+                        <input type="text" class="form-input" placeholder="napr. Digital Warriors">
+                        <div class="form-help">Zvoľte unikátny a výstižný názov pre váš tím</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Šport/Hra<span class="required">*</span>
+                        </label>
+                        <select class="form-select">
+                            <option value="">-- Vyberte šport/hru --</option>
+                            <option value="chess">Šach</option>
+                            <option value="darts">Šípky</option>
+                            <option value="table-tennis">Stolný tenis</option>
+                            <option value="csgo">CS:GO</option>
+                            <option value="fifa">FIFA</option>
+                            <option value="lol">League of Legends</option>
+                            <option value="beer">Konzumácia piva</option>
+                            <option value="other">Iné</option>
+                        </select>
+                        <div class="form-help">Vyberte hlavný šport/hru, v ktorej bude tím súťažiť</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Popis tímu<span class="optional">(voliteľné)</span>
+                        </label>
+                        <textarea class="form-textarea" placeholder="Popíšte váš tím, jeho zameranie, ciele..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Logo -->
+                <div class="form-section">
+                    <div class="section-title">🎨 Logo týmu</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Logo<span class="optional">(voliteľné)</span>
+                        </label>
+                        <div class="logo-upload">
+                            <div class="logo-preview">
+                                <span>?</span>
+                            </div>
+                            <div class="logo-controls">
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="logo-file" accept="image/*">
+                                    <label for="logo-file" class="file-input-label">📁 Vybrať súbor</label>
+                                </div>
+                                <div class="form-help" style="margin-top: 10px;">
+                                    Odporúčaný formát: PNG alebo JPG, minimálne 200x200 px
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Members -->
+                <div class="form-section">
+                    <div class="section-title">👥 Členovia týmu</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Aktuálni členovia (1)
+                        </label>
+                        <div class="members-list">
+                            <div class="member-item">
+                                <div class="member-info">
+                                    <div class="member-avatar">MK</div>
+                                    <div class="member-details">
+                                        <span class="member-name">Marián Kováč</span>
+                                        <span class="member-email">marian.k@student.sk</span>
+                                    </div>
+                                </div>
+                                <span class="member-role">SPRÁVCA</span>
+                            </div>
+                        </div>
+                        <div class="form-help" style="margin-top: 10px;">
+                            Ako zakladateľ týmu ste automaticky správcom. Správcu nie je možné odstrániť.
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Pridať členov<span class="optional">(voliteľné)</span>
+                        </label>
+                        <div class="add-member-form">
+                            <input type="email" class="form-input" placeholder="Email používateľa (napr. peter.n@student.sk)">
+                            <button type="button" class="btn-add">➕ Pridať</button>
+                        </div>
+                        <div class="form-help" style="margin-top: 10px;">
+                            Zadajte email registrovaného používateľa. Členov môžete pridať aj neskôr.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="form-section">
+                    <div class="section-title">📞 Kontaktné informácie</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Kontaktný email<span class="optional">(voliteľné)</span>
+                        </label>
+                        <input type="email" class="form-input" placeholder="team@example.com">
+                        <div class="form-help">Email pre komunikáciu s tímom (predvyplnený váš email)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn-large btn-secondary">✖ Zrušiť</button>
+                <button type="submit" class="btn-large btn-primary">✓ Vytvoriť tím</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe - Študentské turnaje</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Header */
+        .header {
+            background: #e0e0e0;
+            padding: 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #d0d0d0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-item {
+            padding: 5px 10px;
+            border: 1px solid #666;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: #f0f0f0;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 2px solid #333;
+        }
+        .hero h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .hero p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        /* Tournament List */
+        .tournaments-section {
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #999;
+        }
+        .tournament-card {
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+        .tournament-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .tournament-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .tournament-status {
+            padding: 4px 12px;
+            border: 1px solid #333;
+            font-size: 12px;
+        }
+        .tournament-info {
+            color: #666;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .tournament-footer {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .sidebar-box {
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-value {
+            font-weight: bold;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #e0e0e0;
+            padding: 20px;
+            border-top: 2px solid #333;
+            text-align: center;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🏆 ŠTUDENTSKÉ TURNAJE</div>
+            <div class="auth-buttons">
+                <button class="btn">Prihlásiť sa</button>
+                <button class="btn">Registrovať sa</button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav">
+            <div class="nav-item">Domov</div>
+            <div class="nav-item">Turnaje</div>
+            <div class="nav-item">Tímy</div>
+            <div class="nav-item">Hráči</div>
+            <div class="nav-item">Štatistiky</div>
+        </div>
+        
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>Vitajte v systéme študentských turnajov</h1>
+            <p>Zúčastnite sa turnajov, vytvárajte tímy a súťažte s ostatnými!</p>
+            <button class="btn" style="padding: 12px 24px; font-size: 16px;">Prejsť na turnaje</button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Tournament List -->
+            <div class="tournaments-section">
+                <div class="section-title">📋 Aktuálne turnaje</div>
+                
+                <div class="tournament-card">
+                    <div class="tournament-header">
+                        <div class="tournament-title">Šachový turnaj 2025</div>
+                        <div class="tournament-status">REGISTRÁCIA</div>
+                    </div>
+                    <div class="tournament-info">📅 Dátum: 15.10.2025</div>
+                    <div class="tournament-info">👥 Typ: Jednotlivci</div>
+                    <div class="tournament-info">🎯 Max. účastníci: 16</div>
+                    <div class="tournament-footer">
+                        <span>Prihlásených: 8/16</span>
+                        <button class="btn">Detail</button>
+                    </div>
+                </div>
+                
+                <div class="tournament-card">
+                    <div class="tournament-header">
+                        <div class="tournament-title">CS:GO Liga - Jar</div>
+                        <div class="tournament-status">PREBIEHA</div>
+                    </div>
+                    <div class="tournament-info">📅 Dátum: 01.10.2025</div>
+                    <div class="tournament-info">👥 Typ: Tímy (5 hráčov)</div>
+                    <div class="tournament-info">🎯 Max. tímov: 8</div>
+                    <div class="tournament-footer">
+                        <span>Tímov: 8/8</span>
+                        <button class="btn">Detail</button>
+                    </div>
+                </div>
+                
+                <div class="tournament-card">
+                    <div class="tournament-header">
+                        <div class="tournament-title">Šípky Championship</div>
+                        <div class="tournament-status">ČOSKORO</div>
+                    </div>
+                    <div class="tournament-info">📅 Dátum: 20.10.2025</div>
+                    <div class="tournament-info">👥 Typ: Jednotlivci</div>
+                    <div class="tournament-info">🎯 Max. účastníci: 32</div>
+                    <div class="tournament-footer">
+                        <span>Prihlásených: 0/32</span>
+                        <button class="btn">Detail</button>
+                    </div>
+                </div>
+                
+                <button class="btn" style="width: 100%; margin-top: 10px;">Zobraziť všetky turnaje</button>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Stats Box -->
+                <div class="sidebar-box">
+                    <div class="section-title">📊 Štatistiky</div>
+                    <div class="stat-item">
+                        <span>Aktívne turnaje</span>
+                        <span class="stat-value">3</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Registrovaní hráči</span>
+                        <span class="stat-value">247</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tímy</span>
+                        <span class="stat-value">42</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Odohraté zápasy</span>
+                        <span class="stat-value">1,234</span>
+                    </div>
+                </div>
+                
+                <!-- Top Players Box -->
+                <div class="sidebar-box">
+                    <div class="section-title">🏅 Top hráči</div>
+                    <div class="stat-item">
+                        <span>1. Peter Novák</span>
+                        <span class="stat-value">2,450 b.</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>2. Jana Svobodová</span>
+                        <span class="stat-value">2,380 b.</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>3. Martin Horák</span>
+                        <span class="stat-value">2,320 b.</span>
+                    </div>
+                    <button class="btn" style="width: 100%; margin-top: 10px;">Rebríček</button>
+                </div>
+                
+                <!-- Quick Actions Box -->
+                <div class="sidebar-box">
+                    <div class="section-title">⚡ Rýchle akcie</div>
+                    <button class="btn" style="width: 100%; margin-bottom: 10px;">+ Vytvoriť turnaj</button>
+                    <button class="btn" style="width: 100%; margin-bottom: 10px;">+ Vytvoriť tím</button>
+                    <button class="btn" style="width: 100%;">🔍 Hľadať hráčov</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            © 2025 Študentské turnaje | IIS Projekt | FIT VUT
+        </div>
+    </div>
+</body>
+</html>

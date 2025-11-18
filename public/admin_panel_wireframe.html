@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Header */
+        .header {
+            background: #e0e0e0;
+            padding: 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .user-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .admin-badge {
+            padding: 4px 12px;
+            border: 2px solid #d00;
+            background: #fee;
+            color: #d00;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #d0d0d0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-item {
+            padding: 5px 10px;
+            border: 1px solid #666;
+        }
+        .nav-item.active {
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Page Header */
+        .page-header {
+            background: #f8f8f8;
+            padding: 30px 20px;
+            border-bottom: 2px solid #333;
+        }
+        .page-header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .breadcrumb {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Admin Tabs */
+        .admin-tabs {
+            display: flex;
+            background: #e8e8e8;
+            border-bottom: 2px solid #333;
+        }
+        .tab {
+            padding: 15px 30px;
+            border-right: 1px solid #999;
+            cursor: pointer;
+            background: #e8e8e8;
+        }
+        .tab.active {
+            background: white;
+            border-bottom: 2px solid white;
+            margin-bottom: -2px;
+            font-weight: bold;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 600px;
+        }
+        
+        /* Sidebar Stats */
+        .sidebar-stats {
+            background: #f8f8f8;
+            border-right: 2px solid #333;
+            padding: 20px;
+        }
+        .stat-box {
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+        .stat-change {
+            font-size: 12px;
+            color: #0a0;
+            margin-top: 5px;
+        }
+        
+        /* Content Area */
+        .content-area {
+            padding: 20px;
+        }
+        
+        /* Section */
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border: 1px solid #999;
+        }
+        .filter-input {
+            padding: 8px;
+            border: 1px solid #666;
+            flex: 1;
+        }
+        .filter-select {
+            padding: 8px;
+            border: 1px solid #666;
+            min-width: 150px;
+        }
+        
+        /* Table */
+        .data-table {
+            width: 100%;
+            border: 2px solid #333;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #e0e0e0;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #666;
+            font-weight: bold;
+        }
+        .data-table td {
+            padding: 12px;
+            border: 1px solid #ccc;
+        }
+        .data-table tr:nth-child(even) {
+            background: #f8f8f8;
+        }
+        
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border: 1px solid #333;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #856404;
+        }
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+            border-color: #155724;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #721c24;
+        }
+        .status-active {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-color: #0c5460;
+        }
+        .status-blocked {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #721c24;
+        }
+        
+        /* Role badge */
+        .role-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border: 1px solid #666;
+            font-size: 11px;
+            background: #e8e8e8;
+        }
+        .role-admin {
+            background: #fee;
+            color: #d00;
+            border-color: #d00;
+            font-weight: bold;
+        }
+        
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .btn-small {
+            padding: 4px 8px;
+            border: 1px solid #333;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-approve {
+            background: #d4edda;
+            border-color: #155724;
+        }
+        .btn-reject {
+            background: #f8d7da;
+            border-color: #721c24;
+        }
+        .btn-edit {
+            background: #d1ecf1;
+            border-color: #0c5460;
+        }
+        
+        /* Cards for pending items */
+        .pending-card {
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+        .pending-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .pending-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .pending-info {
+            color: #666;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .pending-actions {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            display: flex;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar-stats {
+                border-right: none;
+                border-bottom: 2px solid #333;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🏆 ŠTUDENTSKÉ TURNAJE</div>
+            <div class="user-info">
+                <div class="admin-badge">ADMIN</div>
+                <span>Admin Používateľ</span>
+                <button class="btn">Odhlásiť</button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav">
+            <div class="nav-item">Domov</div>
+            <div class="nav-item">Turnaje</div>
+            <div class="nav-item">Tímy</div>
+            <div class="nav-item">Hráči</div>
+            <div class="nav-item">Štatistiky</div>
+            <div class="nav-item active">⚙️ Admin Panel</div>
+        </div>
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Administračný panel</h1>
+            <div class="breadcrumb">Admin Panel / Prehľad</div>
+        </div>
+        
+        <!-- Admin Tabs -->
+        <div class="admin-tabs">
+            <div class="tab active">📊 Prehľad</div>
+            <div class="tab">👥 Správa používateľov</div>
+            <div class="tab">✅ Schvaľovanie turnajov</div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar with Stats -->
+            <div class="sidebar-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Aktívne turnaje</div>
+                    <div class="stat-number">3</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Celkom používateľov</div>
+                    <div class="stat-number">247</div>
+                    <div class="stat-change">↑ 12 tento týždeň</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Čakajúce turnaje</div>
+                    <div class="stat-number">5</div>
+                    <div class="stat-change">↑ 2 nové</div>
+                </div>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Pending Tournaments Section -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">✅ Turnaje čakajúce na schválenie</div>
+                        <button class="btn">Zobraziť všetky</button>
+                    </div>
+                    
+                    <div class="pending-card">
+                        <div class="pending-header">
+                            <div class="pending-title">FIFA 24 Turnaj - Jeseň</div>
+                            <div class="status-badge status-pending">ČAKÁ NA SCHVÁLENIE</div>
+                        </div>
+                        <div class="pending-info">👤 Organizátor: Marián Kováč</div>
+                        <div class="pending-info">📅 Plánovaný dátum: 25.10.2025</div>
+                        <div class="pending-info">💰 Vstupný poplatok: 5 €</div>
+                        <div class="pending-info">🎯 Max. účastníci: 32 (Tímy - 2 hráči)</div>
+                        <div class="pending-info">📝 Vytvorené: 04.10.2025 14:32</div>
+                        <div class="pending-actions">
+                            <button class="btn btn-approve">✓ Schváliť</button>
+                            <button class="btn btn-reject">✗ Zamietnuť</button>
+                            <button class="btn btn-small">👁️ Detail</button>
+                        </div>
+                    </div>
+                    
+                    <div class="pending-card">
+                        <div class="pending-header">
+                            <div class="pending-title">Stolný tenis - Rapid</div>
+                            <div class="status-badge status-pending">ČAKÁ NA SCHVÁLENIE</div>
+                        </div>
+                        <div class="pending-info">👤 Organizátor: Eva Nováková</div>
+                        <div class="pending-info">📅 Plánovaný dátum: 18.10.2025</div>
+                        <div class="pending-info">💰 Vstupný poplatok: Zadarmo</div>
+                        <div class="pending-info">🎯 Max. účastníci: 16 (Jednotlivci)</div>
+                        <div class="pending-info">📝 Vytvorené: 05.10.2025 09:15</div>
+                        <div class="pending-actions">
+                            <button class="btn btn-approve">✓ Schváliť</button>
+                            <button class="btn btn-reject">✗ Zamietnuť</button>
+                            <button class="btn btn-small">👁️ Detail</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Users Section -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">👥 Nedávno registrovaní používatelia</div>
+                        <button class="btn">Správa používateľov</button>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Meno</th>
+                                <th>Email</th>
+                                <th>Registrovaný</th>
+                                <th>Status</th>
+                                <th>Akcie</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#247</td>
+                                <td>Tomáš Dvořák</td>
+                                <td>tomas.d@student.sk</td>
+                                <td>06.10.2025</td>
+                                <td><span class="status-badge status-active">AKTÍVNY</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit" title="Upraviť používateľa">✏️ Upraviť</button>
+                                        <button class="btn-small" title="Blokovať používateľa">🔒 Blokovať</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#246</td>
+                                <td>Lucia Horváthová</td>
+                                <td>lucia.h@student.sk</td>
+                                <td>05.10.2025</td>
+                                <td><span class="status-badge status-active">AKTÍVNY</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit" title="Upraviť používateľa">✏️ Upraviť</button>
+                                        <button class="btn-small" title="Blokovať používateľa">🔒 Blokovať</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#245</td>
+                                <td>Jakub Černý</td>
+                                <td>jakub.c@student.sk</td>
+                                <td>04.10.2025</td>
+                                <td><span class="status-badge status-active">AKTÍVNY</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-edit" title="Upraviť používateľa">✏️ Upraviť</button>
+                                        <button class="btn-small" title="Blokovať používateľa">🔒 Blokovať</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
