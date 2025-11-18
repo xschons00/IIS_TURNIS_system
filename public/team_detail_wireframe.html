@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe - Detail tímu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Header */
+        .header {
+            background: #e0e0e0;
+            padding: 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #d0d0d0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-item {
+            padding: 5px 10px;
+            border: 1px solid #666;
+        }
+        .nav-item.active {
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 15px 20px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Team Header */
+        .team-header {
+            padding: 30px 20px;
+            background: #f0f0f0;
+            border-bottom: 2px solid #333;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .team-logo-large {
+            width: 120px;
+            height: 120px;
+            border: 3px solid #333;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 48px;
+            flex-shrink: 0;
+        }
+        .team-info {
+            flex: 1;
+        }
+        .team-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .team-sport {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .team-meta {
+            display: flex;
+            gap: 30px;
+            margin-top: 15px;
+        }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .meta-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        .meta-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .team-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-edit {
+            padding: 10px 20px;
+            border: 2px solid #333;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-danger {
+            padding: 10px 20px;
+            border: 2px solid #d00;
+            background: #d00;
+            color: white;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        /* Section */
+        .section {
+            border: 2px solid #333;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #999;
+        }
+        
+        /* Description */
+        .description-text {
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .stat-box {
+            border: 2px solid #666;
+            padding: 15px;
+            background: white;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* Members List */
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .member-item {
+            border: 2px solid #666;
+            padding: 15px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .member-avatar {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #666;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .member-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .member-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .member-email {
+            font-size: 13px;
+            color: #666;
+        }
+        .member-role {
+            display: inline-block;
+            padding: 4px 12px;
+            border: 1px solid #333;
+            font-size: 12px;
+            font-weight: bold;
+            background: #fff3cd;
+            color: #856404;
+            border-color: #856404;
+        }
+        
+        /* Tournament History Table */
+        .history-table {
+            width: 100%;
+            border: 2px solid #333;
+            border-collapse: collapse;
+            background: white;
+        }
+        .history-table th {
+            background: #e0e0e0;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #666;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .history-table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        .history-table tr:nth-child(even) {
+            background: #f8f8f8;
+        }
+        
+        /* Position Badge */
+        .position-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border: 1px solid #333;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .position-1 {
+            background: #ffd700;
+            color: #333;
+            border-color: #d4af37;
+        }
+        .position-2 {
+            background: #c0c0c0;
+            color: #333;
+            border-color: #999;
+        }
+        .position-3 {
+            background: #cd7f32;
+            color: white;
+            border-color: #8b5a00;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .sidebar-box {
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #666;
+        }
+        .info-value {
+            font-weight: bold;
+            text-align: right;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #e0e0e0;
+            padding: 20px;
+            border-top: 2px solid #333;
+            text-align: center;
+            color: #666;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .team-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .team-meta {
+                justify-content: center;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🏆 ŠTUDENTSKÉ TURNAJE</div>
+            <div class="auth-buttons">
+                <button class="btn">Prihlásiť sa</button>
+                <button class="btn">Registrovať sa</button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav">
+            <div class="nav-item">Domov</div>
+            <div class="nav-item">Turnaje</div>
+            <div class="nav-item active">Tímy</div>
+            <div class="nav-item">Hráči</div>
+            <div class="nav-item">Štatistiky</div>
+        </div>
+        
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            Domov > Tímy > Digital Warriors
+        </div>
+        
+        <!-- Team Header -->
+        <div class="team-header">
+            <div class="team-logo-large">DW</div>
+            <div class="team-info">
+                <div class="team-name">Digital Warriors</div>
+                <div class="team-sport">🎮 CS:GO</div>
+                <div class="team-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">ČLENOV</div>
+                        <div class="meta-value">5/5</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">TURNAJE</div>
+                        <div class="meta-value">8</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">VÝHRY</div>
+                        <div class="meta-value">6</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">BODY</div>
+                        <div class="meta-value">1,850</div>
+                    </div>
+                </div>
+            </div>
+            <div class="team-actions">
+                <button class="btn-edit">✏️ Upraviť tím</button>
+                <button class="btn">➕ Pridať člena</button>
+                <button class="btn-danger">🗑️ Zrušiť tím</button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div>
+                <!-- Tournament History -->
+                <div class="section">
+                    <div class="section-title">🏅 História turnajov</div>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Turnaj</th>
+                                <th>Dátum</th>
+                                <th>Umiestnenie</th>
+                                <th>Body</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CS:GO Liga - Jar</td>
+                                <td>01.10.2025</td>
+                                <td><span class="position-badge position-1">🥇 1. miesto</span></td>
+                                <td>+200 b.</td>
+                            </tr>
+                            <tr>
+                                <td>CS:GO Summer Cup</td>
+                                <td>15.08.2025</td>
+                                <td><span class="position-badge position-2">🥈 2. miesto</span></td>
+                                <td>+150 b.</td>
+                            </tr>
+                            <tr>
+                                <td>CS:GO Championship</td>
+                                <td>20.07.2025</td>
+                                <td><span class="position-badge position-1">🥇 1. miesto</span></td>
+                                <td>+200 b.</td>
+                            </tr>
+                            <tr>
+                                <td>Spring Tournament</td>
+                                <td>05.05.2025</td>
+                                <td><span class="position-badge position-3">🥉 3. miesto</span></td>
+                                <td>+120 b.</td>
+                            </tr>
+                            <tr>
+                                <td>CS:GO Winter League</td>
+                                <td>15.02.2025</td>
+                                <td><span class="position-badge">4. miesto</span></td>
+                                <td>+100 b.</td>
+                            </tr>
+                            <tr>
+                                <td>CS:GO Open 2024</td>
+                                <td>10.12.2024</td>
+                                <td><span class="position-badge position-1">🥇 1. miesto</span></td>
+                                <td>+200 b.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="btn" style="width: 100%; margin-top: 15px;">Zobraziť všetky turnaje</button>
+                </div>
+                
+                <!-- Members Section -->
+                <div class="section">
+                    <div class="section-title">👥 Členovia tímu (5/5)</div>
+                    <div class="members-list">
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">MH</div>
+                                <div class="member-details">
+                                    <span class="member-name">Martin Horák</span>
+                                    <span class="member-email">martin.h@student.sk</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="member-role">SPRÁVCA</span>
+                            </div>
+                        </div>
+                        
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">PN</div>
+                                <div class="member-details">
+                                    <span class="member-name">Peter Novák</span>
+                                    <span class="member-email">peter.n@student.sk</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn">👁️ Profil</button>
+                            </div>
+                        </div>
+                        
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">LČ</div>
+                                <div class="member-details">
+                                    <span class="member-name">Lukáš Černý</span>
+                                    <span class="member-email">lukas.c@student.sk</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn">👁️ Profil</button>
+                            </div>
+                        </div>
+                        
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">TD</div>
+                                <div class="member-details">
+                                    <span class="member-name">Tomáš Dvořák</span>
+                                    <span class="member-email">tomas.d@student.sk</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn">👁️ Profil</button>
+                            </div>
+                        </div>
+                        
+                        <div class="member-item">
+                            <div class="member-info">
+                                <div class="member-avatar">MK</div>
+                                <div class="member-details">
+                                    <span class="member-name">Marián Kováč</span>
+                                    <span class="member-email">marian.k@student.sk</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn">👁️ Profil</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Team Info -->
+                <div class="sidebar-box">
+                    <div class="section-title">ℹ️ Informácie o tíme</div>
+                    <div class="info-item">
+                        <span class="info-label">Vytvorený</span>
+                        <span class="info-value">15.09.2024</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Správca</span>
+                        <span class="info-value">Martin Horák</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Aktívne turnaje</span>
+                        <span class="info-value">2</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Posledný zápas</span>
+                        <span class="info-value">06.10.2025</span>
+                    </div>
+                </div>
+                
+                <!-- Achievements -->
+                <div class="sidebar-box">
+                    <div class="section-title">📊 Štatistiky</div>
+                    <div class="info-item">
+                        <span class="info-label">Odohraté zápasy</span>
+                        <span class="info-value">42</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Zlaté medaily</span>
+                        <span class="info-value">6 🥇</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Strieborné medaily</span>
+                        <span class="info-value">4 🥈</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bronzové medaily</span>
+                        <span class="info-value">2 🥉</span>
+                    </div>
+                </div>
+                
+                <!-- Active Tournaments -->
+                <div class="sidebar-box">
+                    <div class="section-title">🎯 Aktuálne turnaje</div>
+                    <div class="info-item">
+                        <span class="info-label">CS:GO Liga - Jeseň</span>
+                        <span class="info-value">Prebieha</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">CS:GO Masters</span>
+                        <span class="info-value">Registrácia</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            © 2025 Študentské turnaje | IIS Projekt | FIT VUT
+        </div>
+    </div>
+</body>
+</html>
