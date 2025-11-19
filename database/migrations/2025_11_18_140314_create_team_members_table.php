@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('team_members', function (Blueprint $table) {
-            $table->unsignedBigInteger('team_ID');
-            $table->unsignedBigInteger('user_ID');
-            $table->primary(['team_ID','user_ID']);
-            $table->foreign('team_ID')->references('team_ID')->on('teams')->onDelete('cascade');
-            $table->foreign('user_ID')->references('user_ID')->on('users')->onDelete('cascade');
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('team_members')) {
+            Schema::create('team_members', function (Blueprint $table) {
+                $table->unsignedBigInteger('team_ID');
+                $table->unsignedBigInteger('user_ID');
+                $table->primary(['team_ID', 'user_ID']);
+                $table->timestamps();
+
+                $table->foreign('team_ID')->references('team_ID')->on('teams')->onDelete('cascade');
+                $table->foreign('user_ID')->references('user_ID')->on('users')->onDelete('cascade');
+            });
+        }
     }
 
     /**

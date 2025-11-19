@@ -11,15 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('team_participants', function (Blueprint $table) {
-            $table->unsignedBigInteger('event_ID');
-            $table->unsignedBigInteger('team_ID');
-            $table->integer('final_placement')->unsigned();
-            $table->primary(['event_ID','team_ID']);
-            $table->foreign('event_ID')->references('event_ID')->on('events')->onDelete('cascade');
-            $table->foreign('team_ID')->references('team_ID')->on('teams')->onDelete('cascade');
-            $table->timestamps();
-        });
+        if (! Schema::hasTable("team_participants")){
+            Schema::create('team_participants', function (Blueprint $table) {
+                $table->unsignedBigInteger('event_ID');
+                $table->unsignedBigInteger('team_ID');
+                $table->integer('final_placement')->unsigned();
+                $table->timestamps();
+
+                $table->primary(['event_ID','team_ID']);
+                $table->foreign('event_ID')->references('event_ID')->on('events')->onDelete('cascade');
+                $table->foreign('team_ID')->references('team_ID')->on('teams')->onDelete('cascade');
+
+            });
+        }
     }
 
     /**
