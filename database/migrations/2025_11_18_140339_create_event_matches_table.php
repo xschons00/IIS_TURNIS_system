@@ -13,7 +13,7 @@ return new class extends Migration
     {
         if (! Schema::hasTable("event_matches")){
             Schema::create('event_matches', function (Blueprint $table) {
-                $table->id('event_ID');
+                $table->unsignedBigInteger('event_ID');
                 $table->unsignedBigInteger('participant_A');
                 $table->unsignedBigInteger('participant_B');
                 $table->unsignedInteger('round')->notnull();
@@ -22,7 +22,7 @@ return new class extends Migration
                 $table->primary(['event_ID','participant_A','participant_B']);
                 $table->timestamps();
 
-                $table->foreign('event_ID')->references('event_ID')->on('_events')->onDelete('cascade');
+                $table->foreign('event_ID')->references('event_ID')->on('events')->onDelete('cascade');
                 $table->foreign('participant_A')->references('user_ID')->on('users')->onDelete('cascade');
                 $table->foreign('participant_B')->references('user_ID')->on('users')->onDelete('cascade');
                 $table->foreign('winner')->references('user_ID')->on('users')->onDelete('set null');

@@ -7,16 +7,26 @@ use App\Models\Event;
 
 class TournamentController extends Controller
 {
+    /**
+     * Resource-style method: list all tournaments.
+     */
     public function GetAllTournaments()
     {
         return Event::all();
     }
 
+    /**
+     * Resource-style method: store a new tournament.
+     */
+
     public function SaveTournament(Request $request)
     {
-        Event::create($request->all());
+        return Event::create($request->all());
     }
 
+    /**
+     * Resource-style method: show a single tournament.
+     */
     public function GetTournament(string $id)
     {
         return Event::find($id);
@@ -32,6 +42,10 @@ class TournamentController extends Controller
         return null;
     }
 
+    /**
+     * Resource-style method: delete a tournament.
+     */
+
     public function DeleteTournament(string $id)
     {
         $tournament = Event::find($id);
@@ -42,4 +56,3 @@ class TournamentController extends Controller
         return false;
     }
 }
-
