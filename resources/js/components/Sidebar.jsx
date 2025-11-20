@@ -13,8 +13,8 @@ function Sidebar() {
                 setLoading(true);
 
                 // Fetch statistics
-                const statsResponse = await fetch('http://localhost:8000/api/statistics');
-                const playersResponse = await fetch('http://localhost:8000/api/players');
+                const statsResponse = await fetch('http://localhost:8080/api/statistics');
+                const playersResponse = await fetch('http://localhost:8080/api/players');
 
                 if (!statsResponse.ok || !playersResponse.ok) {
                     throw new Error('Failed to fetch data');

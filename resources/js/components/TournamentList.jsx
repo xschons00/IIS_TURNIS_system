@@ -11,7 +11,7 @@ function TournamentList() {
         const fetchTournaments = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8000/api/tournaments');
+                const response = await fetch('http://localhost:8080/api/tournaments');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch tournaments');
