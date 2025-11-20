@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('event_date');
             $table->string('location');
             $table->enum('event_type',['SOLO','TEAM']);
+            $table->enum('event_state',['NEW','REGISTRATION','ONGOING','FINISHED']);
             $table->integer('max_participants')->unsigned();
             $table->timestamps();
         });
