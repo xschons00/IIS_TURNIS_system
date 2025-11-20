@@ -18,7 +18,17 @@ function TournamentList() {
                 }
 
                 const data = await response.json();
-                setTournaments(data);
+                // Transform backend data to match frontend expectations
+                const transformedData = data.map(event => ({
+                    id: event.event_ID,
+                    title: event.event_name,
+                    date: event.event_date,
+                    type: event.event_type,
+                    maxParticipants: event.max_participants,
+                    registered: 0, // TODO: Get actual registered count from backend
+                    status: 'REGISTRÁCIA' // TODO: Calculate status based on event_date
+                }));
+                setTournaments(transformedData);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching tournaments:', err);

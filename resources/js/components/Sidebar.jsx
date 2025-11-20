@@ -12,20 +12,41 @@ function Sidebar() {
             try {
                 setLoading(true);
 
-                // Fetch statistics
+                // Fetch statistics and players
                 const statsResponse = await fetch('http://localhost:8080/api/statistics');
                 const playersResponse = await fetch('http://localhost:8080/api/players');
 
-                if (!statsResponse.ok || !playersResponse.ok) {
-                    throw new Error('Failed to fetch data');
+                if (!playersResponse.ok) {
+                    throw new Error('Failed to fetch players data');
                 }
 
-                const statsData = await statsResponse.json();
+                // Handle statistics (might be empty/null from backend)
+                let statsData = [];
+                if (statsResponse.ok) {
+                    const statsText = await statsResponse.text();
+                    if (statsText && statsText.trim()) {
+                        try {
+                            statsData = JSON.parse(statsText);
+                        } catch (e) {
+                            console.warn('Statistics endpoint returned invalid JSON:', statsText);
+                        }
+                    }
+                }
+
                 const playersData = await playersResponse.json();
 
-                setStats(statsData);
-                // Get top 3 players sorted by points
-                setTopPlayers(playersData.slice(0, 3));
+                // Transform statistics data (backend might return empty for now)
+                setStats(statsData || []);
+
+                // Transform players data to match frontend expectations
+                const transformedPlayers = playersData.map(user => ({
+                    name: `${user.first_name} ${user.last_name}`,
+                    points: user.ranking || 0
+                }));
+
+                // Sort by points and get top 3
+                const sortedPlayers = transformedPlayers.sort((a, b) => b.points - a.points);
+                setTopPlayers(sortedPlayers.slice(0, 3));
                 setError(null);
             } catch (err) {
                 console.error('Error fetching sidebar data:', err);
