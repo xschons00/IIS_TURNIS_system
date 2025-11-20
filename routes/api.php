@@ -16,21 +16,28 @@ Route::get('auth/me', [AuthController::class, 'me']);
 Route::get('players', [PlayerController::class, 'GetAllPlayers']);
 Route::post('players', [PlayerController::class, 'SavePlayer']);
 Route::get('players/{id}', [PlayerController::class, 'GetPlayer']);
-Route::put('players/{id}', [PlayerController::class, 'UpdatePlayer']);
-Route::delete('players/{id}', [PlayerController::class, 'DeletePlayer']);
+
 
 // Teams
 Route::get('teams', [TeamController::class, 'GetAllTeams']);
 Route::post('teams', [TeamController::class, 'SaveTeam']);
-Route::get('teams/{id}', [TeamController::class,'GetTeam']);
-Route::put('teams/{id}', [TeamController::class,'update']);
-Route::delete('teams/{id}', [TeamController::class,'DeleteTeam']);
+Route::get('teams/{id}', [TeamController::class, 'GetTeam']);
+
 
 // Tournaments
 Route::get('tournaments', [TournamentController::class, 'GetAllTournaments']);
 Route::post('tournaments', [TournamentController::class, 'SaveTournament']);
 Route::get('tournaments/{id}', [TournamentController::class, 'GetTournament']);
-Route::put('tournaments/{id}', [TournamentController::class, 'UpdateTournament']);
-Route::delete('tournaments/{id}', [TournamentController::class, 'DeleteTournament']);
+
 
 Route::get('statistics', [StatisticsController::class, 'index']);
+
+// Admin-only routes
+Route::middleware('admin')->group(function () {
+    Route::put('tournaments/{id}', [TournamentController::class, 'UpdateTournament']);
+    Route::delete('tournaments/{id}', [TournamentController::class, 'DeleteTournament']);
+    Route::put('teams/{id}', [TeamController::class, 'update']);
+    Route::delete('teams/{id}', [TeamController::class, 'DeleteTeam']);
+    Route::put('players/{id}', [PlayerController::class, 'UpdatePlayer']);
+    Route::delete('players/{id}', [PlayerController::class, 'DeletePlayer']);
+});
