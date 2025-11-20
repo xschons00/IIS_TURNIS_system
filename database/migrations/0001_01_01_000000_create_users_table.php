@@ -19,9 +19,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('faculty', ['ENGINEERING','CHEMISTRY','COMPUTER_SCIENCE','BUSINESS','ARTS']);
+            $table->enum('faculty', ['ENGINEERING','CHEMISTRY','COMPUTER_SCIENCE','BUSINESS','ARTS'])->nullable();
             $table->integer('ranking')->unsigned()->nullable();
-            $table->enum('role', ['ADMIN','USER']);
+            $table->enum('role', ['ADMIN','USER'])->default('USER')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
