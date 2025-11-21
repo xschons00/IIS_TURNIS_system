@@ -29,6 +29,7 @@ Route::post('teams', [TeamController::class, 'SaveTeam']);
 Route::get('teams/{id}', [TeamController::class, 'GetTeam']);
 
 // Team members
+Route::get('teams/{id}/members', [TeamMembersController::class, 'GetTeamMembers']);
 Route::get('teams/{id}/members/count', [TeamMembersController::class, 'GetTeamMemberCount']);
  
 
@@ -38,6 +39,7 @@ Route::post('tournaments', [TournamentController::class, 'SaveTournament']);
 Route::get('tournaments/{id}', [TournamentController::class, 'GetTournament']);
 
 // Participants
+Route::get('tournaments/{id}/participants', [ParticipantsController::class, 'GetParticipants']);
 Route::get('tournaments/{id}/participants/count', [ParticipantsController::class, 'GetParticipantCount']);
 
 Route::get('statistics', [StatisticsController::class, 'index']);

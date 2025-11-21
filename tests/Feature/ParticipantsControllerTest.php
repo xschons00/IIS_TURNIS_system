@@ -5,62 +5,97 @@ use App\Models\Event;
 use App\Models\User;
 use App\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ParticipantsControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    #[Test]
-    public function it_returns_participant_count_for_solo_event()
+    public function test_returns_participants_for_solo_event(): void
     {
         $event = Event::factory()->create(['event_type' => 'SOLO']);
-        
-        // Create users and associate them with the event
-        $user1 = User::factory()->create();
-        $user2 = User::factory()->create();
+
+        $user1 = User::factory()->create([
+            'user_name' => 'user1',
+            'first_name' => 'First1',
+            'last_name' => 'Last1',
+            'faculty' => null,
+            'ranking' => null,
+        ]);
+        $user2 = User::factory()->create([
+            'user_name' => 'user2',
+            'first_name' => 'First2',
+            'last_name' => 'Last2',
+            'faculty' => null,
+            'ranking' => null,
+        ]);
 
         $event->players()->attach([$user1->user_ID, $user2->user_ID]);
 
-        $response = $this->getJson("/api/tournaments/{$event->event_ID}/participants/count");
+        $response = $this->getJson("/api/tournaments/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
                  ->assertJson([
                      'event_id' => $event->event_ID,
+                     'event_name' => $event->event_name,
                      'event_type' => 'SOLO',
-                     'participants' => 2,
+                     'participants' => [
+                         [
+                             'user_ID' => $user1->user_ID,
+                             'user_name' => 'user1',
+                             'first_name' => 'First1',
+                             'last_name' => 'Last1',
+                             'faculty' => null,
+                             'ranking' => null,
+                         ],
+                         [
+                             'user_ID' => $user2->user_ID,
+                             'user_name' => 'user2',
+                             'first_name' => 'First2',
+                             'last_name' => 'Last2',
+                             'faculty' => null,
+                             'ranking' => null,
+                         ],
+                     ],
                  ]);
     }
 
-    #[Test]
-    public function it_returns_participant_count_for_team_event()
+    public function test_returns_participants_for_team_event(): void
     {
         $event = Event::factory()->create(['event_type' => 'TEAM']);
-        
-        // Create teams and associate them with the event
-        $team1 = Team::factory()->create();
-        $team2 = Team::factory()->create();
+
+        $team1 = Team::factory()->create(['team_name' => 'Team1', 'ranking' => null]);
+        $team2 = Team::factory()->create(['team_name' => 'Team2', 'ranking' => null]);
 
         $event->teams()->attach([$team1->team_ID, $team2->team_ID]);
 
-        $response = $this->getJson("/api/tournaments/{$event->event_ID}/participants/count");
+        $response = $this->getJson("/api/tournaments/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
                  ->assertJson([
                      'event_id' => $event->event_ID,
+                     'event_name' => $event->event_name,
                      'event_type' => 'TEAM',
-                     'participants' => 2,
+                     'participants' => [
+                         [
+                             'team_ID' => $team1->team_ID,
+                             'team_name' => 'Team1',
+                             'ranking' => null,
+                         ],
+                         [
+                             'team_ID' => $team2->team_ID,
+                             'team_name' => 'Team2',
+                             'ranking' => null,
+                         ],
+                     ],
                  ]);
     }
 
-    #[Test]
-    public function it_returns_404_if_event_not_found()
+    public function test_returns_404_if_event_not_found(): void
     {
-        $response = $this->getJson("/api/tournaments/999/participants/count");
+        $response = $this->getJson('/api/tournaments/999999/participants/count');
 
         $response->assertStatus(404)
                  ->assertJson(['message' => 'Event not found']);
     }
-
 }
