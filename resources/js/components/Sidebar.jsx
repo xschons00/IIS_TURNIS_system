@@ -36,7 +36,7 @@ function Sidebar() {
                 const playersData = await playersResponse.json();
 
                 // Transform statistics data (backend might return empty for now)
-                setStats(statsData || []);
+                setStats( []); // statsData ||
 
                 // Transform players data to match frontend expectations
                 const transformedPlayers = playersData.map(user => ({

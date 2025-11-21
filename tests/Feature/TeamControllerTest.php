@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -67,6 +68,10 @@ class TeamControllerTest extends TestCase
             'ranking' => 5,
         ]);
 
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+
         $response = $this->putJson('/api/teams/' . $team->team_ID, [
             'team_name' => 'Updated Team',
         ]);
@@ -85,6 +90,10 @@ class TeamControllerTest extends TestCase
             'team_name' => 'To Remove',
             'ranking' => 6,
         ]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
 
         $response = $this->deleteJson('/api/teams/' . $team->team_ID);
 

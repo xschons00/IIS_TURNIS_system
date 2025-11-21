@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,6 +19,7 @@ class TournamentControllerTest extends TestCase
             'event_date' => '2025-01-01',
             'location' => 'Location A',
             'event_type' => 'SOLO',
+            'event_state' => 'NEW',
             'max_participants' => 16,
         ]);
 
@@ -27,6 +29,7 @@ class TournamentControllerTest extends TestCase
             'event_date' => '2025-01-02',
             'location' => 'Location B',
             'event_type' => 'TEAM',
+            'event_state' => 'NEW',
             'max_participants' => 32,
         ]);
 
@@ -46,6 +49,7 @@ class TournamentControllerTest extends TestCase
             'event_date' => '2025-02-01',
             'location' => 'Main Hall',
             'event_type' => 'SOLO',
+            'event_state' => 'NEW',
             'max_participants' => 8,
         ];
 
@@ -67,6 +71,7 @@ class TournamentControllerTest extends TestCase
             'event_date' => '2025-03-01',
             'location' => 'Arena',
             'event_type' => 'TEAM',
+            'event_state' => 'NEW',
             'max_participants' => 24,
         ]);
 
@@ -85,8 +90,13 @@ class TournamentControllerTest extends TestCase
             'event_date' => '2025-04-01',
             'location' => 'Old Location',
             'event_type' => 'SOLO',
+            'event_state' => 'NEW',
             'max_participants' => 12,
         ]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
 
         $response = $this->putJson('/api/tournaments/' . $event->event_ID, [
             'event_name' => 'Updated Name',
@@ -108,8 +118,13 @@ class TournamentControllerTest extends TestCase
             'event_date' => '2025-05-01',
             'location' => 'Temp',
             'event_type' => 'TEAM',
+            'event_state' => 'NEW',
             'max_participants' => 10,
         ]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
 
         $response = $this->deleteJson('/api/tournaments/' . $event->event_ID);
 

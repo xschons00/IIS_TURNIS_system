@@ -20,6 +20,7 @@ class EventFactory extends Factory
             'event_date' => fake()->date(),
             'location' => fake()->city(),
             'event_type' => fake()->randomElement(['SOLO','TEAM']),
+            'event_state' => fake()->randomElement(['NEW','REGISTRATION','ONGOING','FINISHED']),
             'max_participants' => fake()->numberBetween(2, 128),
         ];
     }

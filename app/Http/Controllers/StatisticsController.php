@@ -2,45 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use app\Models\Event;
-use app\Models\User;
-use app\Models\Team;
-use app\Models\EventMatch;
-
+use App\Models\Event;
+use App\Models\EventMatch;
+use App\Models\Team;
+use App\Models\User;
 
 class StatisticsController extends Controller
 {
-    public function index()
+    public function index(): array
     {
-
         return [
-            "active_events"=>$this->getActiveEventsCount(),
-            "registered_users"=>$this->getRegisteredUsersCount(),
-            "teams"=>$this->getTeamsCount(),
-            "matches"=>$this->getMatchesCount(),
-    ];
+            'active_events' => $this->getActiveEventsCount(),
+            'registered_users' => $this->getRegisteredUsersCount(),
+            'teams' => $this->getTeamsCount(),
+            'matches' => $this->getMatchesCount(),
+        ];
     }
 
-    private function getActiveEventsCount()
+    private function getActiveEventsCount(): int
     {
-        return Event::where('status', 'active')->count();
+        return Event::where('event_state', 'ONGOING')->count();
     }
 
-    private function getRegisteredUsersCount()
+    private function getRegisteredUsersCount(): int
     {
-        // Logic to retrieve the count of registered users
-        return User::all()->count();
-    }
-    private function getTeamsCount()
-    {
-        // Logic to retrieve the count of teams
-        return Team::all()->count();
-    }
-    private function getMatchesCount()
-    {
-        // Logic to retrieve the count of matches
-        return EventMatch::where("winner","!=",null)->count();
+        return User::count();
     }
 
+    private function getTeamsCount(): int
+    {
+        return Team::count();
+    }
+
+    private function getMatchesCount(): int
+    {
+        return EventMatch::whereNotNull('winner')->count();
+    }
 }
-

@@ -21,7 +21,10 @@ class TournamentController extends Controller
 
     public function SaveTournament(Request $request)
     {
-        return Event::create($request->all());
+        $data = $request->all();
+        $data['event_state'] = $data['event_state'] ?? 'NEW';
+
+        return Event::create($data);
     }
 
     /**

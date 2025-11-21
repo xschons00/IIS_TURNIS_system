@@ -93,6 +93,10 @@ class PlayerControllerTest extends TestCase
             'role' => 'USER',
         ]);
 
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+
         $response = $this->putJson('/api/players/' . $player->user_ID, [
             'user_name' => 'newname',
         ]);
@@ -116,6 +120,10 @@ class PlayerControllerTest extends TestCase
             'faculty' => 'ENGINEERING',
             'role' => 'USER',
         ]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
 
         $response = $this->deleteJson('/api/players/' . $player->user_ID);
 
