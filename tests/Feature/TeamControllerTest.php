@@ -13,12 +13,12 @@ class TeamControllerTest extends TestCase
 
     public function test_index_returns_all_teams(): void
     {
-        Team::create([
+        Team::factory()->create([
             'team_name' => 'Alpha',
             'ranking' => 1,
         ]);
 
-        Team::create([
+        Team::factory()->create([
             'team_name' => 'Beta',
             'ranking' => 2,
         ]);
@@ -33,9 +33,12 @@ class TeamControllerTest extends TestCase
 
     public function test_store_creates_a_team(): void
     {
+        $leader = User::factory()->create();
+
         $payload = [
             'team_name' => 'Gamma',
             'ranking' => 3,
+            'team_leader_id' => $leader->user_ID,
         ];
 
         $response = $this->postJson('/api/teams', $payload);
@@ -44,12 +47,13 @@ class TeamControllerTest extends TestCase
 
         $this->assertDatabaseHas('teams', [
             'team_name' => 'Gamma',
+            'team_leader_id' => $leader->user_ID,
         ]);
     }
 
     public function test_show_returns_single_team(): void
     {
-        $team = Team::create([
+        $team = Team::factory()->create([
             'team_name' => 'Delta',
             'ranking' => 4,
         ]);
@@ -63,7 +67,7 @@ class TeamControllerTest extends TestCase
 
     public function test_update_modifies_existing_team(): void
     {
-        $team = Team::create([
+        $team = Team::factory()->create([
             'team_name' => 'Old Team',
             'ranking' => 5,
         ]);
@@ -86,7 +90,7 @@ class TeamControllerTest extends TestCase
 
     public function test_destroy_deletes_team(): void
     {
-        $team = Team::create([
+        $team = Team::factory()->create([
             'team_name' => 'To Remove',
             'ranking' => 6,
         ]);

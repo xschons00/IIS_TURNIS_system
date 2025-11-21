@@ -23,6 +23,7 @@ class EventsTableSeeder extends Seeder
                 'event_date' => '2025-12-01',
                 'location' => 'Bratislava Science Hall',
                 'event_type' => 'SOLO',
+                'leader_email' => 'lena.andrejova@example.com',
                 'max_participants' => 16,
                 'participants' => [
                     ['email' => 'lena.andrejova@example.com', 'final_placement' => 1],
@@ -60,6 +61,7 @@ class EventsTableSeeder extends Seeder
                 'event_date' => '2025-12-15',
                 'location' => 'University Sports Center',
                 'event_type' => 'TEAM',
+                'leader_email' => 'admin@digitick.test',
                 'max_participants' => 12,
                 'teams' => [
                     ['team_name' => 'Cyber Falcons', 'final_placement' => 1],
@@ -74,6 +76,7 @@ class EventsTableSeeder extends Seeder
                 'event_date' => '2026-01-12',
                 'location' => 'Online arena',
                 'event_type' => 'SOLO',
+                'leader_email' => 'denis.kovac@example.com',
                 'max_participants' => 32,
                 'participants' => [
                     ['email' => 'denis.kovac@example.com', 'final_placement' => 1],
@@ -111,6 +114,20 @@ class EventsTableSeeder extends Seeder
             $participants = $eventData['participants'] ?? [];
             $teams = $eventData['teams'] ?? [];
             $matches = $eventData['matches'] ?? [];
+            $leaderEmail = $eventData['leader_email'] ?? null;
+            $leader = null;
+
+            if ($leaderEmail) {
+                $leader = User::where('email', $leaderEmail)->first();
+            }
+
+            if (! $leader) {
+                $leader = User::first();
+            }
+
+            if (! $leader) {
+                $leader = User::factory()->create();
+            }
 
             $event = Event::updateOrCreate(
                 ['event_name' => $eventData['event_name']],
@@ -120,6 +137,8 @@ class EventsTableSeeder extends Seeder
                     'location' => $eventData['location'],
                     'event_type' => $eventData['event_type'],
                     'max_participants' => $eventData['max_participants'],
+                    'event_leader_id' => $leader->user_ID,
+                    'event_state' => $eventData['event_state'] ?? 'NEW',
                 ]
             );
 

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,6 +23,7 @@ class EventFactory extends Factory
             'event_type' => fake()->randomElement(['SOLO','TEAM']),
             'event_state' => fake()->randomElement(['NEW','REGISTRATION','ONGOING','FINISHED']),
             'max_participants' => fake()->numberBetween(2, 128),
+            'event_leader_id' => User::factory(),
         ];
     }
 }

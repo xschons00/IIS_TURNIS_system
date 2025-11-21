@@ -13,7 +13,7 @@ class TournamentControllerTest extends TestCase
 
     public function test_index_returns_all_tournaments(): void
     {
-        Event::create([
+        Event::factory()->create([
             'event_name' => 'Event One',
             'description' => 'First event',
             'event_date' => '2025-01-01',
@@ -23,7 +23,7 @@ class TournamentControllerTest extends TestCase
             'max_participants' => 16,
         ]);
 
-        Event::create([
+        Event::factory()->create([
             'event_name' => 'Event Two',
             'description' => 'Second event',
             'event_date' => '2025-01-02',
@@ -43,6 +43,8 @@ class TournamentControllerTest extends TestCase
 
     public function test_store_creates_a_tournament(): void
     {
+        $leader = User::factory()->create();
+
         $payload = [
             'event_name' => 'New Event',
             'description' => 'New event description',
@@ -51,6 +53,7 @@ class TournamentControllerTest extends TestCase
             'event_type' => 'SOLO',
             'event_state' => 'NEW',
             'max_participants' => 8,
+            'event_leader_id' => $leader->user_ID,
         ];
 
         $response = $this->postJson('/api/tournaments', $payload);
@@ -60,12 +63,13 @@ class TournamentControllerTest extends TestCase
         $this->assertDatabaseHas('events', [
             'event_name' => 'New Event',
             'location' => 'Main Hall',
+            'event_leader_id' => $leader->user_ID,
         ]);
     }
 
     public function test_show_returns_single_tournament(): void
     {
-        $event = Event::create([
+        $event = Event::factory()->create([
             'event_name' => 'Shown Event',
             'description' => 'To be shown',
             'event_date' => '2025-03-01',
@@ -84,7 +88,7 @@ class TournamentControllerTest extends TestCase
 
     public function test_update_modifies_existing_tournament(): void
     {
-        $event = Event::create([
+        $event = Event::factory()->create([
             'event_name' => 'Old Name',
             'description' => 'Old description',
             'event_date' => '2025-04-01',
@@ -112,7 +116,7 @@ class TournamentControllerTest extends TestCase
 
     public function test_destroy_deletes_tournament(): void
     {
-        $event = Event::create([
+        $event = Event::factory()->create([
             'event_name' => 'To Delete',
             'description' => 'To delete',
             'event_date' => '2025-05-01',

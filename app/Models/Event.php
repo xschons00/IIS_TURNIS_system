@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
 {
@@ -24,6 +25,7 @@ class Event extends Model
         'event_type',
         'event_state',
         'max_participants',
+        'event_leader_id',
     ];
 
     protected $attributes = [
@@ -58,5 +60,10 @@ class Event extends Model
     public function matches(): HasMany
     {
         return $this->hasMany(EventMatch::class, 'event_ID', 'event_ID');
+    }
+
+    public function leader(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'event_leader_id', 'user_ID');
     }
 }

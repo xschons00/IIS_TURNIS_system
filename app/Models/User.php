@@ -55,6 +55,16 @@ class User extends Authenticatable
          ->using(PlayerParticipant::class);
     }
 
+    public function ledTeams(): HasMany
+    {
+        return $this->hasMany(Team::class, 'team_leader_id', 'user_ID');
+    }
+
+    public function ledEvents(): HasMany
+    {
+        return $this->hasMany(Event::class, 'event_leader_id', 'user_ID');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

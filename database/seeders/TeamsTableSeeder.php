@@ -17,6 +17,7 @@ class TeamsTableSeeder extends Seeder
             [
                 'team_name' => 'Cyber Falcons',
                 'ranking' => 1,
+                'leader_email' => 'lena.andrejova@example.com',
                 'members' => [
                     'lena.andrejova@example.com',
                     'marek.varga@example.com',
@@ -27,6 +28,7 @@ class TeamsTableSeeder extends Seeder
             [
                 'team_name' => 'Quantum Owls',
                 'ranking' => 2,
+                'leader_email' => 'katarina.svobodova@example.com',
                 'members' => [
                     'katarina.svobodova@example.com',
                     'sofia.kralova@example.com',
@@ -36,6 +38,7 @@ class TeamsTableSeeder extends Seeder
             [
                 'team_name' => 'Pixel Titans',
                 'ranking' => 3,
+                'leader_email' => 'marco.hrasko@example.com',
                 'members' => [
                     'marco.hrasko@example.com',
                     'peter.novak@example.com',
@@ -46,9 +49,27 @@ class TeamsTableSeeder extends Seeder
 
         foreach ($teams as $teamData) {
             $memberEmails = $teamData['members'];
+            $leaderEmail = $teamData['leader_email'] ?? ($memberEmails[0] ?? null);
+            $leader = null;
+
+            if ($leaderEmail) {
+                $leader = User::where('email', $leaderEmail)->first();
+            }
+
+            if (! $leader) {
+                $leader = User::first();
+            }
+
+            if (! $leader) {
+                $leader = User::factory()->create();
+            }
+
             $team = Team::updateOrCreate(
                 ['team_name' => $teamData['team_name']],
-                ['ranking' => $teamData['ranking']]
+                [
+                    'ranking' => $teamData['ranking'],
+                    'team_leader_id' => $leader->user_ID,
+                ]
             );
 
             $userIds = User::whereIn('email', $memberEmails)->pluck('user_ID')->all();

@@ -5,13 +5,14 @@ namespace Tests\Feature;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class TeamMembersControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function it_returns_team_member_count()
     {
         $team = Team::factory()->create();
@@ -31,7 +32,7 @@ class TeamMembersControllerTest extends TestCase
                  ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_404_if_team_not_found()
     {
         $response = $this->getJson("/api/teams/9999/members/count");

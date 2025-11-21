@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('teams', function (Blueprint $table) {
             $table->id('team_ID');
+            $table->bigInteger('team_leader_id')->unsigned();
             $table->string('team_name')->unique();
             $table->integer('ranking')->unsigned()->nullable();
             $table->timestamps();
+            $table->foreign('team_leader_id')->references('user_ID')->on('users')->onDelete('cascade');
         });
     }
 

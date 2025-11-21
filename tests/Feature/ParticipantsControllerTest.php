@@ -1,19 +1,18 @@
 <?php
-
-
 namespace Tests\Feature;
 
 use App\Models\Event;
 use App\Models\User;
 use App\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ParticipantsControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function it_returns_participant_count_for_solo_event()
     {
         $event = Event::factory()->create(['event_type' => 'SOLO']);
@@ -34,7 +33,7 @@ class ParticipantsControllerTest extends TestCase
                  ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_participant_count_for_team_event()
     {
         $event = Event::factory()->create(['event_type' => 'TEAM']);
@@ -55,7 +54,7 @@ class ParticipantsControllerTest extends TestCase
                  ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_404_if_event_not_found()
     {
         $response = $this->getJson("/api/tournaments/999/participants/count");

@@ -17,7 +17,7 @@ class StatisticsControllerTest extends TestCase
     {
         $users = User::factory()->count(3)->create();
 
-        $activeEventOne = Event::create([
+        $activeEventOne = Event::factory()->create([
             'event_name' => 'Active Event 1',
             'description' => 'Event in progress',
             'event_date' => '2025-01-01',
@@ -25,9 +25,10 @@ class StatisticsControllerTest extends TestCase
             'event_type' => 'SOLO',
             'event_state' => 'ONGOING',
             'max_participants' => 16,
+            'event_leader_id' => $users[0]->user_ID,
         ]);
 
-        Event::create([
+        Event::factory()->create([
             'event_name' => 'Active Event 2',
             'description' => 'Another active event',
             'event_date' => '2025-02-01',
@@ -35,9 +36,10 @@ class StatisticsControllerTest extends TestCase
             'event_type' => 'TEAM',
             'event_state' => 'ONGOING',
             'max_participants' => 8,
+            'event_leader_id' => $users[1]->user_ID,
         ]);
 
-        Event::create([
+        Event::factory()->create([
             'event_name' => 'Finished Event',
             'description' => 'Already done',
             'event_date' => '2024-12-01',
@@ -45,9 +47,11 @@ class StatisticsControllerTest extends TestCase
             'event_type' => 'SOLO',
             'event_state' => 'FINISHED',
             'max_participants' => 4,
+            'event_leader_id' => $users[2]->user_ID,
         ]);
 
-        Team::factory()->count(2)->create();
+        Team::factory()->create(['team_leader_id' => $users[0]->user_ID]);
+        Team::factory()->create(['team_leader_id' => $users[1]->user_ID]);
 
         EventMatch::create([
             'event_ID' => $activeEventOne->event_ID,
