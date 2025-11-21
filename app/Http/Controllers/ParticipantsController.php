@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Event;
 
-class ParticipantCount extends Controller
+class ParticipantsController extends Controller
 {
     /**
      * Return number of participants for an event.
