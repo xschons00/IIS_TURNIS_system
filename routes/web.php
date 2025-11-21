@@ -13,3 +13,7 @@ Route::get('/tournaments', function () {
 Route::get('/teams', function () {
     return view('teams');
 });
+
+Route::get('/players', function () {
+    return view('players');
+});

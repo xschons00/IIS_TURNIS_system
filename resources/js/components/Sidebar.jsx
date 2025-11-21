@@ -20,23 +20,26 @@ function Sidebar() {
                     throw new Error('Failed to fetch players data');
                 }
 
-                // Handle statistics (might be empty/null from backend)
-                let statsData = [];
+                // Handle statistics
+                let statsData = null;
                 if (statsResponse.ok) {
-                    const statsText = await statsResponse.text();
-                    if (statsText && statsText.trim()) {
-                        try {
-                            statsData = JSON.parse(statsText);
-                        } catch (e) {
-                            console.warn('Statistics endpoint returned invalid JSON:', statsText);
-                        }
-                    }
+                    statsData = await statsResponse.json();
                 }
 
                 const playersData = await playersResponse.json();
 
-                // Transform statistics data (backend might return empty for now)
-                setStats( []); // statsData ||
+                // Transform statistics data from backend object to array for display
+                if (statsData) {
+                    const transformedStats = [
+                        { label: 'Aktívne turnaje', value: statsData.active_events || 0 },
+                        { label: 'Registrovaní užívatelia', value: statsData.registered_users || 0 },
+                        { label: 'Tímy', value: statsData.teams || 0 },
+                        { label: 'Dokončené zápasy', value: statsData.matches || 0 }
+                    ];
+                    setStats(transformedStats);
+                } else {
+                    setStats([]);
+                }
 
                 // Transform players data to match frontend expectations
                 const transformedPlayers = playersData.map(user => ({
@@ -133,9 +136,9 @@ function Sidebar() {
                                 <span className="font-bold text-blue-900">{player.points}</span>
                             </div>
                         ))}
-                        <button className="w-full px-4 py-2 bg-blue-600 text-white font-semibold cursor-pointer mt-3 hover:bg-blue-700 rounded-lg transition-colors">
+                        <a href="/players" className="block w-full px-4 py-2 bg-blue-600 text-white font-semibold text-center cursor-pointer mt-3 hover:bg-blue-700 rounded-lg transition-colors">
                             Rebríček
-                        </button>
+                        </a>
                     </>
                 )}
             </div>

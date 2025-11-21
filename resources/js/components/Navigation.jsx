@@ -5,7 +5,7 @@ function Navigation({ activePage = 'Domov' }) {
         { label: 'Domov', href: '/' },
         { label: 'Turnaje', href: '/tournaments' },
         { label: 'Tímy', href: '/teams' },
-        { label: 'Hráči', href: '#' },
+        { label: 'Hráči', href: '/players' },
         { label: 'Štatistiky', href: '#' }
     ];
 
