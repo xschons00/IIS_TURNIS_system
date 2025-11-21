@@ -22,7 +22,7 @@ function TournamentList() {
         const fetchTournaments = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/tournaments');
+                const response = await fetch('http://localhost:8080/api/events');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch tournaments');
@@ -34,7 +34,7 @@ function TournamentList() {
                 const tournamentsWithCounts = await Promise.all(
                     data.map(async (event) => {
                         try {
-                            const countResponse = await fetch(`http://localhost:8080/api/tournaments/${event.event_ID}/participants/count`);
+                            const countResponse = await fetch(`http://localhost:8080/api/events/${event.event_ID}/participants/count`);
                             if (countResponse.ok) {
                                 const countData = await countResponse.json();
                                 return {

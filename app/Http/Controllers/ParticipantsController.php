@@ -12,7 +12,7 @@ class ParticipantsController extends Controller
 {
 
     /**
-     * GET /api/tournaments/{id}/participants
+     * GET /api/events/{id}/participants
      * Returns list of team members.
      * @return JsonResponse data with team members
      * route::get('/api/teams/{id}/members', [TeamMembersController::class, 'GetTeamMembers']);
@@ -53,7 +53,7 @@ class ParticipantsController extends Controller
      * Return number of participants for an event.
      * @return JsonResponse data with participant count
      * Uses event_type: 'SOLO' -> counts player relations, 'TEAM' -> counts team relations.
-     * get /api/tournaments/{id}/participants/count
+     * get /api/events/{id}/participants/count
      *
     * @return JsonResponse data with participant count
      */

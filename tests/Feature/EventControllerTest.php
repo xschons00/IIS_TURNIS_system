@@ -7,11 +7,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class TournamentControllerTest extends TestCase
+class EventControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_index_returns_all_tournaments(): void
+    public function test_index_returns_all_events(): void
     {
         Event::factory()->create([
             'event_name' => 'Event One',
@@ -33,7 +33,7 @@ class TournamentControllerTest extends TestCase
             'max_participants' => 32,
         ]);
 
-        $response = $this->getJson('/api/tournaments');
+        $response = $this->getJson('/api/events');
 
         $response
             ->assertStatus(200)
@@ -41,7 +41,7 @@ class TournamentControllerTest extends TestCase
             ->assertJsonFragment(['event_name' => 'Event Two']);
     }
 
-    public function test_store_creates_a_tournament(): void
+    public function test_store_creates_a_event(): void
     {
         $leader = User::factory()->create();
 
@@ -56,7 +56,7 @@ class TournamentControllerTest extends TestCase
             'event_leader_id' => $leader->user_ID,
         ];
 
-        $response = $this->postJson('/api/tournaments', $payload);
+        $response = $this->postJson('/api/events', $payload);
 
         $response->assertStatus(201);
 
@@ -67,7 +67,7 @@ class TournamentControllerTest extends TestCase
         ]);
     }
 
-    public function test_show_returns_single_tournament(): void
+    public function test_show_returns_single_event(): void
     {
         $event = Event::factory()->create([
             'event_name' => 'Shown Event',
@@ -79,14 +79,14 @@ class TournamentControllerTest extends TestCase
             'max_participants' => 24,
         ]);
 
-        $response = $this->getJson('/api/tournaments/' . $event->event_ID);
+        $response = $this->getJson('/api/events/' . $event->event_ID);
 
         $response
             ->assertStatus(200)
             ->assertJsonFragment(['event_ID' => $event->event_ID]);
     }
 
-    public function test_update_modifies_existing_tournament(): void
+    public function test_update_modifies_existing_event(): void
     {
         $event = Event::factory()->create([
             'event_name' => 'Old Name',
@@ -102,7 +102,7 @@ class TournamentControllerTest extends TestCase
 
         $this->actingAs($admin);
 
-        $response = $this->putJson('/api/tournaments/' . $event->event_ID, [
+        $response = $this->putJson('/api/events/' . $event->event_ID, [
             'event_name' => 'Updated Name',
         ]);
 
@@ -114,7 +114,7 @@ class TournamentControllerTest extends TestCase
         ]);
     }
 
-    public function test_destroy_deletes_tournament(): void
+    public function test_destroy_deletes_event(): void
     {
         $event = Event::factory()->create([
             'event_name' => 'To Delete',
@@ -130,7 +130,7 @@ class TournamentControllerTest extends TestCase
 
         $this->actingAs($admin);
 
-        $response = $this->deleteJson('/api/tournaments/' . $event->event_ID);
+        $response = $this->deleteJson('/api/events/' . $event->event_ID);
 
         $response->assertStatus(200);
 

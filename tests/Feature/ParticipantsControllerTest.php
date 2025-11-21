@@ -32,7 +32,7 @@ class ParticipantsControllerTest extends TestCase
 
         $event->players()->attach([$user1->user_ID, $user2->user_ID]);
 
-        $response = $this->getJson("/api/tournaments/{$event->event_ID}/participants");
+        $response = $this->getJson("/api/events/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
                  ->assertJson([
@@ -69,7 +69,7 @@ class ParticipantsControllerTest extends TestCase
 
         $event->teams()->attach([$team1->team_ID, $team2->team_ID]);
 
-        $response = $this->getJson("/api/tournaments/{$event->event_ID}/participants");
+        $response = $this->getJson("/api/events/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
                  ->assertJson([
@@ -93,7 +93,7 @@ class ParticipantsControllerTest extends TestCase
 
     public function test_returns_404_if_event_not_found(): void
     {
-        $response = $this->getJson('/api/tournaments/999999/participants/count');
+        $response = $this->getJson('/api/events/999999/participants/count');
 
         $response->assertStatus(404)
                  ->assertJson(['message' => 'Event not found']);

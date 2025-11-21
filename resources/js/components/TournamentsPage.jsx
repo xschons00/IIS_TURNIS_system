@@ -14,7 +14,7 @@ function TournamentsPage() {
         const fetchTournaments = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/tournaments');
+                const response = await fetch('http://localhost:8080/api/events');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch tournaments');

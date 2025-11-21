@@ -5,7 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\TeamController;
-use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\eventController;
 use App\Http\Controllers\ParticipantsController;
 use App\Http\Controllers\TeamMembersController;
 use App\Http\Middleware\isAdmin;
@@ -33,21 +33,21 @@ Route::get('teams/{id}/members', [TeamMembersController::class, 'GetTeamMembers'
 Route::get('teams/{id}/members/count', [TeamMembersController::class, 'GetTeamMemberCount']);
  
 
-// Tournaments
-Route::get('tournaments', [TournamentController::class, 'GetAllTournaments']);
-Route::post('tournaments', [TournamentController::class, 'SaveTournament']);
-Route::get('tournaments/{id}', [TournamentController::class, 'GetTournament']);
+// events
+Route::get('events', [eventController::class, 'GetAllevents']);
+Route::post('events', [eventController::class, 'Saveevent']);
+Route::get('events/{id}', [eventController::class, 'Getevent']);
 
 // Participants
-Route::get('tournaments/{id}/participants', [ParticipantsController::class, 'GetParticipants']);
-Route::get('tournaments/{id}/participants/count', [ParticipantsController::class, 'GetParticipantCount']);
+Route::get('events/{id}/participants', [ParticipantsController::class, 'GetParticipants']);
+Route::get('events/{id}/participants/count', [ParticipantsController::class, 'GetParticipantCount']);
 
 Route::get('statistics', [StatisticsController::class, 'index']);
 
 // Admin-only routes
 Route::middleware([isAdmin::class])->group(function () {
-    Route::put('tournaments/{id}', [TournamentController::class, 'UpdateTournament']);
-    Route::delete('tournaments/{id}', [TournamentController::class, 'DeleteTournament']);
+    Route::put('events/{id}', [eventController::class, 'Updateevent']);
+    Route::delete('events/{id}', [eventController::class, 'Deleteevent']);
     Route::put('teams/{id}', [TeamController::class, 'update']);
     Route::delete('teams/{id}', [TeamController::class, 'DeleteTeam']);
     Route::put('players/{id}', [PlayerController::class, 'UpdatePlayer']);
@@ -59,6 +59,6 @@ Route::middleware([isTeamLeader::class])->group(function () {
     Route::delete('teams/{id}', [TeamController::class, 'DeleteTeam']);
 });
 Route::middleware([isEventLeader::class])->group(function () {
-    Route::put('tournaments/{id}', [TournamentController::class, 'UpdateTournament']);
-    Route::delete('tournaments/{id}', [TournamentController::class, 'DeleteTournament']);
+    Route::put('events/{id}', [eventController::class, 'Updateevent']);
+    Route::delete('events/{id}', [eventController::class, 'Deleteevent']);
 });
