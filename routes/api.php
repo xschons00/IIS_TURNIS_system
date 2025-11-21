@@ -6,6 +6,7 @@ use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\ParticipantCount;
 
 
 Route::post('auth/login', [AuthController::class, 'login']);
@@ -28,7 +29,7 @@ Route::get('teams/{id}', [TeamController::class, 'GetTeam']);
 Route::get('tournaments', [TournamentController::class, 'GetAllTournaments']);
 Route::post('tournaments', [TournamentController::class, 'SaveTournament']);
 Route::get('tournaments/{id}', [TournamentController::class, 'GetTournament']);
-
+Route::get('tournaments/{id}/participants/count', [ParticipantCount::class, 'GetParticipantCount']);
 
 Route::get('statistics', [StatisticsController::class, 'index']);
 
