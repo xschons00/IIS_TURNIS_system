@@ -27,6 +27,7 @@ function LoginPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // Important: include cookies for session-based auth
                 body: JSON.stringify({
                     email: email.trim(),
                     password: password
@@ -40,9 +41,9 @@ function LoginPage() {
 
             const data = await response.json();
 
-            // Store token or session data
-            if (data.token) {
-                localStorage.setItem('auth_token', data.token);
+            // Store user data in localStorage (since cookies don't work across ports)
+            if (data.user) {
+                localStorage.setItem('logged_in_user', JSON.stringify(data.user));
             }
 
             // Redirect to home page

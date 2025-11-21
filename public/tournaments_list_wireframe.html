@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe - Zoznam turnajov</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Header */
+        .header {
+            background: #e0e0e0;
+            padding: 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #333;
+            color: white;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: #d0d0d0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            gap: 20px;
+        }
+        .nav-item {
+            padding: 5px 10px;
+            border: 1px solid #666;
+        }
+        .nav-item.active {
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        /* Page Header */
+        .page-header {
+            background: #f8f8f8;
+            padding: 30px 20px;
+            border-bottom: 2px solid #333;
+        }
+        .page-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .breadcrumb {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 600px;
+        }
+        
+        /* Filters Sidebar */
+        .filters-sidebar {
+            background: #f8f8f8;
+            border-right: 2px solid #333;
+            padding: 20px;
+        }
+        .filter-section {
+            margin-bottom: 25px;
+        }
+        .filter-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #999;
+        }
+        .filter-option {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #666;
+        }
+        .filter-option input[type="radio"] {
+            width: 16px;
+            height: 16px;
+        }
+        .filter-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #666;
+            margin-top: 5px;
+        }
+        .filter-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        /* Content Area */
+        .content-area {
+            padding: 20px;
+        }
+        
+        /* Search and Sort Bar */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border: 2px solid #999;
+        }
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #666;
+            font-size: 14px;
+        }
+        .sort-select {
+            padding: 10px;
+            border: 2px solid #666;
+            min-width: 200px;
+            background: white;
+        }
+        .btn-search {
+            padding: 10px 20px;
+            border: 2px solid #333;
+            background: #333;
+            color: white;
+            cursor: pointer;
+        }
+        
+        /* View Toggle */
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+        .result-count {
+            color: #666;
+            font-size: 14px;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+        }
+        .view-btn {
+            padding: 6px 12px;
+            border: 1px solid #666;
+            background: white;
+            cursor: pointer;
+        }
+        .view-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+        
+        /* Tournament Cards */
+        .tournaments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .tournament-card {
+            border: 2px solid #666;
+            padding: 20px;
+            background: #fafafa;
+            position: relative;
+        }
+        .tournament-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        .tournament-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .tournament-sport {
+            color: #666;
+            font-size: 13px;
+        }
+        .tournament-status {
+            padding: 4px 12px;
+            border: 1px solid #333;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .status-registration {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-color: #0c5460;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+            border-color: #155724;
+        }
+        .status-upcoming {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #856404;
+        }
+        .status-finished {
+            background: #e0e0e0;
+            color: #333;
+            border-color: #666;
+        }
+        .tournament-info {
+            color: #666;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .tournament-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+        }
+        .meta-item {
+            font-size: 13px;
+        }
+        .meta-label {
+            color: #666;
+            font-size: 11px;
+        }
+        .meta-value {
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border: 1px solid #999;
+            margin: 10px 0;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #333;
+        }
+        .progress-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .tournament-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-full {
+            flex: 1;
+        }
+        
+        /* List View */
+        .tournaments-list {
+            display: none;
+        }
+        .tournaments-list.active {
+            display: block;
+        }
+        .tournaments-grid.active {
+            display: grid;
+        }
+        .tournament-row {
+            border: 2px solid #666;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #fafafa;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 150px;
+            gap: 15px;
+            align-items: center;
+        }
+        .tournament-row-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #333;
+        }
+        .page-btn {
+            padding: 8px 12px;
+            border: 2px solid #666;
+            background: white;
+            cursor: pointer;
+        }
+        .page-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #e0e0e0;
+            padding: 20px;
+            border-top: 2px solid #333;
+            text-align: center;
+            color: #666;
+        }
+        
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .filters-sidebar {
+                border-right: none;
+                border-bottom: 2px solid #333;
+            }
+            .tournaments-grid {
+                grid-template-columns: 1fr;
+            }
+            .tournament-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🏆 ŠTUDENTSKÉ TURNAJE</div>
+            <div class="auth-buttons">
+                <button class="btn">Prihlásiť sa</button>
+                <button class="btn btn-primary">+ Vytvoriť turnaj</button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav">
+            <div class="nav-item">Domov</div>
+            <div class="nav-item active">Turnaje</div>
+            <div class="nav-item">Tímy</div>
+            <div class="nav-item">Hráči</div>
+            <div class="nav-item">Štatistiky</div>
+        </div>
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-content">
+                <div>
+                    <h1>Všetky turnaje</h1>
+                    <div class="breadcrumb">Domov / Turnaje</div>
+                </div>
+                <button class="btn btn-primary">+ Vytvoriť turnaj</button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Filters Sidebar -->
+            <div class="filters-sidebar">
+                <h3 style="margin-bottom: 20px;">🔍 Filtre</h3>
+                
+                <!-- Status Filter -->
+                <div class="filter-section">
+                    <div class="filter-title">Stav turnaja</div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="status-all" checked>
+                        <label for="status-all">Všetky</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="status-reg">
+                        <label for="status-reg">Registrácia</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="status-active">
+                        <label for="status-active">Prebieha</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="status-upcoming">
+                        <label for="status-upcoming">Čoskoro</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="status-finished">
+                        <label for="status-finished">Ukončené</label>
+                    </div>
+                </div>
+                
+                <!-- Type Filter -->
+                <div class="filter-section">
+                    <div class="filter-title">Typ účasti</div>
+                    <div class="filter-option">
+                        <input type="radio" name="type" id="type-all" checked>
+                        <label for="type-all">Všetky</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="radio" name="type" id="type-individual">
+                        <label for="type-individual">Jednotlivci</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="radio" name="type" id="type-team">
+                        <label for="type-team">Tímy</label>
+                    </div>
+                </div>
+                
+                <!-- Sport/Game Filter -->
+                <div class="filter-section">
+                    <div class="filter-title">Šport/Hra</div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="sport-chess">
+                        <label for="sport-chess">Šach</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="sport-darts">
+                        <label for="sport-darts">Šípky</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="sport-csgo">
+                        <label for="sport-csgo">CS:GO</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="sport-fifa">
+                        <label for="sport-fifa">FIFA</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="sport-other">
+                        <label for="sport-other">Ostatné</label>
+                    </div>
+                </div>
+                
+                <!-- Date Filter -->
+                <div class="filter-section">
+                    <div class="filter-title">Dátum konania</div>
+                    <label for="date-from" style="font-size: 12px; color: #666;">Od:</label>
+                    <input type="date" id="date-from" class="filter-input">
+                    <label for="date-to" style="font-size: 12px; color: #666; margin-top: 10px; display: block;">Do:</label>
+                    <input type="date" id="date-to" class="filter-input">
+                </div>
+                
+                <!-- Entry Fee Filter -->
+                <div class="filter-section">
+                    <div class="filter-title">Vstupné</div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="fee-free">
+                        <label for="fee-free">Zadarmo</label>
+                    </div>
+                    <div class="filter-option">
+                        <input type="checkbox" id="fee-paid">
+                        <label for="fee-paid">Spoplatnené</label>
+                    </div>
+                </div>
+                
+                <!-- Filter Buttons -->
+                <div class="filter-buttons">
+                    <button class="btn btn-primary" style="width: 100%;">Použiť filtre</button>
+                    <button class="btn" style="width: 100%;">Zrušiť filtre</button>
+                </div>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Search and Sort Bar -->
+                <div class="search-bar">
+                    <input type="text" class="search-input" placeholder="🔍 Hľadať turnaje podľa názvu, organizátora...">
+                    <select class="sort-select">
+                        <option>Zoradiť: Najnovšie</option>
+                        <option>Zoradiť: Najstaršie</option>
+                        <option>Zoradiť: Podľa dátumu (najbližšie)</option>
+                        <option>Zoradiť: Podľa názvu (A-Z)</option>
+                        <option>Zoradiť: Najviac účastníkov</option>
+                    </select>
+                    <button class="btn-search">Hľadať</button>
+                </div>
+                
+                <!-- View Controls -->
+                <div class="view-controls">
+                    <div class="result-count">Nájdených turnajov: <strong>24</strong></div>
+                    <div class="view-toggle">
+                        <button class="view-btn active">◫ Mriežka</button>
+                        <button class="view-btn">☰ Zoznam</button>
+                    </div>
+                </div>
+                
+                <!-- Tournament Cards Grid -->
+                <div class="tournaments-grid active">
+                    <!-- Card 1 -->
+                    <div class="tournament-card">
+                        <div class="tournament-header">
+                            <div>
+                                <div class="tournament-title">Šachový turnaj 2025</div>
+                                <div class="tournament-sport">♟️ Šach</div>
+                            </div>
+                            <div class="tournament-status status-registration">REGISTRÁCIA</div>
+                        </div>
+                        <div class="tournament-info">📅 Dátum: 15.10.2025</div>
+                        <div class="tournament-info">👤 Organizátor: Peter Novák</div>
+                        <div class="tournament-info">💰 Vstupné: Zadarmo</div>
+                        <div class="tournament-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">TYP</div>
+                                <div class="meta-value">Jednotlivci</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">SYSTÉM</div>
+                                <div class="meta-value">Pavúk</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">MAX. ÚČASTNÍCI</div>
+                                <div class="meta-value">16</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">PRIHLÁSENÝCH</div>
+                                <div class="meta-value">8/16</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 50%;"></div>
+                        </div>
+                        <div class="progress-label">Obsadenosť: 50%</div>
+                        <div class="tournament-footer">
+                            <button class="btn btn-full">Detail</button>
+                            <button class="btn btn-primary btn-full">Prihlásiť sa</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 2 -->
+                    <div class="tournament-card">
+                        <div class="tournament-header">
+                            <div>
+                                <div class="tournament-title">CS:GO Liga - Jar</div>
+                                <div class="tournament-sport">🎮 CS:GO</div>
+                            </div>
+                            <div class="tournament-status status-active">PREBIEHA</div>
+                        </div>
+                        <div class="tournament-info">📅 Dátum: 01.10.2025</div>
+                        <div class="tournament-info">👤 Organizátor: Martin Horák</div>
+                        <div class="tournament-info">💰 Vstupné: 10 €</div>
+                        <div class="tournament-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">TYP</div>
+                                <div class="meta-value">Tímy (5)</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">SYSTÉM</div>
+                                <div class="meta-value">Pavúk</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">MAX. TÍMOV</div>
+                                <div class="meta-value">8</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">PRIHLÁSENÝCH</div>
+                                <div class="meta-value">8/8</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                        <div class="progress-label">Obsadenosť: 100% (PLNÝ)</div>
+                        <div class="tournament-footer">
+                            <button class="btn btn-full">Detail</button>
+                            <button class="btn btn-full">Sledovať</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 3 -->
+                    <div class="tournament-card">
+                        <div class="tournament-header">
+                            <div>
+                                <div class="tournament-title">Šípky Championship</div>
+                                <div class="tournament-sport">🎯 Šípky</div>
+                            </div>
+                            <div class="tournament-status status-upcoming">ČOSKORO</div>
+                        </div>
+                        <div class="tournament-info">📅 Dátum: 20.10.2025</div>
+                        <div class="tournament-info">👤 Organizátor: Jana Svobodová</div>
+                        <div class="tournament-info">💰 Vstupné: 5 €</div>
+                        <div class="tournament-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">TYP</div>
+                                <div class="meta-value">Jednotlivci</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">SYSTÉM</div>
+                                <div class="meta-value">Pavúk</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">MAX. ÚČASTNÍCI</div>
+                                <div class="meta-value">32</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">PRIHLÁSENÝCH</div>
+                                <div class="meta-value">24/32</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                        <div class="progress-label">Obsadenosť: 75%</div>
+                        <div class="tournament-footer">
+                            <button class="btn btn-full">Detail</button>
+                            <button class="btn btn-primary btn-full">Prihlásiť sa</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 4 -->
+                    <div class="tournament-card">
+                        <div class="tournament-header">
+                            <div>
+                                <div class="tournament-title">FIFA 24 Turnaj</div>
+                                <div class="tournament-sport">⚽ FIFA</div>
+                            </div>
+                            <div class="tournament-status status-registration">REGISTRÁCIA</div>
+                        </div>
+                        <div class="tournament-info">📅 Dátum: 22.10.2025</div>
+                        <div class="tournament-info">👤 Organizátor: Marián Kováč</div>
+                        <div class="tournament-info">💰 Vstupné: Zadarmo</div>
+                        <div class="tournament-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">TYP</div>
+                                <div class="meta-value">Tímy (2)</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">SYSTÉM</div>
+                                <div class="meta-value">Pavúk</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">MAX. TÍMOV</div>
+                                <div class="meta-value">16</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">PRIHLÁSENÝCH</div>
+                                <div class="meta-value">5/16</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 31%;"></div>
+                        </div>
+                        <div class="progress-label">Obsadenosť: 31%</div>
+                        <div class="tournament-footer">
+                            <button class="btn btn-full">Detail</button>
+                            <button class="btn btn-primary btn-full">Prihlásiť sa</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 5 -->
+                    <div class="tournament-card">
+                        <div class="tournament-header">
+                            <div>
+                                <div class="tournament-title">Stolný tenis Open</div>
+                                <div class="tournament-sport">🏓 Stolný tenis</div>
+                            </div>
+                            <div class="tournament-status status-finished">UKONČENÉ</div>
+                        </div>
+                        <div class="tournament-info">📅 Dátum: 28.09.2025</div>
+                        <div class="tournament-info">👤 Organizátor: Eva Nováková</div>
+                        <div class="tournament-info">🏆 Víťaz: Lukáš Malý</div>
+                        <div class="tournament-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">TYP</div>
+                                <div class="meta-value">Jednotlivci</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">SYSTÉM</div>
+                                <div class="meta-value">Pavúk</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">ÚČASTNÍCI</div>
+                                <div class="meta-value">16/16</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">ZÁPASY</div>
+                                <div class="meta-value">15</div>
+                            </div>
+                        </div>
+                        <div class="tournament-footer">
+                            <button class="btn btn-full">Výsledky</button>
+                            <button class="btn btn-full">Štatistiky</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 6 -->
+                    <div class="tournament-card">
+                        <div class="tournament-header">
+                            <div>
+                                <div class="tournament-title">League of Legends Cup</div>
+                                <div class="tournament-sport">🎮 League of Legends</div>
+                            </div>
+                            <div class="tournament-status status-registration">REGISTRÁCIA</div>
+                        </div>
+                        <div class="tournament-info">📅 Dátum: 25.10.2025</div>
+                        <div class="tournament-info">👤 Organizátor: Tomáš Veselý</div>
+                        <div class="tournament-info">💰 Vstupné: 15 €</div>
+                        <div class="tournament-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">TYP</div>
+                                <div class="meta-value">Tímy (5)</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">SYSTÉM</div>
+                                <div class="meta-value">Pavúk</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">MAX. TÍMOV</div>
+                                <div class="meta-value">8</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">PRIHLÁSENÝCH</div>
+                                <div class="meta-value">3/8</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 37.5%;"></div>
+                        </div>
+                        <div class="progress-label">Obsadenosť: 37.5%</div>
+                        <div class="tournament-footer">
+                            <button class="btn btn-full">Detail</button>
+                            <button class="btn btn-primary btn-full">Prihlásiť sa</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button class="page-btn">‹ Predchádzajúca</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">Ďalšia ›</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            © 2025 Študentské turnaje | IIS Projekt | FIT VUT
+        </div>
+    </div>
+</body>
+</html>
