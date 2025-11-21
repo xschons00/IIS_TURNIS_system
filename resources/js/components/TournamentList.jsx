@@ -84,9 +84,9 @@ function TournamentList() {
             )}
 
             {!loading && !error && (
-                <button className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold cursor-pointer mt-3 hover:from-blue-700 hover:to-cyan-600 rounded-lg shadow-md transition-all">
+                <a href="/tournaments" className="block w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-center cursor-pointer mt-3 hover:from-blue-700 hover:to-cyan-600 rounded-lg shadow-md transition-all">
                     Zobraziť všetky turnaje
-                </button>
+                </a>
             )}
         </div>
     );
