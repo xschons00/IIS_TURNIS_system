@@ -59,9 +59,9 @@ function TeamsPage() {
                                 Prehľad všetkých registrovaných tímov. Pripojte sa k tímu alebo vytvorte vlastný!
                             </p>
                         </div>
-                        <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl">
+                        <a href="/teams/create" className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl inline-block">
                             + Vytvoriť tím
-                        </button>
+                        </a>
                     </div>
                 </div>
 

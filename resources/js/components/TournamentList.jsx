@@ -6,6 +6,17 @@ function TournamentList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Map event_state from backend to Slovak display text
+    const mapEventState = (state) => {
+        const stateMap = {
+            'NEW': 'NOVÝ',
+            'REGISTRATION': 'REGISTRÁCIA',
+            'ONGOING': 'PREBIEHAJÚCI',
+            'FINISHED': 'DOKONČENÝ'
+        };
+        return stateMap[state] || state;
+    };
+
     // Fetch tournaments from backend
     useEffect(() => {
         const fetchTournaments = async () => {
@@ -18,17 +29,40 @@ function TournamentList() {
                 }
 
                 const data = await response.json();
-                // Transform backend data to match frontend expectations
-                const transformedData = data.map(event => ({
-                    id: event.event_ID,
-                    title: event.event_name,
-                    date: event.event_date,
-                    type: event.event_type,
-                    maxParticipants: event.max_participants,
-                    registered: 0, // TODO: Get actual registered count from backend
-                    status: 'REGISTRÁCIA' // TODO: Calculate status based on event_date
-                }));
-                setTournaments(transformedData);
+
+                // Fetch participant counts for all tournaments in parallel
+                const tournamentsWithCounts = await Promise.all(
+                    data.map(async (event) => {
+                        try {
+                            const countResponse = await fetch(`http://localhost:8080/api/tournaments/${event.event_ID}/participants/count`);
+                            if (countResponse.ok) {
+                                const countData = await countResponse.json();
+                                return {
+                                    id: event.event_ID,
+                                    title: event.event_name,
+                                    date: event.event_date,
+                                    type: event.event_type,
+                                    maxParticipants: event.max_participants,
+                                    registered: countData.participants || 0,
+                                    status: mapEventState(event.event_state)
+                                };
+                            }
+                        } catch (err) {
+                            console.error(`Error fetching participant count for tournament ${event.event_ID}:`, err);
+                        }
+                        // Fallback if count fetch fails
+                        return {
+                            id: event.event_ID,
+                            title: event.event_name,
+                            date: event.event_date,
+                            type: event.event_type,
+                            maxParticipants: event.max_participants,
+                            registered: 0,
+                            status: mapEventState(event.event_state)
+                        };
+                    })
+                );
+                setTournaments(tournamentsWithCounts);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching tournaments:', err);

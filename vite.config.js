@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.jsx', 'resources/js/tournaments.jsx', 'resources/js/teams.jsx', 'resources/js/players.jsx'],
+            input: ['resources/css/app.css', 'resources/js/app.jsx', 'resources/js/tournaments.jsx', 'resources/js/teams.jsx', 'resources/js/players.jsx', 'resources/js/create-team.jsx'],
             refresh: true,
         }),
         tailwindcss(),

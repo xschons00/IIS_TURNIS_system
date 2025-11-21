@@ -17,3 +17,7 @@ Route::get('/teams', function () {
 Route::get('/players', function () {
     return view('players');
 });
+
+Route::get('/teams/create', function () {
+    return view('create-team');
+});

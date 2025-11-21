@@ -148,12 +148,12 @@ function Sidebar() {
                 <div className="text-xl font-bold mb-4 pb-3 border-b-2 border-blue-200 text-blue-900">
                     ⚡ Rýchle akcie
                 </div>
-                <button className="w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors">
+                <a href="/tournaments/create" className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
                     + Vytvoriť turnaj
-                </button>
-                <button className="w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors">
+                </a>
+                <a href="/teams/create" className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
                     + Vytvoriť tím
-                </button>
+                </a>
                 <button className="w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer hover:bg-blue-50 rounded-lg transition-colors">
                     🔍 Hľadať hráčov
                 </button>
