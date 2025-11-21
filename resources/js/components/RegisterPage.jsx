@@ -5,6 +5,7 @@ import Footer from './Footer';
 
 function RegisterPage() {
     const [formData, setFormData] = useState({
+        userName: '',
         firstName: '',
         lastName: '',
         email: '',
@@ -26,7 +27,7 @@ function RegisterPage() {
         e.preventDefault();
 
         // Validation
-        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.password.trim()) {
+        if (!formData.userName.trim() || !formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.password.trim()) {
             setError('Všetky polia sú povinné');
             return;
         }
@@ -51,6 +52,7 @@ function RegisterPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    user_name: formData.userName.trim(),
                     first_name: formData.firstName.trim(),
                     last_name: formData.lastName.trim(),
                     email: formData.email.trim(),
@@ -126,6 +128,23 @@ function RegisterPage() {
                             <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-blue-200">
                                 <div className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-300">
                                     👤 Osobné údaje
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                        Používateľské meno <span className="text-red-600">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="userName"
+                                        value={formData.userName}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
+                                        placeholder="napr. jan.novak"
+                                        autoComplete="username"
+                                        disabled={loading || success}
+                                        required
+                                    />
                                 </div>
 
                                 <div className="mb-4">

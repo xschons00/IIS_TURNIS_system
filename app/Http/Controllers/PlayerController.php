@@ -23,7 +23,17 @@ class PlayerController extends Controller
 
     public function SavePlayer(Request $request)
     {
-        return User::create($request->all());
+        $validated = $request->validate([
+            'user_name' => 'required|string|max:255|unique:users,user_name',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $user = User::create($validated);
+
+        return response()->json($user, 201);
     }
 
     /**
