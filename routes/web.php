@@ -37,3 +37,7 @@ Route::get('/register', function () {
 Route::get('/players/{id}', function ($id) {
     return view('player-profile');
 });
+
+Route::get('/tournaments/{id}', function ($id) {
+    return view('tournament-detail');
+});

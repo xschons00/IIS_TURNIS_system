@@ -28,9 +28,12 @@ function TournamentCard({ tournament }) {
                 <span className="text-blue-700 font-medium">
                     Prihlásených: {tournament.registered}/{tournament.maxParticipants}
                 </span>
-                <button className="px-4 py-2 bg-blue-600 text-white font-semibold cursor-pointer hover:bg-blue-700 rounded-lg transition-colors">
+                <a
+                    href={`/tournaments/${tournament.id}`}
+                    className="px-4 py-2 bg-blue-600 text-white font-semibold cursor-pointer hover:bg-blue-700 rounded-lg transition-colors"
+                >
                     Detail
-                </button>
+                </a>
             </div>
         </div>
     );
