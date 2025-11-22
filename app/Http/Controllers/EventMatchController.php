@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Event;
 use App\Models\EventMatch;
 use Illuminate\Validation\Rule;
-use App\Http\Controllers\ParicipantsController;
+use App\Http\Controllers\ParticipantsController;
 
 class EventMatchController extends Controller
 {
@@ -32,7 +32,7 @@ class EventMatchController extends Controller
     // helper to create empty matches for an event
     private function CreateEmptyMatches(Event $event): bool
     {
-        $particimants = PaticipantsController::_GetParticipantCount($event);
+        $particimants = ParticipantsController::_GetParticipantCount($event);
         
         $allowedPlayerCounts = array(2, 4, 8, 16, 32);
         if (in_array($particimants, $allowedPlayerCounts, false)) { // must be even number and at least 2

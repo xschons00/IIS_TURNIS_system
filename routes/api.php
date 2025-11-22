@@ -45,6 +45,9 @@ Route::get('events', [EventController::class, 'GetAllEvents']);
 Route::post('events', [EventController::class, 'SaveEvent']);
 Route::get('events/{id}', [EventController::class, 'GetEvent']);
 
+//event matches
+Route::get('matches/{id}', [EventMatchController::class, 'GetEventMatch']);
+Route::get('events/{id}/matches', [EventMatchController::class, 'GetAllEventMatches']);
 
 // Participants
 Route::get('events/{id}/participants', [ParticipantsController::class, 'GetParticipants']);
@@ -72,9 +75,7 @@ Route::middleware([isTeamLeader::class])->group(function () {
 Route::middleware([isEventLeader::class])->group(function () {
     Route::put('events/{id}', [EventController::class, 'UpdateEvent']);
     Route::delete('events/{id}', [EventController::class, 'DeleteEvent']);
-    //event matches
-    Route::get('events/{id}/matches', [EventMatchController::class, 'GetAllEventMatches']);
-    Route::get('matches/{id}', [EventMatchController::class, 'GetEventMatch']);
+    //event matches prtected routes
     Route::put('matches/{id}', [EventMatchController::class, 'UpdateEventMatch']);
     Route::delete('matches/{id}', [EventMatchController::class, 'DeleteEventMatch']);
     Route::put('events/{id}/matches/generate', [EventMatchController::class, 'GenerateEventMatches']);

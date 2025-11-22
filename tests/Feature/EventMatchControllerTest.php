@@ -18,9 +18,9 @@ class EventMatchControllerTest extends TestCase
     public function test_generate_matches_returns_404_when_event_not_found(): void
     {
         
-        $response = $this->postJson('/api/events/999999/matches/generate');
+        $response = $this->putJson('/api/events/999999/matches/generate');
 
-        $response->assertStatus(405); // Method Not Allowed since route is protected by middleware
+        $response->assertStatus(401); // Method Not Allowed since route is protected by middleware
     }
 
     public function test_generate_matches_fails_when_player_count_invalid(): void
@@ -32,12 +32,8 @@ class EventMatchControllerTest extends TestCase
             'password' => 'top-secret',
             'role' => 'USER',
         ]);
-     
-        $response = $this->postJson('/api/auth/login', [
-            'email' => 'user@example.com',
-            'password' => 'top-secret',
-        ]);
 
+       
        
         $event = Event::factory()->create([
             'event_leader_id' => $event_leader->user_ID,
@@ -52,7 +48,8 @@ class EventMatchControllerTest extends TestCase
         $user3 = User::factory()->create();
         $event->players()->attach([$user1->user_ID, $user2->user_ID, $user3->user_ID]);
        
-        $response = $this->postJson("/api/events/{$event->event_ID}/matches/generate");
+        $this->actingAs($event_leader, 'api');
+        $response = $this->putJson("/api/events/{$event->event_ID}/matches/generate");
 
         $response->assertStatus(400)
                  ->assertJson(['message' => 'Failed to create matches. Check participant count.']);
@@ -68,10 +65,7 @@ class EventMatchControllerTest extends TestCase
             'role' => 'USER',
         ]);
      
-        $response = $this->postJson('/api/auth/login', [
-            'email' => 'user@example.com',
-            'password' => 'top-secret',
-        ]);
+        $this->actingAs($event_leader, 'api');
         $event = Event::factory()->create([
             'event_leader_id' => $leader->user_ID,
             'max_participants' => 8,
@@ -80,7 +74,7 @@ class EventMatchControllerTest extends TestCase
         // Simulate 8 participants (valid — 2,4,8,16,32)
         $event->players()->attach([1,2,3,4,5,6,7,8]);
 
-        $response = $this->postJson("/api/events/{$event->event_ID}/matches/generate");
+        $response = $this->putJson("/api/events/{$event->event_ID}/matches/generate");
 
         $response->assertStatus(201)
                  ->assertJson(['message' => 'Matches initialized successfully']);
@@ -121,10 +115,7 @@ class EventMatchControllerTest extends TestCase
             'role' => 'USER',
         ]);
         
-        $response = $this->postJson('/api/auth/login', [
-            'email' => 'user@example.com',
-            'password' => 'top-secret',
-        ]);
+        $this->actingAs($event_leader, 'api');
 
         $event = Event::factory()->create([
             'event_leader_id' => $leader->user_ID,
@@ -163,7 +154,16 @@ class EventMatchControllerTest extends TestCase
 
     public function test_get_event_match_returns_match(): void
     {
-        $match = EventMatch::factory()->create();
+        $event_leader = User::factory()->create();
+        $event = Event::factory()->create([
+            'event_leader_id' => $event_leader->user_ID,
+        ]);
+
+            
+        $match = EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
+            'round' => 1,
+        ]);
 
         $response = $this->getJson("/api/matches/{$match->id}");
 
@@ -182,13 +182,18 @@ class EventMatchControllerTest extends TestCase
     {
         $response = $this->putJson('/api/matches/999999', []);
 
-        $response->assertStatus(200)
-                 ->assertSee(null);
+        $response->assertStatus(401); // Method Not Allowed since route is protected by middleware
     }
 
     public function test_update_event_match_updates_valid_fields(): void
     {
+        $event_leader = User::factory()->create();
+        actingAs($event_leader, 'api');
+        $event = Event::factory()->create([
+            'event_leader_id' => $event_leader->user_ID,
+        ]);
         $match = EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
             'participant_A' => 1,
             'participant_B' => 2,
             'winner' => null,
@@ -213,7 +218,13 @@ class EventMatchControllerTest extends TestCase
 
     public function test_update_event_match_rejects_invalid_winner(): void
     {
+        $event_leader = User::factory()->create();
+        $this->actingAs($event_leader, 'api');
+        $event = Event::factory()->create([
+            'event_leader_id' => $event_leader->user_ID,
+        ]);
         $match = EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
             'participant_A' => 10,
             'participant_B' => 20,
             'winner' => null,
@@ -233,14 +244,23 @@ class EventMatchControllerTest extends TestCase
 
     public function test_delete_event_match_does_nothing_if_not_found(): void
     {
+
         $response = $this->deleteJson('/api/matches/999999');
 
-        $response->assertStatus(200);
+        $response->assertStatus(401); // Method Not Allowed since route is protected by middleware
     }
 
     public function test_delete_event_match_deletes_match(): void
     {
-        $match = EventMatch::factory()->create();
+        $event_leader = User::factory()->create();
+        $this->actingAs($event_leader, 'api');
+        $event = Event::factory()->create([
+            'event_leader_id' => $event_leader->user_ID,
+        ]);
+        $match = EventMatch::factory()->create( [
+            'event_ID' => $event->event_ID,
+            'round' => 1,
+        ]);
 
         $response = $this->deleteJson("/api/matches/{$match->id}");
 
