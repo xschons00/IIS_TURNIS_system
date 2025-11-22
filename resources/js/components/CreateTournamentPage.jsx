@@ -38,7 +38,14 @@ function CreateTournamentPage() {
             setLoading(true);
             setError(null);
 
-            const response = await apiFetch('/api/tournaments', {
+            // Get logged in user
+            const storedUser = localStorage.getItem('logged_in_user');
+            if (!storedUser) {
+                throw new Error('Musíte byť prihlásený na vytvorenie turnaja');
+            }
+            const user = JSON.parse(storedUser);
+
+            const response = await apiFetch('/api/events', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,7 +65,8 @@ function CreateTournamentPage() {
                     entry_fee: entryFee.trim() || null,
                     prize: prize.trim() || null,
                     contact_email: contactEmail.trim() || null,
-                    contact_phone: contactPhone.trim() || null
+                    contact_phone: contactPhone.trim() || null,
+                    event_leader_id: user.user_ID
                 })
             });
 

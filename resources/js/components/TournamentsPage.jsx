@@ -61,10 +61,20 @@ function TournamentsPage() {
 
                 {/* Page Header */}
                 <div className="bg-gradient-to-br from-blue-50 to-cyan-50 py-12 px-6 border-b border-blue-200">
-                    <h1 className="text-4xl font-bold text-blue-900 mb-3">📋 Všetky turnaje</h1>
-                    <p className="text-blue-700 text-lg">
-                        Prehľad všetkých dostupných turnajov. Vyberte si turnaj a zaregistrujte sa!
-                    </p>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h1 className="text-4xl font-bold text-blue-900 mb-3">📋 Všetky turnaje</h1>
+                            <p className="text-blue-700 text-lg">
+                                Prehľad všetkých dostupných turnajov. Vyberte si turnaj a zaregistrujte sa!
+                            </p>
+                        </div>
+                        <a
+                            href="/create-tournament"
+                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-semibold rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all shadow-md whitespace-nowrap"
+                        >
+                            ➕ Vytvoriť turnaj
+                        </a>
+                    </div>
                 </div>
 
                 {/* Filter Tabs */}

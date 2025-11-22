@@ -40,6 +40,13 @@ function CreateTeamPage() {
             setLoading(true);
             setError(null);
 
+            // Get logged in user
+            const storedUser = localStorage.getItem('logged_in_user');
+            if (!storedUser) {
+                throw new Error('Musíte byť prihlásený na vytvorenie týmu');
+            }
+            const user = JSON.parse(storedUser);
+
             const response = await apiFetch('/api/teams', {
                 method: 'POST',
                 headers: {
@@ -47,10 +54,8 @@ function CreateTeamPage() {
                 },
                 body: JSON.stringify({
                     team_name: teamName.trim(),
-                    ranking: 0, // Default ranking for new teams
-                    description: description.trim() || null,
-                    members: members,
-                    contact_email: contactEmail.trim() || null
+                    ranking: 0,
+                    team_leader_id: user.user_ID
                 })
             });
 
