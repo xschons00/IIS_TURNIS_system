@@ -68,6 +68,7 @@ Route::middleware([isTeamLeader::class])->group(function () {
     Route::put('teams/{id}', [TeamController::class, 'update']);
     Route::delete('teams/{id}', [TeamController::class, 'DeleteTeam']);
 });
+
 Route::middleware([isEventLeader::class])->group(function () {
     Route::put('events/{id}', [EventController::class, 'UpdateEvent']);
     Route::delete('events/{id}', [EventController::class, 'DeleteEvent']);
@@ -76,7 +77,7 @@ Route::middleware([isEventLeader::class])->group(function () {
     Route::get('matches/{id}', [EventMatchController::class, 'GetEventMatch']);
     Route::put('matches/{id}', [EventMatchController::class, 'UpdateEventMatch']);
     Route::delete('matches/{id}', [EventMatchController::class, 'DeleteEventMatch']);
-    Route::post('events/{id}/matches/generate', [EventMatchController::class, 'GenerateEventMatches']);
+    Route::put('events/{id}/matches/generate', [EventMatchController::class, 'GenerateEventMatches']);
 });
 
 // Filter routes

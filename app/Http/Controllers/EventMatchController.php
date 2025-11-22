@@ -32,8 +32,8 @@ class EventMatchController extends Controller
     // helper to create empty matches for an event
     private function CreateEmptyMatches(Event $event): bool
     {
-        $particimants = _GetParticipantCount($event);
-
+        $particimants = PaticipantsController::_GetParticipantCount($event);
+        
         $allowedPlayerCounts = array(2, 4, 8, 16, 32);
         if (in_array($particimants, $allowedPlayerCounts, false)) { // must be even number and at least 2
             return false;

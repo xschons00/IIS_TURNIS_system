@@ -77,7 +77,7 @@ class ParticipantsController extends Controller
 
         $type = strtoupper($event->event_type ?? '');
 
-        $count = $this->_GetParticipantCount($event);
+        $count = _GetParticipantCount($event);
 
         return response()->json([
             'event_id' => $event->event_ID,
@@ -87,7 +87,7 @@ class ParticipantsController extends Controller
     }
 
     //helper functions to get participant count
-    private function _GetParticipantCount(Event $event): int
+    public static function _GetParticipantCount(Event $event): int
     {
         $type = strtoupper($event->event_type ?? '');
 
