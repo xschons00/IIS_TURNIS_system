@@ -9,7 +9,7 @@ function CreateTournamentPage() {
     const [tournamentName, setTournamentName] = useState('');
     const [sport, setSport] = useState('');
     const [description, setDescription] = useState('');
-    const [participationType, setParticipationType] = useState('individual');
+    const [participationType, setParticipationType] = useState('SOLO');
     const [maxParticipants, setMaxParticipants] = useState('');
     const [teamSize, setTeamSize] = useState('');
     const [gameSystem, setGameSystem] = useState('knockout');
@@ -29,8 +29,20 @@ function CreateTournamentPage() {
         e.preventDefault();
 
         // Validation
-        if (!tournamentName.trim() || !sport || !maxParticipants || !eventDate) {
-            setError('Názov turnaja, šport/hra, maximálny počet účastníkov a dátum konania sú povinné');
+        if (!tournamentName.trim() || !sport || !maxParticipants || !eventDate || !location.trim()) {
+            setError('Názov, šport, miesto, maximálny počet účastníkov a dátum konania sú povinné');
+            return;
+        }
+
+        const maxParticipantsNumber = parseInt(maxParticipants, 10);
+
+        if (Number.isNaN(maxParticipantsNumber)) {
+            setError('Zadajte platný počet účastníkov');
+            return;
+        }
+
+        if (![4, 8, 16, 32].includes(maxParticipantsNumber)) {
+            setError('Maximálny počet účastníkov musí byť 4, 8, 16 alebo 32');
             return;
         }
 
@@ -49,24 +61,16 @@ function CreateTournamentPage() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({
                     event_name: tournamentName.trim(),
-                    sport: sport,
                     description: description.trim() || null,
-                    participation_type: participationType,
-                    max_participants: parseInt(maxParticipants),
-                    team_size: teamSize ? parseInt(teamSize) : null,
-                    game_system: gameSystem,
                     event_date: eventDate,
-                    start_time: startTime || null,
-                    location: location.trim() || null,
-                    registration_deadline: registrationDeadline || null,
-                    entry_fee: entryFee.trim() || null,
-                    prize: prize.trim() || null,
-                    contact_email: contactEmail.trim() || null,
-                    contact_phone: contactPhone.trim() || null,
-                    event_leader_id: user.user_ID
+                    location: location.trim(),
+                    event_type: participationType,
+                    max_participants: maxParticipantsNumber,
+                    event_leader_id: user.user_ID,
                 })
             });
 
@@ -203,24 +207,24 @@ function CreateTournamentPage() {
                                     Typ účasti <span className="text-red-600">*</span>
                                 </label>
                                 <div className="flex gap-4">
-                                    <label className={`flex-1 flex items-center gap-3 px-4 py-3 border-2 rounded-lg cursor-pointer transition-all ${participationType === 'individual' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'}`}>
+                                    <label className={`flex-1 flex items-center gap-3 px-4 py-3 border-2 rounded-lg cursor-pointer transition-all ${participationType === 'SOLO' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'}`}>
                                         <input
                                             type="radio"
                                             name="participationType"
-                                            value="individual"
-                                            checked={participationType === 'individual'}
+                                            value="SOLO"
+                                            checked={participationType === 'SOLO'}
                                             onChange={(e) => setParticipationType(e.target.value)}
                                             disabled={loading || success}
                                             className="w-5 h-5"
                                         />
                                         <span className="text-gray-900 font-semibold">👤 Jednotlivci</span>
                                     </label>
-                                    <label className={`flex-1 flex items-center gap-3 px-4 py-3 border-2 rounded-lg cursor-pointer transition-all ${participationType === 'team' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'}`}>
+                                    <label className={`flex-1 flex items-center gap-3 px-4 py-3 border-2 rounded-lg cursor-pointer transition-all ${participationType === 'TEAM' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'}`}>
                                         <input
                                             type="radio"
                                             name="participationType"
-                                            value="team"
-                                            checked={participationType === 'team'}
+                                            value="TEAM"
+                                            checked={participationType === 'TEAM'}
                                             onChange={(e) => setParticipationType(e.target.value)}
                                             disabled={loading || success}
                                             className="w-5 h-5"
@@ -241,7 +245,7 @@ function CreateTournamentPage() {
                                         onChange={(e) => setMaxParticipants(e.target.value)}
                                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
                                         placeholder="napr. 16"
-                                        min="2"
+                                        min="4"
                                         disabled={loading || success}
                                         required
                                     />
@@ -316,7 +320,7 @@ function CreateTournamentPage() {
 
                             <div className="mb-4">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Miesto konania
+                                    Miesto konania <span className="text-red-600">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -325,6 +329,7 @@ function CreateTournamentPage() {
                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
                                     placeholder="napr. Aula A112, FIT VUT"
                                     disabled={loading || success}
+                                    required
                                 />
                             </div>
 

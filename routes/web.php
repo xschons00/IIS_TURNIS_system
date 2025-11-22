@@ -26,6 +26,10 @@ Route::get('/tournaments/create', function () {
     return view('create-tournament');
 });
 
+Route::get('/create-tournament', function () {
+    return view('create-tournament');
+});
+
 Route::get('/login', function () {
     return view('login');
 });
