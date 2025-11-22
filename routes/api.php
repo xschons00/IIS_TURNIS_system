@@ -47,6 +47,8 @@ Route::get('events/{id}', [EventController::class, 'GetEvent']);
 // Participants
 Route::get('events/{id}/participants', [ParticipantsController::class, 'GetParticipants']);
 Route::get('events/{id}/participants/count', [ParticipantsController::class, 'GetParticipantCount']);
+Route::post('events/{id}/participants', [ParticipantsController::class, 'AddParticipant']);
+Route::delete('events/{id}/participants', [ParticipantsController::class, 'RemoveParticipant']);
 
 Route::get('statistics', [StatisticsController::class, 'index']);
 

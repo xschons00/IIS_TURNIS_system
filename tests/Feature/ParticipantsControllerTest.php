@@ -98,4 +98,215 @@ class ParticipantsControllerTest extends TestCase
         $response->assertStatus(404)
                  ->assertJson(['message' => 'Event not found']);
     }
+
+    public function test_requires_authentication_to_add_participant(): void
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(401)
+                 ->assertJson(['message' => 'Unauthenticated']);
+    }
+
+    public function test_authenticated_user_can_join_solo_event(): void
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'ok']);
+
+        $this->assertDatabaseHas('player_participants', [
+            'event_ID' => $event->event_ID,
+            'user_ID' => $user->user_ID,
+        ]);
+    }
+
+    public function test_team_leader_can_register_team_for_team_event(): void
+    {
+        $leader = User::factory()->create();
+        $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
+        $event = Event::factory()->create(['event_type' => 'TEAM']);
+
+        $this->actingAs($leader);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'ok']);
+
+        $this->assertDatabaseHas('team_participants', [
+            'event_ID' => $event->event_ID,
+            'team_ID' => $team->team_ID,
+        ]);
+    }
+
+    public function test_returns_404_when_leader_has_no_team_for_team_event(): void
+    {
+        $leader = User::factory()->create();
+        $event = Event::factory()->create(['event_type' => 'TEAM']);
+
+        $this->actingAs($leader);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(404)
+                 ->assertJson(['message' => 'Team not found']);
+
+        $this->assertDatabaseMissing('team_participants', [
+            'event_ID' => $event->event_ID,
+        ]);
+    }
+
+    public function test_player_cannot_join_solo_event_twice(): void
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+        $user = User::factory()->create();
+
+        $event->players()->attach($user->user_ID);
+
+        $this->actingAs($user);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(409)
+                 ->assertJson(['message' => 'Player already registered']);
+    }
+
+    public function test_player_cannot_join_full_solo_event(): void
+    {
+        $event = Event::factory()->create([
+            'event_type' => 'SOLO',
+            'max_participants' => 1,
+        ]);
+
+        $existingParticipant = User::factory()->create();
+        $event->players()->attach($existingParticipant->user_ID);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(409)
+                 ->assertJson(['message' => 'Event is full']);
+    }
+
+    public function test_team_cannot_join_twice(): void
+    {
+        $leader = User::factory()->create();
+        $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
+        $event = Event::factory()->create(['event_type' => 'TEAM']);
+
+        $event->teams()->attach($team->team_ID);
+
+        $this->actingAs($leader);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(409)
+                 ->assertJson(['message' => 'Team already registered']);
+    }
+
+    public function test_team_cannot_join_full_event(): void
+    {
+        $event = Event::factory()->create([
+            'event_type' => 'TEAM',
+            'max_participants' => 1,
+        ]);
+
+        $existingTeam = Team::factory()->create();
+        $event->teams()->attach($existingTeam->team_ID);
+
+        $leader = User::factory()->create();
+        $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
+        $this->actingAs($leader);
+
+        $response = $this->postJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(409)
+                 ->assertJson(['message' => 'Event is full']);
+    }
+
+    public function test_requires_authentication_to_remove_participant(): void
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+
+        $response = $this->deleteJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(401)
+                 ->assertJson(['message' => 'Unauthenticated']);
+    }
+
+    public function test_player_can_leave_solo_event(): void
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+        $user = User::factory()->create();
+        $event->players()->attach($user->user_ID);
+
+        $this->actingAs($user);
+
+        $response = $this->deleteJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'ok']);
+
+        $this->assertDatabaseMissing('player_participants', [
+            'event_ID' => $event->event_ID,
+            'user_ID' => $user->user_ID,
+        ]);
+    }
+
+    public function test_player_cannot_leave_if_not_registered(): void
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $response = $this->deleteJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(409)
+                 ->assertJson(['message' => 'Player not registered']);
+    }
+
+    public function test_team_leader_can_remove_team_from_event(): void
+    {
+        $leader = User::factory()->create();
+        $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
+        $event = Event::factory()->create(['event_type' => 'TEAM']);
+
+        $event->teams()->attach($team->team_ID);
+
+        $this->actingAs($leader);
+
+        $response = $this->deleteJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'ok']);
+
+        $this->assertDatabaseMissing('team_participants', [
+            'event_ID' => $event->event_ID,
+            'team_ID' => $team->team_ID,
+        ]);
+    }
+
+    public function test_team_cannot_leave_if_not_registered(): void
+    {
+        $leader = User::factory()->create();
+        $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
+        $event = Event::factory()->create(['event_type' => 'TEAM']);
+
+        $this->actingAs($leader);
+
+        $response = $this->deleteJson("/api/events/{$event->event_ID}/participants");
+
+        $response->assertStatus(409)
+                 ->assertJson(['message' => 'Team not registered']);
+    }
 }
