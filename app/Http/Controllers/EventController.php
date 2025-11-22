@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Event;
 use App\Models\EventMatch;
 use Illuminate\Validation\Rule;
+use App\Http\Controllers\ParicipantsController;
 
 class EventController extends Controller
 {
@@ -38,7 +39,7 @@ class EventController extends Controller
             'max:32',
             function ($attribute, $value, $fail) {
                 // Check power of 2: 4, 8, 16, 32
-                if (!in_array($value, [4, 8, 16, 32], true)) {
+                if (!in_array($value, [2, 4, 8, 16, 32], true)) {
                     $fail('The '.$attribute.' must be one of: 4, 8, 16, 32.');
                 }
             }
@@ -48,26 +49,6 @@ class EventController extends Controller
     $validated['event_state'] = 'NEW';
 
     return Event::create($validated);
-    }
-
-    // helper to create empty matches for an event
-    private function CreateEmptyMatches(Event $event): void
-    {
-        $maxParticipants = $event->max_participants;
-        $numMatches = $maxParticipants / 2; // Each match has 2 participants
-        for ($i = 0; $i < $numMatches; $i++) {
-            EventMatch::create([
-                'event_ID' => $event->event_ID,
-                'match_number' => $i + 1,
-                'player1_ID' => null,
-                'player2_ID' => null,
-                'team1_ID' => null,
-                'team2_ID' => null,
-                'winner_ID' => null,
-                'match_state' => 'PENDING',
-            ]);
-        }
-
     }
 
     /**

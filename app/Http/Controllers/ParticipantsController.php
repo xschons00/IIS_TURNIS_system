@@ -77,22 +77,27 @@ class ParticipantsController extends Controller
 
         $type = strtoupper($event->event_type ?? '');
 
-        if ($type === 'SOLO') {
-            $count = $event->players()->count();
-        } elseif ($type === 'TEAM') {
-            $count = $event->teams()->count();
-        } else {
-            return response()->json([
-                'message' => 'Unknown event type',
-                'event_type' => $event->event_type,
-            ], 400);
-        }
+        $count = $this->_GetParticipantCount($event);
 
         return response()->json([
             'event_id' => $event->event_ID,
             'event_type' => $type,
             'participants' => $count,
         ]);
+    }
+
+    //helper functions to get participant count
+    private function _GetParticipantCount(Event $event): int
+    {
+        $type = strtoupper($event->event_type ?? '');
+
+        if ($type === 'SOLO') {
+            return $event->players()->get()->count();
+        } elseif ($type === 'TEAM') {
+            return $event->teams()->get()->count();
+        } else {
+            return  0;
+        }
     }
 
     public function AddParticipant(Request $request, int $id): JsonResponse
