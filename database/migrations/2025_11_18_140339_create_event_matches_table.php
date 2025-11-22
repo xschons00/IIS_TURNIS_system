@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable("event_matches")){
+        $this->down(); // Drop the table if it exists to avoid conflicts
+
             Schema::create('event_matches', function (Blueprint $table) {
                 $table->unsignedBigInteger('event_ID');
-                $table->unsignedBigInteger('participant_A');
-                $table->unsignedBigInteger('participant_B');
+                $table->unsignedBigInteger('participant_A')->nullable();
+                $table->unsignedBigInteger('participant_B')->nullable();
                 $table->unsignedInteger('round')->notnull();
                 $table->dateTime('time');
                 $table->unsignedBigInteger('winner')->nullable();
@@ -27,7 +28,8 @@ return new class extends Migration
                 $table->foreign('participant_B')->references('user_ID')->on('users')->onDelete('cascade');
                 $table->foreign('winner')->references('user_ID')->on('users')->onDelete('set null');
             });
-        }
+        
+    
     }
 
     /**

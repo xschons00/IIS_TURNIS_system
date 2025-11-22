@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable("team_participants")){
+        $this->down(); // Drop the table if it exists to avoid conflicts
             Schema::create('team_participants', function (Blueprint $table) {
                 $table->unsignedBigInteger('event_ID');
                 $table->unsignedBigInteger('team_ID');
@@ -23,7 +23,7 @@ return new class extends Migration
                 $table->foreign('team_ID')->references('team_ID')->on('teams')->onDelete('cascade');
 
             });
-        }
+        
     }
 
     /**

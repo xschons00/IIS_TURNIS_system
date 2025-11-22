@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $this->down(); // Drop the table if it exists to avoid conflicts
         Schema::create('users', function (Blueprint $table) {
             $table->id('user_ID');
             $table->string('user_name');

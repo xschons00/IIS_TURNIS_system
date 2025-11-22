@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $this->down(); // Drop the table if it exists to avoid conflicts
         Schema::create('teams', function (Blueprint $table) {
             $table->id('team_ID');
             $table->bigInteger('team_leader_id')->unsigned();

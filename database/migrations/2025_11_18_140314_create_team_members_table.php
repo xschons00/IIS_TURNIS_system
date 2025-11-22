@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable('team_members')) {
+        $this->down(); // Drop the table if it exists to avoid conflicts
             Schema::create('team_members', function (Blueprint $table) {
                 $table->unsignedBigInteger('team_ID');
                 $table->unsignedBigInteger('user_ID');
@@ -21,7 +21,7 @@ return new class extends Migration
                 $table->foreign('team_ID')->references('team_ID')->on('teams')->onDelete('cascade');
                 $table->foreign('user_ID')->references('user_ID')->on('users')->onDelete('cascade');
             });
-        }
+        
     }
 
     /**

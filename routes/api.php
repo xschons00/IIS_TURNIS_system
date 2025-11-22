@@ -37,9 +37,9 @@ Route::get('teams/{id}/members/count', [TeamMembersController::class, 'GetTeamMe
  
 
 // events
-Route::get('events', [EventController::class, 'GetAllevents']);
-Route::post('events', [EventController::class, 'Saveevent']);
-Route::get('events/{id}', [EventController::class, 'Getevent']);
+Route::get('events', [EventController::class, 'GetAllEvents']);
+Route::post('events', [EventController::class, 'SaveEvent']);
+Route::get('events/{id}', [EventController::class, 'GetEvent']);
 
 // Participants
 Route::get('events/{id}/participants', [ParticipantsController::class, 'GetParticipants']);
@@ -62,8 +62,8 @@ Route::middleware([isTeamLeader::class])->group(function () {
     Route::delete('teams/{id}', [TeamController::class, 'DeleteTeam']);
 });
 Route::middleware([isEventLeader::class])->group(function () {
-    Route::put('events/{id}', [EventController::class, 'Updateevent']);
-    Route::delete('events/{id}', [EventController::class, 'Deleteevent']);
+    Route::put('events/{id}', [EventController::class, 'UpdateEvent']);
+    Route::delete('events/{id}', [EventController::class, 'DeleteEvent']);
 });
 
 // Filter routes
