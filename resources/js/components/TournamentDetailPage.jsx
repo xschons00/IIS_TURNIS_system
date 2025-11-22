@@ -11,6 +11,10 @@ function TournamentDetailPage() {
     const [tournament, setTournament] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [participants, setParticipants] = useState([]);
+    const [userTeams, setUserTeams] = useState([]);
+    const [showTeamPopup, setShowTeamPopup] = useState(false);
+    const [registering, setRegistering] = useState(false);
 
     useEffect(() => {
         const fetchTournament = async () => {
@@ -34,6 +38,104 @@ function TournamentDetailPage() {
         fetchTournament();
     }, [id]);
 
+    useEffect(() => {
+        const fetchParticipants = async () => {
+            if (!tournament) return;
+
+            try {
+                // TODO: Replace with actual API endpoint for participants
+                // const response = await apiFetch(`/api/events/${id}/participants`);
+                // const data = await response.json();
+                // setParticipants(data);
+                setParticipants([]);
+            } catch (err) {
+                console.error('Error fetching participants:', err);
+            }
+        };
+
+        const fetchUserTeams = async () => {
+            if (!tournament || tournament.event_type !== 'TEAM') return;
+
+            try {
+                const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
+                if (!loggedInUser.user_ID) return;
+
+                // TODO: Replace with actual API endpoint for user's teams
+                // const response = await apiFetch(`/api/users/${loggedInUser.user_ID}/teams`);
+                // const data = await response.json();
+                // setUserTeams(data);
+                setUserTeams([]);
+            } catch (err) {
+                console.error('Error fetching user teams:', err);
+            }
+        };
+
+        fetchParticipants();
+        fetchUserTeams();
+    }, [tournament, id]);
+
+    const participantsCount = participants.length;
+
+    const handleRegistration = async () => {
+        if (!tournament) return;
+
+        const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
+        if (!loggedInUser.user_ID) {
+            alert('Musíte byť prihlásený, aby ste sa mohli zaregistrovať na turnaj');
+            return;
+        }
+
+        if (tournament.event_type === 'SOLO') {
+            // Register immediately for solo tournament
+            try {
+                setRegistering(true);
+                // TODO: Replace with actual registration API endpoint
+                // const response = await apiFetch(`/api/events/${id}/register`, {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ user_id: loggedInUser.user_ID })
+                // });
+                // if (response.ok) {
+                //     alert('Úspešne ste sa zaregistrovali na turnaj!');
+                //     window.location.reload();
+                // }
+                alert('Registrácia na SOLO turnaj (TODO: implementovať API endpoint)');
+            } catch (err) {
+                console.error('Registration error:', err);
+                alert('Registrácia zlyhala');
+            } finally {
+                setRegistering(false);
+            }
+        } else {
+            // Show team selection popup for team tournament
+            setShowTeamPopup(true);
+        }
+    };
+
+    const handleTeamRegistration = async (teamId) => {
+        try {
+            setRegistering(true);
+            // TODO: Replace with actual registration API endpoint
+            // const response = await apiFetch(`/api/events/${id}/register`, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ team_id: teamId })
+            // });
+            // if (response.ok) {
+            //     alert('Úspešne ste zaregistrovali tím na turnaj!');
+            //     setShowTeamPopup(false);
+            //     window.location.reload();
+            // }
+            alert(`Registrácia tímu ${teamId} na TEAM turnaj (TODO: implementovať API endpoint)`);
+            setShowTeamPopup(false);
+        } catch (err) {
+            console.error('Registration error:', err);
+            alert('Registrácia zlyhala');
+        } finally {
+            setRegistering(false);
+        }
+    };
+
     const formatDate = (isoDate) => {
         if (!isoDate) return 'N/A';
         const date = new Date(isoDate);
@@ -47,6 +149,26 @@ function TournamentDetailPage() {
             return `${dateStr} ${time}`;
         }
         return dateStr;
+    };
+
+    const getStatusText = (status) => {
+        const statusMap = {
+            'NEW': 'NOVÝ',
+            'REGISTRATION': 'REGISTRÁCIA',
+            'ONGOING': 'PREBIEHA',
+            'FINISHED': 'UKONČENÝ'
+        };
+        return statusMap[status] || status;
+    };
+
+    const getStatusColor = (status) => {
+        const colorMap = {
+            'NEW': 'bg-yellow-50 border-yellow-600 text-yellow-900',
+            'REGISTRATION': 'bg-green-50 border-green-600 text-green-900',
+            'ONGOING': 'bg-blue-50 border-blue-600 text-blue-900',
+            'FINISHED': 'bg-gray-50 border-gray-600 text-gray-900'
+        };
+        return colorMap[status] || 'bg-white border-blue-600 text-blue-900';
     };
 
     if (loading) {
@@ -107,18 +229,17 @@ function TournamentDetailPage() {
 
                 {/* Tournament Header */}
                 <div className="bg-gradient-to-br from-blue-50 to-cyan-50 py-8 px-6 border-b-2 border-blue-200">
-                    <div className="flex justify-between items-start mb-6">
+                    <div className="flex justify-between items-start mb-4">
                         <div>
                             <h1 className="text-4xl font-bold text-blue-900 mb-2">{tournament.event_name}</h1>
-                            <p className="text-blue-700">{tournament.description || 'Popis turnaja nie je k dispozícii'}</p>
                         </div>
                         <div className="text-center">
-                            <div className="px-6 py-2 bg-white border-2 border-blue-600 rounded-lg font-bold text-blue-900 mb-3">
-                                REGISTRÁCIA OTVORENÁ
+                            <div className={`px-6 py-2 border-2 rounded-lg font-bold mb-3 ${getStatusColor(tournament.event_state)}`}>
+                                {getStatusText(tournament.event_state)}
                             </div>
                             <button
+                                onClick={handleRegistration}
                                 className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-semibold rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all shadow-md whitespace-nowrap"
-                                disabled
                             >
                                 ✓ Registrovať sa na turnaj
                             </button>
@@ -128,32 +249,20 @@ function TournamentDetailPage() {
                     {/* Meta Information */}
                     <div className="grid grid-cols-2 gap-x-8 gap-y-3 max-w-4xl">
                         <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">📅 Dátum:</span>
-                            <span className="font-bold text-blue-900">{formatDate(tournament.event_date)}</span>
+                            <span className="text-blue-600 min-w-[160px]">Vytvorené:</span>
+                            <span className="font-bold text-blue-900">{formatDate(tournament.created_at)}</span>
                         </div>
                         <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">👥 Typ:</span>
-                            <span className="font-bold text-blue-900">{tournament.participation_type === 'individual' ? 'Jednotlivci' : 'Tímy'}</span>
+                            <span className="text-blue-600 min-w-[160px]">Uzávierka prihlášok:</span>
+                            <span className="font-bold text-blue-900">{formatDate(tournament.registration_deadline)}</span>
                         </div>
                         <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">🎯 Kapacita:</span>
-                            <span className="font-bold text-blue-900">0/{tournament.max_participants} obsadených</span>
+                            <span className="text-blue-600 min-w-[160px]">Začiatok turnaja:</span>
+                            <span className="font-bold text-blue-900">{formatDateTime(tournament.event_date, tournament.start_time)}</span>
                         </div>
                         <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">⚙️ Systém:</span>
-                            <span className="font-bold text-blue-900">Vyraďovací (Pavúk)</span>
-                        </div>
-                        <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">📍 Miesto:</span>
-                            <span className="font-bold text-blue-900">{tournament.location || 'Neuvedené'}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">💰 Vstupný poplatok:</span>
-                            <span className="font-bold text-blue-900">{tournament.entry_fee || 'Zadarmo'}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">🏆 Výherná cena:</span>
-                            <span className="font-bold text-blue-900">{tournament.prize || 'Neuvedené'}</span>
+                            <span className="text-blue-600 min-w-[160px]">Kontakt:</span>
+                            <span className="font-bold text-blue-900">{tournament.contact_email || 'Neuvedené'}</span>
                         </div>
                     </div>
                 </div>
@@ -178,20 +287,32 @@ function TournamentDetailPage() {
                             </h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex justify-between py-2 border-b border-gray-200">
-                                    <span className="text-gray-600">Vytvorené</span>
-                                    <span className="font-bold text-blue-900">{formatDate(tournament.created_at)}</span>
+                                    <span className="text-gray-600">📅 Dátum</span>
+                                    <span className="font-bold text-blue-900">{formatDate(tournament.event_date)}</span>
                                 </div>
                                 <div className="flex justify-between py-2 border-b border-gray-200">
-                                    <span className="text-gray-600">Uzávierka prihlášok</span>
-                                    <span className="font-bold text-blue-900">{formatDate(tournament.registration_deadline)}</span>
+                                    <span className="text-gray-600">👥 Typ</span>
+                                    <span className="font-bold text-blue-900">{tournament.event_type === 'SOLO' ? 'Jednotlivci' : 'Tímy'}</span>
                                 </div>
                                 <div className="flex justify-between py-2 border-b border-gray-200">
-                                    <span className="text-gray-600">Začiatok turnaja</span>
-                                    <span className="font-bold text-blue-900">{formatDateTime(tournament.event_date, tournament.start_time)}</span>
+                                    <span className="text-gray-600">🎯 Kapacita</span>
+                                    <span className="font-bold text-blue-900">{participantsCount}/{tournament.max_participants} obsadených</span>
                                 </div>
                                 <div className="flex justify-between py-2 border-b border-gray-200">
-                                    <span className="text-gray-600">Kontakt</span>
-                                    <span className="font-bold text-blue-900">{tournament.contact_email || 'Neuvedené'}</span>
+                                    <span className="text-gray-600">⚙️ Systém</span>
+                                    <span className="font-bold text-blue-900">Vyraďovací (Pavúk)</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-gray-200">
+                                    <span className="text-gray-600">📍 Miesto</span>
+                                    <span className="font-bold text-blue-900">{tournament.location || 'Neuvedené'}</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-gray-200">
+                                    <span className="text-gray-600">💰 Vstupné</span>
+                                    <span className="font-bold text-blue-900">{tournament.entry_fee || 'Zadarmo'}</span>
+                                </div>
+                                <div className="flex justify-between py-2 border-b border-gray-200">
+                                    <span className="text-gray-600">🏆 Výherná cena</span>
+                                    <span className="font-bold text-blue-900">{tournament.prize || 'Neuvedené'}</span>
                                 </div>
                             </div>
                         </div>
@@ -212,18 +333,101 @@ function TournamentDetailPage() {
                     {/* Participants Section */}
                     <div className="bg-white rounded-lg shadow-lg border-2 border-blue-200 p-6">
                         <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
-                            👥 Prihlásení účastníci (0/{tournament.max_participants})
+                            👥 {tournament.event_type === 'SOLO' ? 'Prihlásení účastníci' : 'Prihlásené tímy'} ({participantsCount}/{tournament.max_participants})
                         </h2>
-                        <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
-                            <div className="text-gray-500 text-lg">
-                                Zatiaľ nie sú prihlásení žiadni účastníci
+                        {participants.length === 0 ? (
+                            <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
+                                <div className="text-gray-500 text-lg">
+                                    Zatiaľ nie sú prihlásení žiadni {tournament.event_type === 'SOLO' ? 'účastníci' : 'tímy'}
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {participants.map((participant, index) => (
+                                    <div key={index} className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
+                                        <div className="font-bold text-blue-900">
+                                            {tournament.event_type === 'SOLO'
+                                                ? `${participant.first_name} ${participant.last_name}`
+                                                : participant.team_name
+                                            }
+                                        </div>
+                                        {tournament.event_type === 'TEAM' && (
+                                            <div className="text-sm text-blue-600 mt-1">
+                                                {participant.member_count} členov
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <Footer />
             </div>
+
+            {/* Team Selection Popup */}
+            {showTeamPopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 border-b-2 border-blue-200">
+                            <h2 className="text-2xl font-bold text-blue-900">Vyberte tím</h2>
+                            <p className="text-blue-700 mt-2">Zvoľte tím, s ktorým sa chcete zaregistrovať na turnaj</p>
+                        </div>
+
+                        <div className="p-6">
+                            {userTeams.length === 0 ? (
+                                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-8 text-center">
+                                    <div className="text-yellow-700 text-lg mb-4">
+                                        Nie ste členom žiadneho tímu
+                                    </div>
+                                    <a
+                                        href="/teams/create"
+                                        className="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        Vytvoriť tím
+                                    </a>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {userTeams.map((team) => (
+                                        <div
+                                            key={team.team_ID}
+                                            className="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 transition-colors cursor-pointer"
+                                            onClick={() => handleTeamRegistration(team.team_ID)}
+                                        >
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <div className="font-bold text-blue-900 text-lg">{team.team_name}</div>
+                                                    <div className="text-sm text-blue-600 mt-1">
+                                                        {team.member_count || 0} členov
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                                                    disabled={registering}
+                                                >
+                                                    {registering ? 'Registrujem...' : 'Vybrať'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="bg-gray-50 p-4 border-t border-gray-200 flex justify-end">
+                            <button
+                                onClick={() => setShowTeamPopup(false)}
+                                className="px-6 py-2 bg-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-400 transition-colors"
+                                disabled={registering}
+                            >
+                                Zrušiť
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
