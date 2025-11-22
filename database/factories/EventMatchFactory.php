@@ -20,6 +20,7 @@ class EventMatchFactory extends Factory
             'event_ID' => Event::factory(),
             'participant_A' => User::factory(),
             'participant_B' => User::factory(),
+            'round' => fake()->numberBetween(1, 5),
             'time' => fake()->dateTimeBetween('-1 month', '+1 month'),
             // winner may be null or one of the participants; default null
             'winner' => null,

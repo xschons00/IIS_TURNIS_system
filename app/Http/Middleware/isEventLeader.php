@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Event;
+use App\Models\EventMatch;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Event;
 
 class isEventLeader
 {
@@ -21,12 +22,39 @@ class isEventLeader
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $event = Event::findOrFail($request->route('id'));
+        $resourceId = $request->route('id');
+
+        if ($this->isMatchRoute($request)) {
+            $match = EventMatch::find($resourceId);
+
+            if (! $match) {
+                return response()->json(['message' => 'Match not found'], 404);
+            }
+
+            $event = Event::find($match->event_ID);
+        } else {
+            $event = Event::find($resourceId);
+        }
+
+        if (! $event) {
+            return response()->json(['message' => 'Event not found'], 404);
+        }
 
         if ($user->role !== 'ADMIN' && $event->event_leader_id !== $user->user_ID) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
         return $next($request);
+    }
+
+    private function isMatchRoute(Request $request): bool
+    {
+        $route = $request->route();
+
+        if (! $route) {
+            return false;
+        }
+
+        return strpos($route->uri(), 'matches/') === 0;
     }
 }
