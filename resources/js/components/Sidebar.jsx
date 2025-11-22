@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function Sidebar() {
     const [stats, setStats] = useState([]);
@@ -13,8 +15,8 @@ function Sidebar() {
                 setLoading(true);
 
                 // Fetch statistics and players
-                const statsResponse = await fetch('http://localhost:8080/api/statistics');
-                const playersResponse = await fetch('http://localhost:8080/api/players');
+                const statsResponse = await apiFetch('/api/statistics');
+                const playersResponse = await apiFetch('/api/players');
 
                 if (!playersResponse.ok) {
                     throw new Error('Failed to fetch players data');
@@ -136,7 +138,7 @@ function Sidebar() {
                                 <span className="font-bold text-blue-900">{player.points}</span>
                             </div>
                         ))}
-                        <a href="/players" className="block w-full px-4 py-2 bg-blue-600 text-white font-semibold text-center cursor-pointer mt-3 hover:bg-blue-700 rounded-lg transition-colors">
+                        <a href={appUrl('/players')} className="block w-full px-4 py-2 bg-blue-600 text-white font-semibold text-center cursor-pointer mt-3 hover:bg-blue-700 rounded-lg transition-colors">
                             Rebríček
                         </a>
                     </>
@@ -148,10 +150,10 @@ function Sidebar() {
                 <div className="text-xl font-bold mb-4 pb-3 border-b-2 border-blue-200 text-blue-900">
                     ⚡ Rýchle akcie
                 </div>
-                <a href="/tournaments/create" className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
+                <a href={appUrl('/tournaments/create')} className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
                     + Vytvoriť turnaj
                 </a>
-                <a href="/teams/create" className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
+                <a href={appUrl('/teams/create')} className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
                     + Vytvoriť tím
                 </a>
                 <button className="w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer hover:bg-blue-50 rounded-lg transition-colors">

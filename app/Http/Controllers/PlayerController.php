@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PlayerController extends Controller
 {
@@ -50,12 +51,31 @@ class PlayerController extends Controller
     {
         $player = User::find($id);
 
-        if ($player) {
-            $player->update($request->all());
-            return $player;
+        if (!$player) {
+            return null;
         }
 
-        return null;
+        $validated = $request->validate([
+            'user_name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('users', 'user_name')->ignore($player->user_ID, 'user_ID'),
+            ],
+            'first_name' => ['sometimes', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'string', 'max:255'],
+            'email' => [
+                'sometimes',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($player->user_ID, 'user_ID'),
+            ],
+            'password' => ['sometimes', 'string', 'min:6'],
+        ]);
+
+        $player->update($validated);
+
+        return $player;
     }
 
     /**

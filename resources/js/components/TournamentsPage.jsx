@@ -3,6 +3,7 @@ import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import TournamentCard from './TournamentCard';
+import { apiFetch } from '../utils/api';
 
 function TournamentsPage() {
     const [tournaments, setTournaments] = useState([]);
@@ -14,7 +15,7 @@ function TournamentsPage() {
         const fetchTournaments = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/events');
+                const response = await apiFetch('/api/events');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch tournaments');

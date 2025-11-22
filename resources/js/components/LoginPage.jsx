@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function LoginPage() {
     const [email, setEmail] = useState('');
@@ -22,7 +24,7 @@ function LoginPage() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch('http://localhost:8080/api/auth/login', {
+            const response = await apiFetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -47,7 +49,7 @@ function LoginPage() {
             }
 
             // Redirect to home page
-            window.location.href = '/';
+            window.location.href = appUrl('/');
         } catch (err) {
             console.error('Error logging in:', err);
             setError(err.message);
@@ -140,7 +142,7 @@ function LoginPage() {
                             {/* Register Link */}
                             <div className="text-center text-sm text-gray-600">
                                 Nemáte účet?{' '}
-                                <a href="/register" className="text-blue-600 hover:text-blue-800 font-semibold">
+                                <a href={appUrl('/register')} className="text-blue-600 hover:text-blue-800 font-semibold">
                                     Zaregistrujte sa
                                 </a>
                             </div>
