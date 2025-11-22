@@ -33,3 +33,7 @@ Route::get('/login', function () {
 Route::get('/register', function () {
     return view('register');
 });
+
+Route::get('/players/{id}', function ($id) {
+    return view('player-profile');
+});

@@ -63,13 +63,13 @@ function Header() {
                                 <div className="text-sm text-gray-600">Prihlásený ako:</div>
                                 <div className="font-bold text-blue-900">{user.email}</div>
                             </div>
-                            <button
-                                onClick={() => alert('Player profile - zatiaľ neimplementované')}
-                                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors flex items-center gap-2"
+                            <a
+                                href={`/players/${user.user_ID}`}
+                                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors flex items-center gap-2 block no-underline"
                             >
                                 <span>👤</span>
                                 <span>Môj profil</span>
-                            </button>
+                            </a>
                             <button
                                 onClick={handleLogout}
                                 className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 border-t border-blue-100"

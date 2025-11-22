@@ -126,8 +126,7 @@ function PlayersPage() {
                                             <tr
                                                 key={player.user_ID}
                                                 onClick={() => {
-                                                    // TODO: Navigate to player profile page
-                                                    console.log('Clicked on player:', player.user_ID);
+                                                    window.location.href = `/players/${player.user_ID}`;
                                                 }}
                                                 className={`border-b border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer ${
                                                     index % 2 === 0 ? 'bg-white' : 'bg-gray-50'

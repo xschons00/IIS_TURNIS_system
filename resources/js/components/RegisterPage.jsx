@@ -8,6 +8,7 @@ function RegisterPage() {
         firstName: '',
         lastName: '',
         email: '',
+        faculty: '',
         password: '',
         confirmPassword: ''
     });
@@ -26,7 +27,7 @@ function RegisterPage() {
         e.preventDefault();
 
         // Validation
-        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.password.trim()) {
+        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.faculty || !formData.password.trim()) {
             setError('Všetky polia sú povinné');
             return;
         }
@@ -58,6 +59,7 @@ function RegisterPage() {
                     first_name: formData.firstName.trim(),
                     last_name: formData.lastName.trim(),
                     email: formData.email.trim(),
+                    faculty: formData.faculty,
                     password: formData.password
                 })
             });
@@ -164,6 +166,29 @@ function RegisterPage() {
                                         disabled={loading || success}
                                         required
                                     />
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                        Fakulta <span className="text-red-600">*</span>
+                                    </label>
+                                    <select
+                                        name="faculty"
+                                        value={formData.faculty}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
+                                        disabled={loading || success}
+                                        required
+                                    >
+                                        <option value="">-- Vyberte fakultu --</option>
+                                        <option value="ENGINEERING">Inžinierstvo (Engineering)</option>
+                                        <option value="CHEMISTRY">Chémia (Chemistry)</option>
+                                        <option value="COMPUTER_SCIENCE">Informatika (Computer Science)</option>
+                                        <option value="BUSINESS">Ekonómia (Business)</option>
+                                        <option value="ARTS">Umenie (Arts)</option>
+                                        <option value="MATHEMATICS">Matematika (Mathematics)</option>
+                                        <option value="PHYSICS">Fyzika (Physics)</option>
+                                    </select>
                                 </div>
                             </div>
 
