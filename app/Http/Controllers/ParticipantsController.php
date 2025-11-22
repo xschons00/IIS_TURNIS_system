@@ -72,7 +72,7 @@ class ParticipantsController extends Controller
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Match not found'], 404);
+            return response()->json(['message' => 'Event not found'], 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
