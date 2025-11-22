@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EventMatch extends Model
 {
+    use HasFactory;
+
     protected $table = 'event_matches';
-    public $primaryKey = null;
-    public $incrementing = false;
-    public $timestamps = false;
 
     protected $fillable = [
         'event_ID',

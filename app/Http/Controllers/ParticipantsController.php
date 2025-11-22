@@ -27,7 +27,7 @@ class ParticipantsController extends Controller
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return response()->json(['message' => 'Match not found'], 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
@@ -77,7 +77,7 @@ class ParticipantsController extends Controller
 
         $type = strtoupper($event->event_type ?? '');
 
-        $count = $this->_GetParticipantCount($event);
+        $count = self::_GetParticipantCount($event);
 
         return response()->json([
             'event_id' => $event->event_ID,
@@ -87,7 +87,7 @@ class ParticipantsController extends Controller
     }
 
     //helper functions to get participant count
-    private function _GetParticipantCount(Event $event): int
+    public static function _GetParticipantCount(Event $event): int
     {
         $type = strtoupper($event->event_type ?? '');
 
@@ -111,7 +111,7 @@ class ParticipantsController extends Controller
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return response()->json(['message' => 'Match not found'], 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
@@ -177,7 +177,7 @@ class ParticipantsController extends Controller
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return response()->json(['message' => 'Match not found'], 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
