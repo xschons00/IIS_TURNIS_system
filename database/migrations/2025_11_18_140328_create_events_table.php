@@ -10,6 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
+
+        $this->down(); // Drop the table if it exists to avoid conflicts
         Schema::create('events', function (Blueprint $table) {
             $table->id('event_ID');
             $table->string('event_name');

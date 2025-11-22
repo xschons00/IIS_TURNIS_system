@@ -13,7 +13,11 @@ class EventControllerTest extends TestCase
 
     public function test_index_returns_all_events(): void
     {
+        //create event leader
+        $leader = User::factory()->create();
+        
         Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
             'event_name' => 'Event One',
             'description' => 'First event',
             'event_date' => '2025-01-01',
@@ -24,6 +28,7 @@ class EventControllerTest extends TestCase
         ]);
 
         Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
             'event_name' => 'Event Two',
             'description' => 'Second event',
             'event_date' => '2025-01-02',
@@ -56,7 +61,7 @@ class EventControllerTest extends TestCase
             'event_leader_id' => $leader->user_ID,
         ];
 
-        $response = $this->postJson('/api/events', $payload);
+        $response = $this->postJson('/api/events/', $payload);
 
         $response->assertStatus(201);
 
@@ -69,7 +74,9 @@ class EventControllerTest extends TestCase
 
     public function test_show_returns_single_event(): void
     {
+        $leader = User::factory()->create();
         $event = Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
             'event_name' => 'Shown Event',
             'description' => 'To be shown',
             'event_date' => '2025-03-01',
@@ -88,7 +95,9 @@ class EventControllerTest extends TestCase
 
     public function test_update_modifies_existing_event(): void
     {
+        $leader = User::factory()->create();
         $event = Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
             'event_name' => 'Old Name',
             'description' => 'Old description',
             'event_date' => '2025-04-01',
@@ -116,7 +125,9 @@ class EventControllerTest extends TestCase
 
     public function test_destroy_deletes_event(): void
     {
+        $leader = User::factory()->create();
         $event = Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
             'event_name' => 'To Delete',
             'description' => 'To delete',
             'event_date' => '2025-05-01',
