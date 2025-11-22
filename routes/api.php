@@ -70,6 +70,9 @@ Route::middleware([isAdmin::class])->group(function () {
 Route::middleware([isTeamLeader::class])->group(function () {
     Route::put('teams/{id}', [TeamController::class, 'update']);
     Route::delete('teams/{id}', [TeamController::class, 'DeleteTeam']);
+    //team members protected routes
+    Route::post('teams/{id}/members', [TeamMembersController::class, 'AddTeamMember']);
+    Route::delete('teams/{id}/members', [TeamMembersController::class, 'RemoveTeamMember']);
 });
 
 Route::middleware([isEventLeader::class])->group(function () {
