@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function RegisterPage() {
     const [formData, setFormData] = useState({
@@ -48,7 +50,7 @@ function RegisterPage() {
             // Generate username from email (part before @)
             const userName = formData.email.trim().split('@')[0];
 
-            const response = await fetch('http://localhost:8080/api/players', {
+            const response = await apiFetch('/api/players', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -72,7 +74,7 @@ function RegisterPage() {
 
             // Redirect to login page after 2 seconds
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = appUrl('/login');
             }, 2000);
         } catch (err) {
             console.error('Error registering:', err);
@@ -247,7 +249,7 @@ function RegisterPage() {
                             {/* Login Link */}
                             <div className="text-center text-sm text-gray-600">
                                 Už máte účet?{' '}
-                                <a href="/login" className="text-blue-600 hover:text-blue-800 font-semibold">
+                                <a href={appUrl('/login')} className="text-blue-600 hover:text-blue-800 font-semibold">
                                     Prihláste sa
                                 </a>
                             </div>

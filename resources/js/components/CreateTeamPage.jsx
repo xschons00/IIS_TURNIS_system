@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function CreateTeamPage() {
     const [teamName, setTeamName] = useState('');
@@ -38,7 +40,7 @@ function CreateTeamPage() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch('http://localhost:8080/api/teams', {
+            const response = await apiFetch('/api/teams', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -62,7 +64,7 @@ function CreateTeamPage() {
 
             // Redirect to teams page after 2 seconds
             setTimeout(() => {
-                window.location.href = '/teams';
+                window.location.href = appUrl('/teams');
             }, 2000);
         } catch (err) {
             console.error('Error creating team:', err);
@@ -73,7 +75,7 @@ function CreateTeamPage() {
     };
 
     const handleCancel = () => {
-        window.location.href = '/teams';
+        window.location.href = appUrl('/teams');
     };
 
     return (
@@ -85,9 +87,9 @@ function CreateTeamPage() {
                 {/* Breadcrumb */}
                 <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
                     <div className="text-sm text-gray-600">
-                        <a href="/" className="hover:text-blue-600">Domov</a>
+                        <a href={appUrl('/')} className="hover:text-blue-600">Domov</a>
                         <span className="mx-2">›</span>
-                        <a href="/teams" className="hover:text-blue-600">Tímy</a>
+                        <a href={appUrl('/teams')} className="hover:text-blue-600">Tímy</a>
                         <span className="mx-2">›</span>
                         <span className="text-gray-900 font-semibold">Vytvoriť nový tím</span>
                     </div>

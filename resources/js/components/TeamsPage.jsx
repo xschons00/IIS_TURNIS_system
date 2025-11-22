@@ -3,6 +3,8 @@ import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import TeamCard from './TeamCard';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function TeamsPage() {
     const [teams, setTeams] = useState([]);
@@ -13,7 +15,7 @@ function TeamsPage() {
         const fetchTeams = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/teams');
+                const response = await apiFetch('/api/teams');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch teams');
@@ -59,7 +61,7 @@ function TeamsPage() {
                                 Prehľad všetkých registrovaných tímov. Pripojte sa k tímu alebo vytvorte vlastný!
                             </p>
                         </div>
-                        <a href="/teams/create" className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl inline-block">
+                        <a href={appUrl('/teams/create')} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl inline-block">
                             + Vytvoriť tím
                         </a>
                     </div>

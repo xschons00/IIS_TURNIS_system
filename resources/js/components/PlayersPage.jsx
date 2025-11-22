@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import { apiFetch } from '../utils/api';
 
 function PlayersPage() {
     const [players, setPlayers] = useState([]);
@@ -12,7 +13,7 @@ function PlayersPage() {
         const fetchPlayers = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/players');
+                const response = await apiFetch('/api/players');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch players');

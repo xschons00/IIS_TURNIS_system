@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TournamentCard from './TournamentCard';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function TournamentList() {
     const [tournaments, setTournaments] = useState([]);
@@ -22,7 +24,7 @@ function TournamentList() {
         const fetchTournaments = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/events');
+                const response = await apiFetch('/api/events');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch tournaments');
@@ -34,7 +36,7 @@ function TournamentList() {
                 const tournamentsWithCounts = await Promise.all(
                     data.map(async (event) => {
                         try {
-                            const countResponse = await fetch(`http://localhost:8080/api/events/${event.event_ID}/participants/count`);
+                            const countResponse = await apiFetch(`/api/events/${event.event_ID}/participants/count`);
                             if (countResponse.ok) {
                                 const countData = await countResponse.json();
                                 return {
@@ -118,7 +120,7 @@ function TournamentList() {
             )}
 
             {!loading && !error && (
-                <a href="/tournaments" className="block w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-center cursor-pointer mt-3 hover:from-blue-700 hover:to-cyan-600 rounded-lg shadow-md transition-all">
+                <a href={appUrl('/tournaments')} className="block w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-center cursor-pointer mt-3 hover:from-blue-700 hover:to-cyan-600 rounded-lg shadow-md transition-all">
                     Zobraziť všetky turnaje
                 </a>
             )}
