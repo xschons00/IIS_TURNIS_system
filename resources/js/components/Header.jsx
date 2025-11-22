@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function Header() {
     const [user, setUser] = useState(null);
@@ -24,7 +26,7 @@ function Header() {
         localStorage.removeItem('logged_in_user');
 
         // Call logout API (optional, for backend session cleanup)
-        fetch('http://localhost:8080/api/auth/logout', {
+        apiFetch('/api/auth/logout', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -35,7 +37,7 @@ function Header() {
         });
 
         // Redirect to home
-        window.location.href = '/';
+        window.location.href = appUrl('/');
     };
 
     return (
@@ -63,13 +65,13 @@ function Header() {
                                 <div className="text-sm text-gray-600">Prihlásený ako:</div>
                                 <div className="font-bold text-blue-900">{user.email}</div>
                             </div>
-                            <button
-                                onClick={() => alert('Player profile - zatiaľ neimplementované')}
-                                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors flex items-center gap-2"
+                            <a
+                                href={`/players/${user.user_ID}`}
+                                className="w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors flex items-center gap-2 block no-underline"
                             >
                                 <span>👤</span>
                                 <span>Môj profil</span>
-                            </button>
+                            </a>
                             <button
                                 onClick={handleLogout}
                                 className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 border-t border-blue-100"
@@ -83,10 +85,10 @@ function Header() {
             ) : (
                 // Not logged in view
                 <div className="flex gap-2.5">
-                    <a href="/login" className="px-4 py-2 border-2 border-white bg-white text-blue-600 font-semibold cursor-pointer hover:bg-blue-50 rounded-lg transition-colors">
+                    <a href={appUrl('/login')} className="px-4 py-2 border-2 border-white bg-white text-blue-600 font-semibold cursor-pointer hover:bg-blue-50 rounded-lg transition-colors">
                         Prihlásiť sa
                     </a>
-                    <a href="/register" className="px-4 py-2 border-2 border-white bg-transparent text-white font-semibold cursor-pointer hover:bg-white hover:text-blue-600 rounded-lg transition-colors">
+                    <a href={appUrl('/register')} className="px-4 py-2 border-2 border-white bg-transparent text-white font-semibold cursor-pointer hover:bg-white hover:text-blue-600 rounded-lg transition-colors">
                         Registrovať sa
                     </a>
                 </div>

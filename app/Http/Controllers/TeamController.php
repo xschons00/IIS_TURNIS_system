@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TeamController extends Controller
 {
@@ -25,7 +26,13 @@ class TeamController extends Controller
      */
     public function SaveTeam(Request $request)
     {
-        return Team::create($request->all());
+        $validated = $request->validate([
+            'team_name' => 'required|string|max:255|unique:teams,team_name',
+            'ranking' => 'nullable|integer|min:0',
+            'team_leader_id' => 'required|exists:users,user_ID',
+        ]);
+
+        return Team::create($validated);
     }
 
     /**
@@ -41,12 +48,24 @@ class TeamController extends Controller
     {
         $team = Team::find($id);
 
-        if ($team) {
-            $team->update($request->all());
-            return $team;
+        if (!$team) {
+            return null;
         }
 
-        return null;
+        $validated = $request->validate([
+            'team_name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('teams', 'team_name')->ignore($team->team_ID, 'team_ID'),
+            ],
+            'ranking' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'team_leader_id' => ['sometimes', 'exists:users,user_ID'],
+        ]);
+
+        $team->update($validated);
+
+        return $team;
     }
 
     /**

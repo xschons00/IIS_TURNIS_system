@@ -17,6 +17,10 @@ v php terminaly napis :<br>
 - ```php artisan view:clear``` <br>
 - ```php artisan migrate --graceful --ansi``` <br>
 - ```npm install```
+deploy : <br>
+- vsetko v public/ musi byt v WWW/ zlozke inac to nezapne
+- aj .htaccess musi byt v korenovom dire lebo inac to nepojde
+- 1. ```chmod -R o=rX,g= ~/WWW && chmod o=x ~```
 
 
 

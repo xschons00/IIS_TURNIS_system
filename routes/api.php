@@ -25,6 +25,9 @@ Route::get('players', [PlayerController::class, 'GetAllPlayers']);
 Route::post('players', [PlayerController::class, 'SavePlayer']);
 Route::get('players/{id}', [PlayerController::class, 'GetPlayer']);
 
+// Authenticated user routes (no middleware - auth check inside controller)
+Route::put('profile', [PlayerController::class, 'UpdateOwnProfile']);
+
 
 // Teams
 Route::get('teams', [TeamController::class, 'GetAllTeams']);

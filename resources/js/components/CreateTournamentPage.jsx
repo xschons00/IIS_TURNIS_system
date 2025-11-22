@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function CreateTournamentPage() {
     const [tournamentName, setTournamentName] = useState('');
@@ -36,7 +38,7 @@ function CreateTournamentPage() {
             setLoading(true);
             setError(null);
 
-            const response = await fetch('http://localhost:8080/api/tournaments', {
+            const response = await apiFetch('/api/tournaments', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,7 +72,7 @@ function CreateTournamentPage() {
 
             // Redirect to tournaments page after 2 seconds
             setTimeout(() => {
-                window.location.href = '/tournaments';
+                window.location.href = appUrl('/tournaments');
             }, 2000);
         } catch (err) {
             console.error('Error creating tournament:', err);
@@ -423,7 +425,7 @@ function CreateTournamentPage() {
                         <div className="flex gap-4 justify-end">
                             <button
                                 type="button"
-                                onClick={() => window.location.href = '/tournaments'}
+                                onClick={() => window.location.href = appUrl('/tournaments')}
                                 className="px-6 py-3 border-2 border-gray-400 bg-white text-gray-700 font-semibold rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={loading || success}
                             >
