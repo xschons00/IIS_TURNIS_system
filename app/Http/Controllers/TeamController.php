@@ -7,27 +7,31 @@ use App\Models\TeamMember;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 use Throwable;
 
 class TeamController 
 {
+    use ApiResponse;
+
     /**
      * Resource-style method: list all teams.
      */
-    public function index()
+    public function index(): JsonResponse
     {
         return $this->GetAllTeams();
     }
 
-    public function GetAllTeams()
+    public function GetAllTeams(): JsonResponse
     {
-        return Team::all();
+        return $this->respondWithMessage('Teams retrieved', Team::all());
     }
 
     /**
      * Resource-style method: store a new team.
      */
-    public function SaveTeam(Request $request)
+    public function SaveTeam(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'team_name' => 'required|string|max:255|unique:teams,team_name',
@@ -40,7 +44,7 @@ class TeamController
         // Resolve leader from payload or authenticated user
         $leaderId = $validated['team_leader_id'] ?? optional($request->user())->user_ID;
         if (! $leaderId) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return $this->respondWithMessage('Unauthenticated', null, 401);
         }
 
         // Always include the leader as a member
@@ -59,7 +63,7 @@ class TeamController
             // attach/sync members including leader
             $team->members()->sync($memberIds);
 
-            return $team;
+            return $this->respondWithMessage('Team created', $team, 201);
         });
     }
 
@@ -67,17 +71,23 @@ class TeamController
      * Resource-style method: show a single team.
      */
 
-    public function GetTeam(string $id)
+    public function GetTeam(string $id): JsonResponse
     {
-        return Team::find($id);
+        $team = Team::find($id);
+
+        if (! $team) {
+            return $this->respondWithMessage('Team not found', null, 404);
+        }
+
+        return $this->respondWithMessage('Team retrieved', $team);
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): JsonResponse
     {
         $team = Team::find($id);
 
         if (!$team) {
-            return null;
+            return $this->respondWithMessage('Team not found', null, 404);
         }
 
         $validated = $request->validate([
@@ -107,7 +117,7 @@ class TeamController
                 $team->members()->sync($memberIds);
             }
 
-            return $team;
+            return $this->respondWithMessage('Team updated', $team);
         });
     }
 
@@ -115,15 +125,15 @@ class TeamController
      * Resource-style method: delete a team.
      */
 
-    public function DeleteTeam(string $id)
+    public function DeleteTeam(string $id): JsonResponse
     {
         $team = Team::find($id);
 
         if ($team) {
             $team->delete();
-            return true;
+            return $this->respondWithMessage('Team deleted');
         }
 
-        return false;
+        return $this->respondWithMessage('Team not found', null, 404);
     }
 }

@@ -3,7 +3,7 @@ import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import { appUrl } from '../utils/url';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 
 function PlayerProfilePage() {
     // Get player ID from URL path
@@ -16,6 +16,21 @@ function PlayerProfilePage() {
     const [teams, setTeams] = useState([]);
     const [teamsLoading, setTeamsLoading] = useState(true);
     const [teamsError, setTeamsError] = useState(null);
+    const [stats, setStats] = useState({
+        totalPoints: 0,
+        tournaments: 0,
+        wins: 0,
+        rank: null,
+        matchesPlayed: 0,
+        finals: 0,
+        semifinals: 0,
+        goldMedals: 0,
+        silverMedals: 0,
+        bronzeMedals: 0
+    });
+    const [tournamentHistory, setTournamentHistory] = useState([]);
+    const [statsLoading, setStatsLoading] = useState(false);
+    const [statsError, setStatsError] = useState(null);
 
     // Edit profile modal state
     const [showEditModal, setShowEditModal] = useState(false);
@@ -39,16 +54,17 @@ function PlayerProfilePage() {
                     throw new Error('Hráč nenájdený');
                 }
 
-                const data = await response.json();
+                const { data } = await parseApiJson(response);
+                const playerData = data || {};
 
                 // Check if this is the logged-in user's profile
                 const storedUser = localStorage.getItem('logged_in_user');
                 if (storedUser) {
                     const loggedInUser = JSON.parse(storedUser);
-                    setIsOwnProfile(loggedInUser.user_ID === data.user_ID);
+                    setIsOwnProfile(loggedInUser.user_ID === playerData.user_ID);
                 }
 
-                setPlayer(data);
+                setPlayer(playerData);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching player profile:', err);
@@ -72,19 +88,20 @@ function PlayerProfilePage() {
                 if (!teamsResponse.ok) {
                     throw new Error('Nepodarilo sa načítať tímy');
                 }
-                const teamsData = await teamsResponse.json();
+                const { data: teamsData } = await parseApiJson(teamsResponse);
+                const normalizedTeams = Array.isArray(teamsData) ? teamsData : [];
 
                 const membershipChecks = await Promise.all(
-                    teamsData.map(async (team) => {
+                    normalizedTeams.map(async (team) => {
                         const membersResponse = await apiFetch(`/api/teams/${team.team_ID}/members`);
                         if (!membersResponse.ok) {
                             return null;
                         }
-                        const membersData = await membersResponse.json();
-                        const membersArray = Array.isArray(membersData)
-                            ? membersData
-                            : Array.isArray(membersData.members)
+                        const { data: membersData } = await parseApiJson(membersResponse);
+                        const membersArray = Array.isArray(membersData?.members)
                             ? membersData.members
+                            : Array.isArray(membersData)
+                            ? membersData
                             : [];
                         const isMember = membersArray.some((member) => member.user_ID === player.user_ID);
                         if (!isMember) return null;
@@ -126,6 +143,189 @@ function PlayerProfilePage() {
         const year = date.getFullYear();
         return `${day}. ${month}. ${year}`;
     };
+
+    // Load statistics and tournament history from API data
+    useEffect(() => {
+        if (!player?.user_ID) return;
+
+        let cancelled = false;
+
+        const loadPlayerStats = async () => {
+            setStatsLoading(true);
+            setStatsError(null);
+            setStats({
+                totalPoints: 0,
+                tournaments: 0,
+                wins: 0,
+                rank: null,
+                matchesPlayed: 0,
+                finals: 0,
+                semifinals: 0,
+                goldMedals: 0,
+                silverMedals: 0,
+                bronzeMedals: 0
+            });
+            setTournamentHistory([]);
+
+            try {
+                const [playersResponse, eventsResponse] = await Promise.all([
+                    apiFetch('/api/players'),
+                    apiFetch('/api/events')
+                ]);
+
+                const playersPayload = playersResponse.ok ? await parseApiJson(playersResponse) : { data: [] };
+                const eventsPayload = eventsResponse.ok ? await parseApiJson(eventsResponse) : { data: [] };
+
+                const playersList = Array.isArray(playersPayload.data) ? playersPayload.data : [];
+                const eventsList = Array.isArray(eventsPayload.data) ? eventsPayload.data : [];
+
+                const rankIndex = playersList
+                    .filter((p) => p.role === 'USER')
+                    .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
+                    .findIndex((p) => p.user_ID === player.user_ID);
+                const resolvedRank = rankIndex >= 0 ? rankIndex + 1 : null;
+
+                const playerTeamIds = teams.map((team) => team.team_ID);
+                let matchesPlayed = 0;
+                let wins = 0;
+                let finals = 0;
+                let semifinals = 0;
+                let goldMedals = 0;
+                let silverMedals = 0;
+                let bronzeMedals = 0;
+                let tournamentsPlayed = 0;
+                const history = [];
+
+                for (const event of eventsList) {
+                    const eventType = (event.event_type || '').toUpperCase();
+                    if (eventType !== 'SOLO' && eventType !== 'TEAM') {
+                        continue;
+                    }
+
+                    const candidateIds = eventType === 'SOLO' ? [player.user_ID] : playerTeamIds;
+                    if (candidateIds.length === 0) continue;
+
+                    const matchesResponse = await apiFetch(`/api/events/${event.event_ID}/matches`);
+                    if (!matchesResponse.ok) continue;
+
+                    const { data: matchesData } = await parseApiJson(matchesResponse);
+                    const matches = Array.isArray(matchesData?.matches) ? matchesData.matches : [];
+                    if (matches.length === 0) continue;
+
+                    const relevantMatches = matches.filter(
+                        (match) =>
+                            candidateIds.includes(match.participant_A) || candidateIds.includes(match.participant_B)
+                    );
+
+                    if (relevantMatches.length === 0) continue;
+
+                    tournamentsPlayed += 1;
+                    const maxRound = matches.reduce((max, m) => Math.max(max, m.round || 0), 0);
+
+                    const eventPoints = relevantMatches.reduce((sum, match) => {
+                        const participantId = candidateIds.includes(match.participant_A)
+                            ? match.participant_A
+                            : candidateIds.includes(match.participant_B)
+                            ? match.participant_B
+                            : null;
+
+                        if (participantId === null) return sum;
+
+                        if (match.participant_A === participantId) {
+                            return sum + (match.participant_A_points || 0);
+                        }
+                        if (match.participant_B === participantId) {
+                            return sum + (match.participant_B_points || 0);
+                        }
+                        return sum;
+                    }, 0);
+
+                    const eventWins = relevantMatches.filter((match) => {
+                        const participantId = candidateIds.includes(match.participant_A)
+                            ? match.participant_A
+                            : candidateIds.includes(match.participant_B)
+                            ? match.participant_B
+                            : null;
+                        return participantId !== null && match.winner === participantId;
+                    }).length;
+
+                    const reachedFinal =
+                        maxRound > 0 && relevantMatches.some((m) => (m.round || 0) === maxRound);
+                    const reachedSemi =
+                        maxRound > 1 && relevantMatches.some((m) => (m.round || 0) === maxRound - 1);
+
+                    if (reachedFinal) {
+                        finals += 1;
+                        const wonFinal = relevantMatches.some(
+                            (m) => (m.round || 0) === maxRound && candidateIds.includes(m.winner)
+                        );
+                        if (wonFinal) {
+                            goldMedals += 1;
+                        } else {
+                            silverMedals += 1;
+                        }
+                    } else if (reachedSemi) {
+                        semifinals += 1;
+                        bronzeMedals += 1;
+                    }
+
+                    matchesPlayed += relevantMatches.length;
+                    wins += eventWins;
+
+                    history.push({
+                        name: event.event_name,
+                        date: formatDate(event.event_date),
+                        placement: reachedFinal
+                            ? relevantMatches.some(
+                                  (m) => (m.round || 0) === maxRound && candidateIds.includes(m.winner)
+                              )
+                                ? '1. miesto'
+                                : '2. miesto'
+                            : reachedSemi
+                                ? 'Semifinále'
+                                : 'Účastník',
+                        points: eventPoints,
+                    });
+                }
+
+                if (cancelled) {
+                    return;
+                }
+
+                const pointsFromHistory = history.reduce((sum, item) => sum + (Number(item.points) || 0), 0);
+
+                setStats({
+                    totalPoints: player.ranking ?? pointsFromHistory,
+                    tournaments: tournamentsPlayed,
+                    wins,
+                    rank: resolvedRank,
+                    matchesPlayed,
+                    finals,
+                    semifinals,
+                    goldMedals,
+                    silverMedals,
+                    bronzeMedals,
+                });
+                setTournamentHistory(history);
+            } catch (err) {
+                if (cancelled) {
+                    return;
+                }
+                console.error('Error fetching player stats:', err);
+                setStatsError('Nepodarilo sa načítať štatistiky hráča');
+            } finally {
+                if (!cancelled) {
+                    setStatsLoading(false);
+                }
+            }
+        };
+
+        loadPlayerStats();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [player?.user_ID, teams]);
 
     // Open edit modal
     const handleEditProfile = () => {
@@ -171,8 +371,9 @@ function PlayerProfilePage() {
             if (!playersResponse.ok) {
                 throw new Error('Nepodarilo sa overiť dostupnosť používateľského mena');
             }
-            const allPlayers = await playersResponse.json();
-            const usernameTaken = allPlayers.some(
+            const { data: allPlayers } = await parseApiJson(playersResponse);
+            const playersList = Array.isArray(allPlayers) ? allPlayers : [];
+            const usernameTaken = playersList.some(
                 (p) =>
                     p.user_name?.toLowerCase() === trimmedUserName.toLowerCase() &&
                     p.user_ID !== player.user_ID
@@ -201,7 +402,7 @@ function PlayerProfilePage() {
                 throw new Error('Nepodarilo sa aktualizovať profil');
             }
 
-            const updatedPlayer = await response.json();
+            const { data: updatedPlayer } = await parseApiJson(response);
 
             // Update player state
             setPlayer(updatedPlayer);
@@ -275,22 +476,6 @@ function PlayerProfilePage() {
         );
     }
 
-    // Mock data - TODO: Replace with real API data
-    const stats = {
-        totalPoints: player.ranking || 0,
-        tournaments: 0,
-        wins: 0,
-        rank: 1,
-        matchesPlayed: 0,
-        finals: 0,
-        semifinals: 0,
-        goldMedals: 0,
-        silverMedals: 0,
-        bronzeMedals: 0
-    };
-
-    const tournamentHistory = [];
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-50 p-5">
             <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -331,7 +516,7 @@ function PlayerProfilePage() {
                             <div className="flex gap-8 flex-wrap">
                                 <div>
                                     <div className="text-xs text-blue-600 mb-1">CELKOVÉ BODY</div>
-                                    <div className="text-2xl font-bold text-blue-900">{stats.totalPoints.toLocaleString()}</div>
+                                    <div className="text-2xl font-bold text-blue-900">{Number(stats.totalPoints || 0).toLocaleString()}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-blue-600 mb-1">TURNAJE</div>
@@ -343,7 +528,7 @@ function PlayerProfilePage() {
                                 </div>
                                 <div>
                                     <div className="text-xs text-blue-600 mb-1">UMIESTNENIE</div>
-                                    <div className="text-2xl font-bold text-blue-900">#{stats.rank}</div>
+                                    <div className="text-2xl font-bold text-blue-900">#{stats.rank ?? '-'}</div>
                                 </div>
                             </div>
                         </div>
@@ -371,24 +556,33 @@ function PlayerProfilePage() {
                             <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
                                 📊 Štatistiky
                             </h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="border-2 border-blue-200 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white text-center">
-                                    <div className="text-sm text-blue-600 mb-2">ODOHRATÉ ZÁPASY</div>
-                                    <div className="text-3xl font-bold text-blue-900">{stats.matchesPlayed}</div>
+                            {statsError && (
+                                <div className="mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-lg text-red-700 text-sm">
+                                    {statsError}
                                 </div>
-                                <div className="border-2 border-green-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-white text-center">
-                                    <div className="text-sm text-green-600 mb-2">VÝHRY</div>
-                                    <div className="text-3xl font-bold text-green-900">{stats.wins}</div>
+                            )}
+                            {statsLoading ? (
+                                <div className="text-center py-6 text-blue-600">Načítavam štatistiky...</div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="border-2 border-blue-200 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white text-center">
+                                        <div className="text-sm text-blue-600 mb-2">ODOHRATÉ ZÁPASY</div>
+                                        <div className="text-3xl font-bold text-blue-900">{stats.matchesPlayed}</div>
+                                    </div>
+                                    <div className="border-2 border-green-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-white text-center">
+                                        <div className="text-sm text-green-600 mb-2">VÝHRY</div>
+                                        <div className="text-3xl font-bold text-green-900">{stats.wins}</div>
+                                    </div>
+                                    <div className="border-2 border-yellow-200 rounded-lg p-4 bg-gradient-to-br from-yellow-50 to-white text-center">
+                                        <div className="text-sm text-yellow-600 mb-2">FINÁLE</div>
+                                        <div className="text-3xl font-bold text-yellow-900">{stats.finals}</div>
+                                    </div>
+                                    <div className="border-2 border-orange-200 rounded-lg p-4 bg-gradient-to-br from-orange-50 to-white text-center">
+                                        <div className="text-sm text-orange-600 mb-2">SEMIFINÁLE</div>
+                                        <div className="text-3xl font-bold text-orange-900">{stats.semifinals}</div>
+                                    </div>
                                 </div>
-                                <div className="border-2 border-yellow-200 rounded-lg p-4 bg-gradient-to-br from-yellow-50 to-white text-center">
-                                    <div className="text-sm text-yellow-600 mb-2">FINÁLE</div>
-                                    <div className="text-3xl font-bold text-yellow-900">{stats.finals}</div>
-                                </div>
-                                <div className="border-2 border-orange-200 rounded-lg p-4 bg-gradient-to-br from-orange-50 to-white text-center">
-                                    <div className="text-sm text-orange-600 mb-2">SEMIFINÁLE</div>
-                                    <div className="text-3xl font-bold text-orange-900">{stats.semifinals}</div>
-                                </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Tournament History */}
@@ -396,7 +590,13 @@ function PlayerProfilePage() {
                             <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
                                 🏅 História turnajov
                             </h2>
-                            {tournamentHistory.length === 0 ? (
+                            {statsLoading ? (
+                                <div className="text-center py-10 text-blue-600">Načítavam históriu...</div>
+                            ) : statsError ? (
+                                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-center text-red-700">
+                                    {statsError}
+                                </div>
+                            ) : tournamentHistory.length === 0 ? (
                                 <div className="text-center py-10 text-gray-500">
                                     Žiadna história turnajov
                                 </div>
@@ -492,7 +692,7 @@ function PlayerProfilePage() {
                                 )}
                                 <div className="flex justify-between py-2">
                                     <span className="text-gray-600">Aktuálne turnaje</span>
-                                    <span className="font-bold text-blue-900">0</span>
+                                    <span className="font-bold text-blue-900">{stats.tournaments}</span>
                                 </div>
                                 <div className="flex justify-between py-2 border-b border-gray-200">
                                     <span className="text-gray-600">Registrovaný</span>

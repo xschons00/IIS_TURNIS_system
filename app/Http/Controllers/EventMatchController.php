@@ -6,9 +6,12 @@ use App\Models\Event;
 use App\Models\EventMatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class EventMatchController 
 {
+    use ApiResponse;
+
 
     /**
      * PUT /api/events/{id}/matches/generate
@@ -19,16 +22,16 @@ class EventMatchController
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $success = $this->CreateEmptyMatches($event);
 
         if (!$success) {
-            return response()->json(['message' => 'Failed to create matches. Check participant count.'], 400);
+            return $this->respondWithMessage('Failed to create matches. Check participant count.', null, 400);
         }
 
-        return response()->json(['message' => 'Matches initialized successfully'], 201);
+        return $this->respondWithMessage('Matches initialized successfully', null, 201);
     }
 
     /**
@@ -73,16 +76,19 @@ class EventMatchController
     {
         $event = Event::find($id);
         if (!$event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $matches = $event->matches()->get();
 
-        return response()->json([
-            'event_id' => $event->event_ID,
-            'event_name' => $event->event_name,
-            'matches' => $matches,
-        ]);
+        return $this->respondWithMessage(
+            'Matches retrieved',
+            [
+                'event_id' => $event->event_ID,
+                'event_name' => $event->event_name,
+                'matches' => $matches,
+            ]
+        );
     }
 
     /**
@@ -93,10 +99,10 @@ class EventMatchController
         $match = EventMatch::find($id);
 
         if (!$match) {
-            return response()->json(['message' => 'Match not found'], 404);
+            return $this->respondWithMessage('Match not found', null, 404);
         }
 
-        return response()->json($match);
+        return $this->respondWithMessage('Match retrieved', $match);
     }
 
     /**
@@ -107,7 +113,7 @@ class EventMatchController
         $match = EventMatch::find($id);
 
         if (!$match) {
-            return response()->json(['message' => 'Match not found'], 404);
+            return $this->respondWithMessage('Match not found', null, 404);
         }
 
         $validated = $request->validate([
@@ -135,7 +141,9 @@ class EventMatchController
             $match->update($validated);
         }
 
-        return response()->json($match);
+        $match->refresh();
+
+        return $this->respondWithMessage('Match updated', $match);
     }
 
     /**
@@ -146,12 +154,12 @@ class EventMatchController
         $match = EventMatch::find($id);
 
         if (!$match) {
-            return response()->json(['message' => 'Match not found'], 404);
+            return $this->respondWithMessage('Match not found', null, 404);
         }
 
         $match->delete();
 
-        return response()->json(['message' => 'Match deleted']);
+        return $this->respondWithMessage('Match deleted');
     }
 
     // helper to calculate final score
@@ -192,16 +200,19 @@ class EventMatchController
     {
         $event = Event::find($event_id);
         if (! $event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $totalPoints = self::_CalculateTotalScore($event, $participant_ID);
 
-        return response()->json([
-            'event_id' => $event->event_ID,
-            'participant_id' => $participant_ID,
-            'total_points' => $totalPoints,
-        ]);
+        return $this->respondWithMessage(
+            'Total points calculated',
+            [
+                'event_id' => $event->event_ID,
+                'participant_id' => $participant_ID,
+                'total_points' => $totalPoints,
+            ]
+        );
     }
     
     // Calculate final placement for participants of event
@@ -209,7 +220,7 @@ class EventMatchController
     {
         $event = Event::find($event_id);
         if (! $event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
@@ -219,7 +230,7 @@ class EventMatchController
         } elseif ($type === 'TEAM') {
             $participants = $event->teams()->get();
         } else {
-            return response()->json(['message' => 'Invalid event type'], 400);
+            return $this->respondWithMessage('Invalid event type', null, 400);
         }
 
         $results = [];
@@ -252,17 +263,20 @@ class EventMatchController
         }
 
         //update participants
-        self::_UpdateResults($participants, $results);
+        self::_UpdateResults($participants, $results, $type);
 
-        return response()->json([
-            'event_id' => $event->event_ID,
-            'type' => $type,
-            'placements' => $results,
-        ]);
+        return $this->respondWithMessage(
+            'Final placements calculated',
+            [
+                'event_id' => $event->event_ID,
+                'type' => $type,
+                'placements' => $results,
+            ]
+        );
     }
 
     // helper for DB updating
-    public static function _UpdateResults($participants, array $results) : void
+    public static function _UpdateResults($participants, array $results, string $type) : void
     {
 
             // update participants

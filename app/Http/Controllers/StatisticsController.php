@@ -6,17 +6,24 @@ use App\Models\Event;
 use App\Models\EventMatch;
 use App\Models\Team;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class StatisticsController 
 {
-    public function index(): array
+    use ApiResponse;
+
+    public function index(): JsonResponse
     {
-        return [
-            'active_events' => $this->getActiveEventsCount(),
-            'registered_users' => $this->getRegisteredUsersCount(),
-            'teams' => $this->getTeamsCount(),
-            'matches' => $this->getMatchesCount(),
-        ];
+        return $this->respondWithMessage(
+            'Statistics retrieved',
+            [
+                'active_events' => $this->getActiveEventsCount(),
+                'registered_users' => $this->getRegisteredUsersCount(),
+                'teams' => $this->getTeamsCount(),
+                'matches' => $this->getMatchesCount(),
+            ]
+        );
     }
 
     private function getActiveEventsCount(): int

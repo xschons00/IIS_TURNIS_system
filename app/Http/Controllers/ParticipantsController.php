@@ -9,9 +9,12 @@ use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Event;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class ParticipantsController 
 {
+    use ApiResponse;
+
 
     /**
      * GET /api/events/{id}/participants
@@ -25,7 +28,7 @@ class ParticipantsController
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Match not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
@@ -42,18 +45,22 @@ class ParticipantsController
         } elseif ($type === 'TEAM') {
             $participants = $event->teams()->get(['teams.team_ID', 'teams.team_name', 'teams.ranking']);
         } else {
-            return response()->json([
-                'message' => 'Unknown event type',
-                'event_type' => $event->event_type,
-            ], 400);
+            return $this->respondWithMessage(
+                'Unknown event type',
+                ['event_type' => $event->event_type],
+                400
+            );
         }
 
-        return response()->json([
-            'event_id' => $event->event_ID,
-            'event_name' => $event->event_name,
-            'event_type' => $type,
-            'participants' => $participants,
-        ]);
+        return $this->respondWithMessage(
+            'Participants retrieved',
+            [
+                'event_id' => $event->event_ID,
+                'event_name' => $event->event_name,
+                'event_type' => $type,
+                'participants' => $participants,
+            ]
+        );
     }
 
 
@@ -70,18 +77,21 @@ class ParticipantsController
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
 
         $count = self::_GetParticipantCount($event);
 
-        return response()->json([
-            'event_id' => $event->event_ID,
-            'event_type' => $type,
-            'participants' => $count,
-        ]);
+        return $this->respondWithMessage(
+            'Participant count retrieved',
+            [
+                'event_id' => $event->event_ID,
+                'event_type' => $type,
+                'participants' => $count,
+            ]
+        );
     }
 
     //helper functions to get participant count
@@ -103,13 +113,13 @@ class ParticipantsController
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return $this->respondWithMessage('Unauthenticated', null, 401);
         }
 
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Match not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
@@ -120,11 +130,11 @@ class ParticipantsController
                 ->exists();
 
             if ($alreadyRegistered) {
-                return response()->json(['message' => 'Player already registered'], 409);
+                return $this->respondWithMessage('Player already registered', null, 409);
             }
 
             if ($event->players()->count() >= $event->max_participants) {
-                return response()->json(['message' => 'Event is full'], 409);
+                return $this->respondWithMessage('Event is full', null, 409);
             }
 
             PlayerParticipant::create([
@@ -136,7 +146,7 @@ class ParticipantsController
             $team = Team::where('team_leader_id', $user->user_ID)->first();
 
             if (!$team) {
-                return response()->json(['message' => 'Team not found'], 404);
+                return $this->respondWithMessage('Team not found', null, 404);
             }
 
             $alreadyRegistered = $event->teams()
@@ -144,11 +154,11 @@ class ParticipantsController
                 ->exists();
 
             if ($alreadyRegistered) {
-                return response()->json(['message' => 'Team already registered'], 409);
+                return $this->respondWithMessage('Team already registered', null, 409);
             }
 
             if ($event->teams()->count() >= $event->max_participants) {
-                return response()->json(['message' => 'Event is full'], 409);
+                return $this->respondWithMessage('Event is full', null, 409);
             }
 
             TeamParticipant::create([
@@ -157,13 +167,14 @@ class ParticipantsController
                 'status' => 'REQUESTED',
             ]);
         } else {
-            return response()->json([
-                'message' => 'Unknown event type',
-                'event_type' => $event->event_type,
-            ], 400);
+            return $this->respondWithMessage(
+                'Unknown event type',
+                ['event_type' => $event->event_type],
+                400
+            );
         }
 
-        return response()->json(['message' => 'ok'], 200);
+        return $this->respondWithMessage('Registration submitted');
     }
 
     public function RemoveParticipant(Request $request, int $id): JsonResponse
@@ -171,13 +182,13 @@ class ParticipantsController
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return $this->respondWithMessage('Unauthenticated', null, 401);
         }
 
         $event = Event::find($id);
 
         if (!$event) {
-            return response()->json(['message' => 'Match not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
@@ -188,7 +199,7 @@ class ParticipantsController
                 ->exists();
 
             if (!$registered) {
-                return response()->json(['message' => 'Player not registered'], 409);
+                return $this->respondWithMessage('Player not registered', null, 409);
             }
 
             PlayerParticipant::where('event_ID', $event->event_ID)
@@ -198,7 +209,7 @@ class ParticipantsController
             $team = Team::where('team_leader_id', $user->user_ID)->first();
 
             if (!$team) {
-                return response()->json(['message' => 'Team not found'], 404);
+                return $this->respondWithMessage('Team not found', null, 404);
             }
 
             $registered = TeamParticipant::where('event_ID', $event->event_ID)
@@ -206,7 +217,7 @@ class ParticipantsController
                 ->exists();
 
             if (!$registered) {
-                return response()->json(['message' => 'Team not registered'], 409);
+                return $this->respondWithMessage('Team not registered', null, 409);
             }
 
             TeamParticipant::where('event_ID', $event->event_ID)
@@ -214,13 +225,14 @@ class ParticipantsController
                 ->delete();
 
         } else {
-            return response()->json([
-                'message' => 'Unknown event type',
-                'event_type' => $event->event_type,
-            ], 400);
+            return $this->respondWithMessage(
+                'Unknown event type',
+                ['event_type' => $event->event_type],
+                400
+            );
         }
 
-        return response()->json(['message' => 'ok'], 200);
+        return $this->respondWithMessage('Registration removed');
     }
 
 
@@ -259,16 +271,19 @@ class ParticipantsController
     {
         $event = Event::find($event_id);
         if (! $event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $totalPoints = self::_CalculateTotalScore($event, $participant_id);
 
-        return response()->json([
-            'event_id' => $event->event_ID,
-            'participant_id' => $participant_id,
-            'total_points' => $totalPoints,
-        ]);
+        return $this->respondWithMessage(
+            'Total points calculated',
+            [
+                'event_id' => $event->event_ID,
+                'participant_id' => $participant_id,
+                'total_points' => $totalPoints,
+            ]
+        );
     }
     
     // Calculate final placement for participants of event
@@ -276,7 +291,7 @@ class ParticipantsController
     {
         $event = Event::find($id);
         if (! $event) {
-            return response()->json(['message' => 'Event not found'], 404);
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $type = strtoupper($event->event_type ?? '');
@@ -286,7 +301,7 @@ class ParticipantsController
         } elseif ($type === 'TEAM') {
             $participants = $event->teams()->get();
         } else {
-            return response()->json(['message' => 'Invalid event type'], 400);
+            return $this->respondWithMessage('Invalid event type', null, 400);
         }
 
         $results = [];
@@ -321,11 +336,14 @@ class ParticipantsController
         //update participants
         self::_UpdateResults($participants, $results, $type);
 
-        return response()->json([
-            'event_id' => $event->event_ID,
-            'type' => $type,
-            'placements' => $results,
-        ]);
+        return $this->respondWithMessage(
+            'Final placements calculated',
+            [
+                'event_id' => $event->event_ID,
+                'type' => $type,
+                'placements' => $results,
+            ]
+        );
     }
 
     // helper for DB updating

@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Filters;
 
 use Illuminate\Http\Request;
 use App\Models\Event;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class EventFilter 
 {
+    use ApiResponse;
+
     /**
      * Get events based on provided filters.
      * @param request \Illuminate\Http\Request
@@ -15,12 +19,12 @@ class EventFilter
      * 
      * route: GET /filters/events
      */
-    public function GetEventsFilter(Request $request)
+    public function GetEventsFilter(Request $request): JsonResponse
     {
         $filters = $request->input('filters', []);
 
         if (empty($filters)) {
-            return Event::all();
+            return $this->respondWithMessage('Events retrieved', Event::all());
         }
 
         foreach ($filters as $field => $value) {
@@ -34,7 +38,7 @@ class EventFilter
             $db_filters[] = [$field, '=', $value];
         }
 
-        return Event::where($db_filters)->get();
+        return $this->respondWithMessage('Events filtered', Event::where($db_filters)->get());
     }
 
 

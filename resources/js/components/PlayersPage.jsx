@@ -4,6 +4,7 @@ import Navigation from './Navigation';
 import Footer from './Footer';
 import { apiFetch } from '../utils/api';
 import { appUrl } from '../utils/url';
+import { parseApiJson } from '../utils/api';
 
 function PlayersPage() {
     const [players, setPlayers] = useState([]);
@@ -22,10 +23,11 @@ function PlayersPage() {
                     throw new Error('Failed to fetch players');
                 }
 
-                const data = await response.json();
+                const { data } = await parseApiJson(response);
+                const playersData = Array.isArray(data) ? data : [];
                 // Transform backend data to match frontend expectations
                 // Filter out admin users - only show regular users
-                const transformedData = data
+                const transformedData = playersData
                     .filter((user) => user.role === 'USER')
                     .map((user) => ({
                         user_ID: user.user_ID,

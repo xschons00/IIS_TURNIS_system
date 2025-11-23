@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function TournamentDetailPage() {
@@ -26,8 +26,8 @@ function TournamentDetailPage() {
                 if (!response.ok) {
                     throw new Error('Turnaj nenájdený');
                 }
-                const data = await response.json();
-                setTournament(data);
+                const { data } = await parseApiJson(response);
+                setTournament(data || null);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching tournament:', err);
@@ -51,8 +51,16 @@ function TournamentDetailPage() {
                 if (!response.ok) {
                     throw new Error('Nepodarilo sa načítať účastníkov');
                 }
-                const data = await response.json();
-                let participantsList = data.participants || [];
+                const { data } = await parseApiJson(response);
+                let participantsList = [];
+
+                if (data) {
+                    if (Array.isArray(data.participants)) {
+                        participantsList = data.participants;
+                    } else if (Array.isArray(data)) {
+                        participantsList = data;
+                    }
+                }
 
                 // For team tournaments, fetch member count for each team
                 if (tournament.event_type === 'TEAM' && participantsList.length > 0) {
@@ -61,10 +69,10 @@ function TournamentDetailPage() {
                             try {
                                 const countResponse = await apiFetch(`/api/teams/${participant.team_ID}/members/count`);
                                 if (countResponse.ok) {
-                                    const countData = await countResponse.json();
+                                    const { data: countData } = await parseApiJson(countResponse);
                                     return {
                                         ...participant,
-                                        member_count: countData.members || 0
+                                        member_count: (countData?.members ?? 0)
                                     };
                                 }
                             } catch (err) {
@@ -87,17 +95,18 @@ function TournamentDetailPage() {
         };
 
         const fetchUserTeams = async () => {
-            if (!tournament || tournament.event_type !== 'TEAM') return;
+                if (!tournament || tournament.event_type !== 'TEAM') return;
 
-            try {
-                const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
-                if (!loggedInUser.user_ID) return;
+                try {
+                    const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
+                    if (!loggedInUser.user_ID) return;
 
                 const response = await apiFetch('/api/teams', { credentials: 'include' });
                 if (!response.ok) {
                     throw new Error('Nepodarilo sa načítať tímy');
                 }
-                const teams = await response.json();
+                const { data } = await parseApiJson(response);
+                const teams = Array.isArray(data) ? data : [];
                 const ownedTeams = teams.filter((team) => team.team_leader_id === loggedInUser.user_ID);
                 setUserTeams(ownedTeams);
                 setTeamLoadError(ownedTeams.length === 0 ? 'Nemáte žiadne tímy, ktoré by sa dali prihlásiť.' : '');
@@ -140,8 +149,8 @@ function TournamentDetailPage() {
                 }
 
                 if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.message || 'Registrácia zlyhala');
+                    const { message } = await parseApiJson(response);
+                    throw new Error(message || 'Registrácia zlyhala');
                 }
 
                 alert('Úspešne ste sa zaregistrovali na turnaj!');
@@ -176,8 +185,8 @@ function TournamentDetailPage() {
             }
 
             if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.message || 'Registrácia tímu zlyhala');
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Registrácia tímu zlyhala');
             }
 
             alert('Úspešne ste zaregistrovali tím na turnaj!');

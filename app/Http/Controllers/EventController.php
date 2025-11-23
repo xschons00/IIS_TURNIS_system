@@ -5,23 +5,27 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Event;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 
 class EventController 
 {
+    use ApiResponse;
+
     /**
      * Resource-style method: list all events.
      */
-    public function GetAllEvents()
+    public function GetAllEvents(): JsonResponse
     {
-        return Event::all();
+        return $this->respondWithMessage('Events retrieved', Event::all());
     }
 
     /**
      * Resource-style method: store a new event.
      */
 
-    public function SaveEvent(Request $request)
+    public function SaveEvent(Request $request): JsonResponse
     {
     $validated = $request->validate([
         'event_name'        => 'required|string|max:255',
@@ -49,22 +53,28 @@ class EventController
 
     $validated['event_state'] = 'NEW';
 
-    return Event::create($validated);
+    return $this->respondWithMessage('Event created', Event::create($validated), 201);
     }
 
     /**
      * Resource-style method: show a single event.
      */
-    public function GetEvent(string $id)
+    public function GetEvent(string $id): JsonResponse
     {
-        return Event::find($id);
+        $event = Event::find($id);
+
+        if (! $event) {
+            return $this->respondWithMessage('Event not found', null, 404);
+        }
+
+        return $this->respondWithMessage('Event retrieved', $event);
     }
 
-    public function UpdateEvent(Request $request, string $id)
+    public function UpdateEvent(Request $request, string $id): JsonResponse
     {
         $event = Event::find($id);
         if (! $event) {
-            return null;
+            return $this->respondWithMessage('Event not found', null, 404);
         }
 
         $validated = $request->validate([
@@ -84,20 +94,21 @@ class EventController
             $event->update($validated);
         }
 
-        return $event;
+        return $this->respondWithMessage('Event updated', $event);
     }
 
     /**
      * Resource-style method: delete a event.
      */
 
-    public function DeleteEvent(string $id)
+    public function DeleteEvent(string $id): JsonResponse
     {
         $event = Event::find($id);
         if ($event) {
             $event->delete();
-            return true;
+            return $this->respondWithMessage('Event deleted');
         }
-        return false;
+
+        return $this->respondWithMessage('Event not found', null, 404);
     }
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 const roleLabels = {
@@ -54,8 +54,8 @@ function AdminUsersPage() {
                 if (!res.ok) {
                     throw new Error('Nepodarilo sa načítať používateľov.');
                 }
-                const data = await res.json();
-                setUsers(data || []);
+                const { data } = await parseApiJson(res);
+                setUsers(Array.isArray(data) ? data : []);
                 setError('');
             } catch (err) {
                 console.error(err);
@@ -106,8 +106,8 @@ function AdminUsersPage() {
                 throw new Error('Na odstránenie musíte byť prihlásený ako admin.');
             }
             if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || 'Odstránenie zlyhalo');
+                const { message } = await parseApiJson(res);
+                throw new Error(message || 'Odstránenie zlyhalo');
             }
             setUsers((prev) => prev.filter((u) => u.user_ID !== id));
             setFlash('Používateľ bol odstránený.');

@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class AuthController 
 {
+    use ApiResponse;
+
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
@@ -17,14 +20,14 @@ class AuthController
         //hash password before comparing
         //$credentials['password'] = Hash::make($credentials['password']);
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return $this->respondWithMessage('Invalid credentials', null, 401);
         }
 
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }
 
-        return response()->json([
+        return $this->respondWithMessage('Login successful', [
             'user' => Auth::user(),
         ]);
     }
@@ -40,7 +43,7 @@ class AuthController
             $request->session()->regenerateToken();
         }
 
-        return response()->json(['message' => 'Logged out']);
+        return $this->respondWithMessage('Logged out');
     }
 
     public function me(Request $request): JsonResponse
@@ -48,9 +51,9 @@ class AuthController
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return $this->respondWithMessage('Unauthenticated', null, 401);
         }
 
-        return response()->json($user);
+        return $this->respondWithMessage('Authenticated user', $user);
     }
 }

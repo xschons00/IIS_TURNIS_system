@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 const statusLabels = {
@@ -78,12 +78,14 @@ function AdminApproveTournamentsPage() {
                     throw new Error('Nepodarilo sa načítať turnaje z API');
                 }
 
-                const eventsData = await eventsRes.json();
+                const { data: eventsPayload } = await parseApiJson(eventsRes);
+                const eventsData = Array.isArray(eventsPayload) ? eventsPayload : [];
 
                 let playersMap = {};
                 if (playersRes.ok) {
-                    const players = await playersRes.json();
-                    playersMap = players.reduce((acc, player) => {
+                    const { data: players } = await parseApiJson(playersRes);
+                    const playerList = Array.isArray(players) ? players : [];
+                    playersMap = playerList.reduce((acc, player) => {
                         acc[player.user_ID] = `${player.first_name || ''} ${player.last_name || ''}`.trim() ||
                             player.user_name ||
                             player.email ||
@@ -98,8 +100,8 @@ function AdminApproveTournamentsPage() {
                         try {
                             const countRes = await apiFetch(`/api/events/${event.event_ID}/participants/count`);
                             if (countRes.ok) {
-                                const countData = await countRes.json();
-                                registered = countData.participants || 0;
+                                const { data: countData } = await parseApiJson(countRes);
+                                registered = countData?.participants || 0;
                             }
                         } catch (err) {
                             console.error('Error fetching participant count', err);
@@ -220,15 +222,16 @@ function AdminApproveTournamentsPage() {
             }
 
             if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.message || 'Schválenie zlyhalo');
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Schválenie zlyhalo');
             }
 
-            const updated = await response.json().catch(() => ({}));
+            const { data: updated } = await parseApiJson(response);
+            const updatedEvent = updated || {};
             setEvents((prev) =>
                 prev.map((ev) =>
                     ev.event_ID === eventId
-                        ? { ...ev, ...updated, event_state: updated.event_state || 'REGISTRATION' }
+                        ? { ...ev, ...updatedEvent, event_state: updatedEvent.event_state || 'REGISTRATION' }
                         : ev
                 )
             );
@@ -264,8 +267,8 @@ function AdminApproveTournamentsPage() {
             }
 
             if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.message || 'Zamietnutie zlyhalo');
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Zamietnutie zlyhalo');
             }
 
             setEvents((prev) => prev.filter((ev) => ev.event_ID !== eventId));

@@ -3,7 +3,7 @@ import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import TournamentCard from './TournamentCard';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function TournamentsPage() {
@@ -23,7 +23,8 @@ function TournamentsPage() {
                     throw new Error('Failed to fetch tournaments');
                 }
 
-                const data = await response.json();
+                const { data } = await parseApiJson(response);
+                const events = Array.isArray(data) ? data : [];
 
                 const mapEventState = (state) => {
                     const stateMap = {
@@ -36,7 +37,7 @@ function TournamentsPage() {
                 };
 
                 // Filter to only approved/active (not NEW)
-                const approved = data.filter((event) => event.event_state && event.event_state !== 'NEW');
+                const approved = events.filter((event) => event.event_state && event.event_state !== 'NEW');
 
                 const transformedData = await Promise.all(
                     approved.map(async (event) => {
@@ -45,14 +46,14 @@ function TournamentsPage() {
                                 credentials: 'include',
                             });
                             if (countResponse.ok) {
-                                const countData = await countResponse.json();
+                                const { data: countData } = await parseApiJson(countResponse);
                                 return {
                                     id: event.event_ID,
                                     title: event.event_name,
                                     date: event.event_date,
                                     type: event.event_type,
                                     maxParticipants: event.max_participants,
-                                    registered: countData.participants || 0,
+                                    registered: (countData?.participants ?? 0),
                                     status: mapEventState(event.event_state),
                                 };
                             }

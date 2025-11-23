@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function CreateTournamentPage() {
@@ -75,11 +75,11 @@ function CreateTournamentPage() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Nepodarilo sa vytvoriť turnaj');
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Nepodarilo sa vytvoriť turnaj');
             }
 
-            const data = await response.json();
+            await parseApiJson(response);
             setSuccess(true);
 
             // Redirect to tournaments page after 2 seconds

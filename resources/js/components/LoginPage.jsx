@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function LoginPage() {
@@ -37,15 +37,16 @@ function LoginPage() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Nepodarilo sa prihlásiť');
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Nepodarilo sa prihlásiť');
             }
 
-            const data = await response.json();
+            const { data } = await parseApiJson(response);
+            const payload = data || {};
 
             // Store user data in localStorage (since cookies don't work across ports)
-            if (data.user) {
-                localStorage.setItem('logged_in_user', JSON.stringify(data.user));
+            if (payload.user) {
+                localStorage.setItem('logged_in_user', JSON.stringify(payload.user));
             }
 
             // Redirect to home page

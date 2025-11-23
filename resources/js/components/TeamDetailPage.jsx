@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function TeamDetailPage() {
@@ -14,6 +14,8 @@ function TeamDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isLeader, setIsLeader] = useState(false);
+    const [canLeaveTeam, setCanLeaveTeam] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
 
     // Delete modal state
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -26,6 +28,9 @@ function TeamDetailPage() {
     const [memberError, setMemberError] = useState(null);
     const [editLoading, setEditLoading] = useState(false);
     const [allPlayers, setAllPlayers] = useState([]);
+    const [leaveLoading, setLeaveLoading] = useState(false);
+    const [editTeamName, setEditTeamName] = useState('');
+    const [teamNameError, setTeamNameError] = useState(null);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -37,32 +42,35 @@ function TeamDetailPage() {
                 if (!teamResponse.ok) {
                     throw new Error('Tím nenájdený');
                 }
-                const teamData = await teamResponse.json();
-                setTeam(teamData);
+                const { data: teamData } = await parseApiJson(teamResponse);
+                setTeam(teamData || null);
 
                 // Fetch team members
                 const membersResponse = await apiFetch(`/api/teams/${teamId}/members`);
+                let normalizedMembers = [];
                 if (membersResponse.ok) {
-                    const membersData = await membersResponse.json();
+                    const { data: membersData } = await parseApiJson(membersResponse);
                     console.log('Members data received:', membersData);
                     // Handle both array and object response formats
-                    if (Array.isArray(membersData)) {
-                        setMembers(membersData);
-                    } else if (membersData.members && Array.isArray(membersData.members)) {
-                        setMembers(membersData.members);
-                    } else {
-                        setMembers([]);
+                    if (Array.isArray(membersData?.members)) {
+                        normalizedMembers = membersData.members;
+                    } else if (Array.isArray(membersData)) {
+                        normalizedMembers = membersData;
                     }
-                } else {
+                }
+                setMembers(normalizedMembers);
+                if (!membersResponse.ok) {
                     console.error('Failed to fetch members:', membersResponse.status);
-                    setMembers([]);
                 }
 
                 // Check if current user is team leader
                 const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
-                if (loggedInUser.user_ID && teamData.team_leader_id === loggedInUser.user_ID) {
-                    setIsLeader(true);
-                }
+                setCurrentUser(loggedInUser?.user_ID ? loggedInUser : null);
+                const isLoggedLeader = loggedInUser.user_ID && teamData?.team_leader_id === loggedInUser.user_ID;
+                setIsLeader(Boolean(isLoggedLeader));
+
+                const isMember = normalizedMembers.some((m) => m.user_ID === loggedInUser.user_ID);
+                setCanLeaveTeam(Boolean(isMember && !isLoggedLeader));
 
                 setError(null);
             } catch (err) {
@@ -117,18 +125,53 @@ function TeamDetailPage() {
         }
     };
 
+    const handleLeaveTeam = async () => {
+        if (!currentUser?.user_ID) {
+            alert('Musíte byť prihlásený, aby ste mohli opustiť tím.');
+            return;
+        }
+        if (isLeader) {
+            alert('Správca tímu nemôže opustiť svoj tím.');
+            return;
+        }
+
+        try {
+            setLeaveLoading(true);
+            const response = await apiFetch(`/api/teams/${teamId}/members`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_ID: currentUser.user_ID }),
+            });
+
+            if (!response.ok) {
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Nepodarilo sa opustiť tím');
+            }
+
+            window.location.reload();
+        } catch (err) {
+            console.error('Error leaving team:', err);
+            alert('Chyba pri opúšťaní tímu: ' + err.message);
+            setLeaveLoading(false);
+        }
+    };
+
     // Edit team - open modal
     const handleEditTeam = async () => {
         try {
             // Fetch all players for validation
             const playersResponse = await apiFetch('/api/players');
             if (playersResponse.ok) {
-                const players = await playersResponse.json();
+                const { data: players } = await parseApiJson(playersResponse);
                 setAllPlayers(players);
             }
 
             // Set current members as edit members
             setEditMembers([...members]);
+            setEditTeamName(teamData?.team_name || '');
+            setTeamNameError(null);
             setShowEditModal(true);
         } catch (err) {
             console.error('Error opening edit modal:', err);
@@ -169,9 +212,16 @@ function TeamDetailPage() {
 
     // Save edited team members
     const handleSaveTeamEdit = async () => {
+        const trimmedName = editTeamName.trim();
+        if (!trimmedName) {
+            setTeamNameError('Názov tímu je povinný');
+            return;
+        }
+
         try {
             setEditLoading(true);
             setMemberError(null);
+            setTeamNameError(null);
 
             const memberIds = editMembers.map(m => m.user_ID);
 
@@ -181,12 +231,14 @@ function TeamDetailPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    team_name: trimmedName,
                     members: memberIds
                 })
             });
 
             if (!response.ok) {
-                throw new Error('Nepodarilo sa uložiť zmeny');
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Nepodarilo sa uložiť zmeny');
             }
 
             // Reload page to show updated members
@@ -299,8 +351,8 @@ function TeamDetailPage() {
                             </div>
                         </div>
 
-                        {/* Action Buttons - Only show if user is team leader */}
-                        {isLeader && (
+                        {/* Action Buttons - Leader gets edit/delete, members can leave */}
+                        {isLeader ? (
                             <div className="flex flex-col gap-2">
                                 <button
                                     onClick={handleEditTeam}
@@ -315,6 +367,18 @@ function TeamDetailPage() {
                                     🗑️ Vymazať tím
                                 </button>
                             </div>
+                        ) : (
+                            canLeaveTeam && (
+                                <div className="flex flex-col gap-2">
+                                    <button
+                                        onClick={handleLeaveTeam}
+                                        className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap disabled:opacity-50"
+                                        disabled={leaveLoading}
+                                    >
+                                        {leaveLoading ? 'Odpájam...' : '🚪 Opustiť tím'}
+                                    </button>
+                                </div>
+                            )
                         )}
                     </div>
                 </div>
@@ -527,6 +591,30 @@ function TeamDetailPage() {
                                 <h3 className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
                                     👥 Členovia týmu
                                 </h3>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                        Názov tímu
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editTeamName}
+                                        onChange={(e) => {
+                                            setEditTeamName(e.target.value);
+                                            setTeamNameError(null);
+                                        }}
+                                        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none text-gray-900 ${
+                                            teamNameError ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                        }`}
+                                        placeholder="Zadajte nový názov tímu"
+                                        disabled={editLoading}
+                                    />
+                                    {teamNameError && (
+                                        <div className="mt-2 text-sm text-red-600 font-semibold">
+                                            ⚠ {teamNameError}
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Add member input */}
                                 <div className="mb-4">

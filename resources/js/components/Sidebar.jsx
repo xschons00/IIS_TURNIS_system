@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function Sidebar() {
@@ -25,10 +25,12 @@ function Sidebar() {
                 // Handle statistics
                 let statsData = null;
                 if (statsResponse.ok) {
-                    statsData = await statsResponse.json();
+                    const { data } = await parseApiJson(statsResponse);
+                    statsData = data || null;
                 }
 
-                const playersData = await playersResponse.json();
+                const { data: playersData } = await parseApiJson(playersResponse);
+                const playersList = Array.isArray(playersData) ? playersData : [];
 
                 // Transform statistics data from backend object to array for display
                 if (statsData) {
@@ -44,7 +46,7 @@ function Sidebar() {
                 }
 
                 // Transform players data to match frontend expectations
-                const transformedPlayers = playersData.map(user => ({
+                const transformedPlayers = playersList.map(user => ({
                     name: user.user_name,
                     points: user.ranking || 0
                 }));

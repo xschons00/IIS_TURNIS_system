@@ -3,7 +3,7 @@ import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import TeamCard from './TeamCard';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function TeamsPage() {
@@ -22,20 +22,21 @@ function TeamsPage() {
                     throw new Error('Failed to fetch teams');
                 }
 
-                const data = await response.json();
+                const { data } = await parseApiJson(response);
+                const teamsData = Array.isArray(data) ? data : [];
 
                 // Fetch member counts for each team
                 const teamsWithCounts = await Promise.all(
-                    data.map(async (team) => {
+                    teamsData.map(async (team) => {
                         try {
                             const countResponse = await apiFetch(`/api/teams/${team.team_ID}/members/count`);
                             if (countResponse.ok) {
-                                const countData = await countResponse.json();
+                                const { data: countData } = await parseApiJson(countResponse);
                                 return {
                                     team_ID: team.team_ID,
                                     team_name: team.team_name,
                                     ranking: team.ranking,
-                                    members: countData.members || 0,
+                                    members: (countData?.members ?? 0),
                                     tournaments: 0, // TODO: Get actual tournament count from backend
                                     wins: 0, // TODO: Calculate wins from team_participants
                                     points: team.ranking || 0 // Use ranking as points for now

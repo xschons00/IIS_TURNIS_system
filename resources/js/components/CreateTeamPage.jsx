@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function CreateTeamPage() {
@@ -23,8 +23,8 @@ function CreateTeamPage() {
                 // Fetch all players for username validation
                 const response = await apiFetch('/api/players');
                 if (response.ok) {
-                    const players = await response.json();
-                    setAllPlayers(players);
+                    const { data } = await parseApiJson(response);
+                    setAllPlayers(Array.isArray(data) ? data : []);
                 }
             } catch (err) {
                 console.error('Error initializing team creation:', err);
@@ -91,14 +91,6 @@ function CreateTeamPage() {
             }
             const user = JSON.parse(storedUser);
 
-            const readJsonSafe = async (res) => {
-                try {
-                    return await res.json();
-                } catch (e) {
-                    return null;
-                }
-            };
-
             const response = await apiFetch('/api/teams', {
                 method: 'POST',
                 headers: {
@@ -114,16 +106,12 @@ function CreateTeamPage() {
                 })
             });
 
+            const { message } = await parseApiJson(response);
+
             if (!response.ok) {
-                const errorData = await readJsonSafe(response);
-                const fallbackText = !errorData ? await response.text().catch(() => '') : '';
-                const message = errorData?.message
-                    || (fallbackText && !fallbackText.startsWith('{') ? fallbackText : '')
-                    || 'Nepodarilo sa vytvoriť tím';
-                throw new Error(message);
+                throw new Error(message || 'Nepodarilo sa vytvoriť tím');
             }
 
-            const data = await readJsonSafe(response);
             setSuccess(true);
 
             // Redirect to teams page after 2 seconds

@@ -5,17 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 use Illuminate\Support\Facades\Hash;
 
 class PlayerController 
 {
+    use ApiResponse;
+
     /**
      * Resource-style method: list all players.
      */
 
-    public function GetAllPlayers()
+    public function GetAllPlayers(): JsonResponse
     {
-        return User::all();
+        return $this->respondWithMessage('Players retrieved', User::all());
     }
 
     /**
@@ -23,7 +27,7 @@ class PlayerController
      */
 
 
-    public function SavePlayer(Request $request)
+    public function SavePlayer(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'user_name' => 'required|string|max:255|unique:users,user_name',
@@ -37,7 +41,7 @@ class PlayerController
 
         $user = User::create($validated);
 
-        return response()->json($user, 201);
+        return $this->respondWithMessage('Player created', $user, 201);
     }
 
     /**
@@ -45,17 +49,23 @@ class PlayerController
      */
 
 
-    public function GetPlayer(string $id)
+    public function GetPlayer(string $id): JsonResponse
     {
-        return User::find($id);
+        $player = User::find($id);
+
+        if (! $player) {
+            return $this->respondWithMessage('User not found', null, 404);
+        }
+
+        return $this->respondWithMessage('Player retrieved', $player);
     }
 
-    public function UpdatePlayer(Request $request, string $id)
+    public function UpdatePlayer(Request $request, string $id): JsonResponse
     {
         $player = User::find($id);
 
         if (!$player) {
-            return null;
+            return $this->respondWithMessage('User not found', null, 404);
         }
 
         $validated = $request->validate([
@@ -81,13 +91,13 @@ class PlayerController
         }
         $player->update($validated);
 
-        return $player;
+        return $this->respondWithMessage('Player updated', $player);
     }
 
     /**
      * Update own profile (authenticated user)
      */
-    public function UpdateOwnProfile(Request $request)
+    public function UpdateOwnProfile(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,user_ID',
@@ -100,7 +110,7 @@ class PlayerController
         $user = User::find($validated['user_id']);
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            return $this->respondWithMessage('User not found', null, 404);
         }
 
         $user->update([
@@ -109,22 +119,22 @@ class PlayerController
             'faculty' => $validated['faculty'] ?? $user->faculty,
         ]);
 
-        return response()->json($user);
+        return $this->respondWithMessage('Profile updated', $user);
     }
 
     /**
      * Resource-style method: delete a player.
      */
 
-    public function DeletePlayer(string $id)
+    public function DeletePlayer(string $id): JsonResponse
     {
         $player = User::find($id);
 
         if ($player) {
             $player->delete();
-            return true;
+            return $this->respondWithMessage('Player deleted');
         }
 
-        return false;
+        return $this->respondWithMessage('User not found', null, 404);
     }
 }

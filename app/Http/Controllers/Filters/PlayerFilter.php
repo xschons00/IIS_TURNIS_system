@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Filters;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class PlayerFilter 
 {
+    use ApiResponse;
+
     /**
      * Get events based on provided filters.
      * @param request \Illuminate\Http\Request
@@ -14,12 +18,12 @@ class PlayerFilter
      * 
      * route: /api/filter/events
      */
-    public function GetPlayersFilter(Request $request)
+    public function GetPlayersFilter(Request $request): JsonResponse
     {
         $filters = $request->input('filters', []);
 
         if (empty($filters)) {
-            return User::all();
+            return $this->respondWithMessage('Players retrieved', User::all());
         }
 
         foreach ($filters as $field => $value) {
@@ -33,7 +37,7 @@ class PlayerFilter
             $db_filters[] = [$field, '=', $value];
         }
 
-        return User::where($db_filters)->get();
+        return $this->respondWithMessage('Players filtered', User::where($db_filters)->get());
     }
 
 

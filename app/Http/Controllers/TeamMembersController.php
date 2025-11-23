@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class TeamMembersController 
 {
+    use ApiResponse;
+
 
     /**
      * GET /api/teams/{id}/members
@@ -20,17 +23,20 @@ class TeamMembersController
         $team = Team::find($id);
 
         if (! $team) {
-            return response()->json(['message' => 'Team not found'], 404);
+            return $this->respondWithMessage('Team not found', null, 404);
         }
 
         $members = $team->members()->get(['users.user_ID', 'users.user_name', 'first_name', 'last_name',
                                             'faculty', 'ranking']);
 
-        return response()->json([
-            'team_id' => $team->team_ID,
-            'team_name' => $team->team_name,
-            'members' => $members,
-        ]);
+        return $this->respondWithMessage(
+            'Team members retrieved',
+            [
+                'team_id' => $team->team_ID,
+                'team_name' => $team->team_name,
+                'members' => $members,
+            ]
+        );
     }
 
     /**
@@ -44,16 +50,19 @@ class TeamMembersController
         $team = Team::find($id);
 
         if (! $team) {
-            return response()->json(['message' => 'Team not found'], 404);
+            return $this->respondWithMessage('Team not found', null, 404);
         }
 
         $count = $team->members()->count();
 
-        return response()->json([
-            'team_id' => $team->team_ID,
-            'team_name' => $team->team_name,
-            'members' => $count,
-        ]);
+        return $this->respondWithMessage(
+            'Team member count retrieved',
+            [
+                'team_id' => $team->team_ID,
+                'team_name' => $team->team_name,
+                'members' => $count,
+            ]
+        );
     }
 
     /**
@@ -68,7 +77,7 @@ class TeamMembersController
         $team = Team::find($id);
 
         if (! $team) {
-            return response()->json(['message' => 'Team not found'], 404);
+            return $this->respondWithMessage('Team not found', null, 404);
         }
 
         $validated = $request->validate([
@@ -77,12 +86,12 @@ class TeamMembersController
 
         // Check if user is already a member
         if ($team->members()->where('users.user_ID', $validated['user_ID'])->exists()) {
-            return response()->json(['message' => 'User is already a team member'], 400);
+            return $this->respondWithMessage('User is already a team member', null, 400);
         }
 
         $team->members()->attach($validated['user_ID']);
 
-        return response()->json(['message' => 'Member added successfully'], 201);
+        return $this->respondWithMessage('Member added successfully', null, 201);
     }
     /**
      * DELETE /api/teams/{id}/members
@@ -94,17 +103,17 @@ class TeamMembersController
     {
         $team = Team::find($id);
         if (! $team) {
-            return response()->json(['message' => 'Team not found'], 404);
+            return $this->respondWithMessage('Team not found', null, 404);
         }   
         $validated = $request->validate([
             'user_ID' => 'required|exists:users,user_ID',
         ]);
         // Check if user is a member
         if (! $team->members()->where('users.user_ID', $validated['user_ID'])->exists()) {
-            return response()->json(['message' => 'User is not a team member'], 400);
+            return $this->respondWithMessage('User is not a team member', null, 400);
         }
         $team->members()->detach($validated['user_ID']);
-        return response()->json(['message' => 'Member removed successfully'], 200);
+        return $this->respondWithMessage('Member removed successfully', null, 200);
     }
 
 }

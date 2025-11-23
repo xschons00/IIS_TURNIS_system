@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TournamentCard from './TournamentCard';
-import { apiFetch } from '../utils/api';
+import { apiFetch, parseApiJson } from '../utils/api';
 import { appUrl } from '../utils/url';
 
 function TournamentList() {
@@ -30,22 +30,23 @@ function TournamentList() {
                     throw new Error('Failed to fetch tournaments');
                 }
 
-                const data = await response.json();
+                const { data } = await parseApiJson(response);
+                const events = Array.isArray(data) ? data : [];
 
                 // Fetch participant counts for all tournaments in parallel
                 const tournamentsWithCounts = await Promise.all(
-                    data.map(async (event) => {
+                    events.map(async (event) => {
                         try {
                             const countResponse = await apiFetch(`/api/events/${event.event_ID}/participants/count`);
                             if (countResponse.ok) {
-                                const countData = await countResponse.json();
+                                const { data: countData } = await parseApiJson(countResponse);
                                 return {
                                     id: event.event_ID,
                                     title: event.event_name,
                                     date: event.event_date,
                                     type: event.event_type,
                                     maxParticipants: event.max_participants,
-                                    registered: countData.participants || 0,
+                                    registered: (countData?.participants ?? 0),
                                     status: mapEventState(event.event_state)
                                 };
                             }

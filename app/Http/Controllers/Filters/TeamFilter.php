@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Filters;
 
 use Illuminate\Http\Request;
 use App\Models\Team;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Concerns\ApiResponse;
 
 class TeamFilter 
 {
+    use ApiResponse;
+
     /**
      * Get teams based on filters provided in the request.
      * @param Request $request
@@ -14,12 +18,12 @@ class TeamFilter
      * 
      * route: POST /api/teams/filter
      */
-    public function GetTeamsFilter(Request $request)
+    public function GetTeamsFilter(Request $request): JsonResponse
     {
 
         $filters = $request->input('filters', []);
         if (empty($filters)) {
-            return Team::all();
+            return $this->respondWithMessage('Teams retrieved', Team::all());
         }
         // remove null filters
         foreach ($filters as $field => $value) {
@@ -33,7 +37,7 @@ class TeamFilter
             $db_filters[] = [$field, '=', $value];
         }
 
-        return Team::where($db_filters)->get();
+        return $this->respondWithMessage('Teams filtered', Team::where($db_filters)->get());
     }
 
 
