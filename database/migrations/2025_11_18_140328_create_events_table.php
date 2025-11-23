@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->id('event_ID');
             $table->string('event_name');
             $table->string('description');
+            $table->string('entry_fee');
+            $table->string('winner_price');
             $table->date('event_date');
             $table->string('location');
             $table->enum('event_type', ['SOLO', 'TEAM']);
