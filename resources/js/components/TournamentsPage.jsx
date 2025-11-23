@@ -4,6 +4,7 @@ import Navigation from './Navigation';
 import Footer from './Footer';
 import TournamentCard from './TournamentCard';
 import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function TournamentsPage() {
     const [tournaments, setTournaments] = useState([]);
@@ -120,7 +121,7 @@ function TournamentsPage() {
                                     alert('⚠️ Túto akciu môže vykonať len prihlásený používateľ.\n\nProsím, prihláste sa do svojho účtu.');
                                     return;
                                 }
-                                window.location.href = '/create-tournament';
+                                window.location.href = appUrl('/create-tournament');
                             }}
                             className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl"
                         >

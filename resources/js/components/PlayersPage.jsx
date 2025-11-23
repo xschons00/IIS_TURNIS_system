@@ -3,6 +3,7 @@ import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function PlayersPage() {
     const [players, setPlayers] = useState([]);
@@ -166,7 +167,7 @@ function PlayersPage() {
                                             <tr
                                                 key={player.user_ID}
                                                 onClick={() => {
-                                                    window.location.href = `/players/${player.user_ID}`;
+                                                    window.location.href = appUrl(`/players/${player.user_ID}`);
                                                 }}
                                                 className={`border-b border-blue-100 hover:bg-blue-100 transition-colors cursor-pointer ${
                                                     index % 2 === 0 ? 'bg-white' : 'bg-gray-50'

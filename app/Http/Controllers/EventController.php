@@ -26,6 +26,8 @@ class EventController
     $validated = $request->validate([
         'event_name'        => 'required|string|max:255',
         'description'       => 'nullable|string',
+        'entry_fee'         => 'nullable|string',
+        'winner_price'      => 'nullable|string',
         'event_date'        => 'required|date',
         'location'          => 'required|string|max:255',
         'event_type'        => 'required|in:SOLO,TEAM',
@@ -34,7 +36,7 @@ class EventController
         'max_participants' => [
             'required',
             'integer',
-            'min:4',
+            'min:2',
             'max:32',
             function ($attribute, $value, $fail) {
                 // Check power of 2: 4, 8, 16, 32
@@ -68,6 +70,8 @@ class EventController
         $validated = $request->validate([
             'event_name' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
+            'entry_fee' => 'sometimes|string',
+            'winner_price' => 'sometimes|string',
             'event_date' => 'sometimes|date',
             'location' => 'sometimes|string|max:255',
             'event_type' => ['sometimes', Rule::in(['SOLO', 'TEAM'])],

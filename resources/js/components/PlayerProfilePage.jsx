@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import { appUrl } from '../utils/url';
+import { apiFetch } from '../utils/api';
 
 function PlayerProfilePage() {
     // Get player ID from URL path
@@ -11,10 +13,14 @@ function PlayerProfilePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isOwnProfile, setIsOwnProfile] = useState(false);
+    const [teams, setTeams] = useState([]);
+    const [teamsLoading, setTeamsLoading] = useState(true);
+    const [teamsError, setTeamsError] = useState(null);
 
     // Edit profile modal state
     const [showEditModal, setShowEditModal] = useState(false);
     const [editFormData, setEditFormData] = useState({
+        userName: '',
         firstName: '',
         lastName: '',
         faculty: ''
@@ -28,7 +34,7 @@ function PlayerProfilePage() {
                 setLoading(true);
 
                 // Fetch player data
-                const response = await fetch(`http://localhost:8080/api/players/${id}`);
+                const response = await apiFetch(`/api/players/${id}`, { credentials: 'include' });
                 if (!response.ok) {
                     throw new Error('Hráč nenájdený');
                 }
@@ -55,6 +61,56 @@ function PlayerProfilePage() {
         fetchPlayerProfile();
     }, [id]);
 
+    // Fetch teams the player is a member of
+    useEffect(() => {
+        const fetchPlayerTeams = async () => {
+            try {
+                setTeamsLoading(true);
+                setTeamsError(null);
+
+                const teamsResponse = await apiFetch('/api/teams');
+                if (!teamsResponse.ok) {
+                    throw new Error('Nepodarilo sa načítať tímy');
+                }
+                const teamsData = await teamsResponse.json();
+
+                const membershipChecks = await Promise.all(
+                    teamsData.map(async (team) => {
+                        const membersResponse = await apiFetch(`/api/teams/${team.team_ID}/members`);
+                        if (!membersResponse.ok) {
+                            return null;
+                        }
+                        const membersData = await membersResponse.json();
+                        const membersArray = Array.isArray(membersData)
+                            ? membersData
+                            : Array.isArray(membersData.members)
+                            ? membersData.members
+                            : [];
+                        const isMember = membersArray.some((member) => member.user_ID === player.user_ID);
+                        if (!isMember) return null;
+                        return {
+                            ...team,
+                            memberCount: membersArray.length
+                        };
+                    })
+                );
+
+                const playerTeams = membershipChecks.filter(Boolean);
+                setTeams(playerTeams);
+            } catch (err) {
+                console.error('Error loading player teams:', err);
+                setTeams([]);
+                setTeamsError('Nepodarilo sa načítať tímy hráča');
+            } finally {
+                setTeamsLoading(false);
+            }
+        };
+
+        if (player?.user_ID) {
+            fetchPlayerTeams();
+        }
+    }, [player?.user_ID]);
+
     // Get player initial from username
     const getUserInitial = (username) => {
         if (!username) return '?';
@@ -74,6 +130,7 @@ function PlayerProfilePage() {
     // Open edit modal
     const handleEditProfile = () => {
         setEditFormData({
+            userName: player.user_name || '',
             firstName: player.first_name || '',
             lastName: player.last_name || '',
             faculty: player.faculty || ''
@@ -99,18 +156,41 @@ function PlayerProfilePage() {
             return;
         }
 
+        const trimmedUserName = editFormData.userName.trim();
+        if (!trimmedUserName) {
+            setEditError('Používateľské meno je povinné');
+            return;
+        }
+
         try {
             setEditLoading(true);
             setEditError(null);
 
-            const response = await fetch(`http://localhost:8080/api/profile`, {
+            // Verify username uniqueness (excluding current user)
+            const playersResponse = await apiFetch('/api/players');
+            if (!playersResponse.ok) {
+                throw new Error('Nepodarilo sa overiť dostupnosť používateľského mena');
+            }
+            const allPlayers = await playersResponse.json();
+            const usernameTaken = allPlayers.some(
+                (p) =>
+                    p.user_name?.toLowerCase() === trimmedUserName.toLowerCase() &&
+                    p.user_ID !== player.user_ID
+            );
+            if (usernameTaken) {
+                setEditError('Toto používateľské meno je už obsadené. Skúste iné.');
+                setEditLoading(false);
+                return;
+            }
+
+            const response = await apiFetch('/api/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     user_id: player.user_ID,
+                    user_name: trimmedUserName,
                     first_name: editFormData.firstName.trim(),
                     last_name: editFormData.lastName.trim(),
                     faculty: editFormData.faculty
@@ -131,6 +211,7 @@ function PlayerProfilePage() {
                 const storedUser = localStorage.getItem('logged_in_user');
                 if (storedUser) {
                     const user = JSON.parse(storedUser);
+                    user.user_name = updatedPlayer.user_name;
                     user.first_name = updatedPlayer.first_name;
                     user.last_name = updatedPlayer.last_name;
                     user.faculty = updatedPlayer.faculty;
@@ -181,7 +262,7 @@ function PlayerProfilePage() {
                                 {error || 'Hráč nenájdený'}
                             </div>
                             <button
-                                onClick={() => window.location.href = '/players'}
+                                onClick={() => window.location.href = appUrl('/players')}
                                 className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                             >
                                 Späť na zoznam hráčov
@@ -209,7 +290,6 @@ function PlayerProfilePage() {
     };
 
     const tournamentHistory = [];
-    const teams = [];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-50 p-5">
@@ -220,9 +300,9 @@ function PlayerProfilePage() {
                 {/* Breadcrumb */}
                 <div className="px-6 py-3 bg-gradient-to-br from-gray-50 to-blue-50 border-b border-blue-200">
                     <div className="text-blue-600 text-sm">
-                        <a href="/" className="hover:text-blue-800">Domov</a>
+                        <a href={appUrl('/')} className="hover:text-blue-800">Domov</a>
                         {' > '}
-                        <a href="/players" className="hover:text-blue-800">Hráči</a>
+                        <a href={appUrl('/players')} className="hover:text-blue-800">Hráči</a>
                         {' > '}
                         <span className="text-blue-900 font-semibold">
                             {player.user_name}
@@ -351,22 +431,36 @@ function PlayerProfilePage() {
                             <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
                                 👥 Tímy
                             </h2>
-                            {teams.length === 0 ? (
+                            {teamsLoading ? (
+                                <div className="text-center py-10 text-blue-600">Načítavam tímy...</div>
+                            ) : teamsError ? (
+                                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-center text-red-700">
+                                    {teamsError}
+                                </div>
+                            ) : teams.length === 0 ? (
                                 <div className="text-center py-10 text-gray-500">
                                     Hráč nie je členom žiadneho tímu
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {teams.map((team, index) => (
-                                        <div key={index} className="border-2 border-blue-200 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white flex justify-between items-center hover:shadow-md transition-shadow">
+                                    {teams.map((team) => (
+                                        <div
+                                            key={team.team_ID}
+                                            className="border-2 border-blue-200 rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white flex justify-between items-center hover:shadow-md transition-shadow"
+                                        >
                                             <div>
-                                                <div className="font-bold text-blue-900 text-lg">{team.name}</div>
-                                                <div className="text-blue-600 text-sm">{team.sport}</div>
-                                                <div className="text-gray-600 text-sm mt-1">{team.members} členov</div>
+                                                <div className="font-bold text-blue-900 text-lg">{team.team_name}</div>
+                                                {team.sport && <div className="text-blue-600 text-sm">{team.sport}</div>}
+                                                <div className="text-gray-600 text-sm mt-1">
+                                                    {team.memberCount ?? 0} členov
+                                                </div>
                                             </div>
-                                            <button className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                            <a
+                                                href={appUrl(`/teams/${team.team_ID}`)}
+                                                className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                                            >
                                                 Detail
-                                            </button>
+                                            </a>
                                         </div>
                                     ))}
                                 </div>
@@ -460,6 +554,21 @@ function PlayerProfilePage() {
                                     type="text"
                                     name="firstName"
                                     value={editFormData.firstName}
+                                    onChange={handleEditChange}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
+                                    disabled={editLoading}
+                                    required
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    Používateľské meno <span className="text-red-600">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="userName"
+                                    value={editFormData.userName}
                                     onChange={handleEditChange}
                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
                                     disabled={editLoading}

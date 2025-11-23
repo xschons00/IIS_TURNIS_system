@@ -176,9 +176,6 @@ function Sidebar() {
                 >
                     + Vytvoriť tím
                 </button>
-                <button className="w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer hover:bg-blue-50 rounded-lg transition-colors">
-                    🔍 Hľadať hráčov
-                </button>
             </div>
         </div>
     );

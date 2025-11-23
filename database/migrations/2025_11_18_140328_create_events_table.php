@@ -15,11 +15,13 @@ return new class extends Migration {
         Schema::create('events', function (Blueprint $table) {
             $table->id('event_ID');
             $table->string('event_name');
-            $table->string('description');
+            $table->string('description')->nullable();
+            $table->string('entry_fee')->nullable();
+            $table->string('winner_price')->nullable();
             $table->date('event_date');
             $table->string('location');
             $table->enum('event_type', ['SOLO', 'TEAM']);
-            $table->enum('event_state', ['NEW', 'REGISTRATION', 'ONGOING', 'FINISHED']);
+            $table->enum('event_state', ['NEW', 'REGISTRATION', 'ONGOING', 'FINISHED'])->default('NEW');
             $table->integer('max_participants')->unsigned();
             $table->timestamps();
             $table->bigInteger('event_leader_id')->unsigned();

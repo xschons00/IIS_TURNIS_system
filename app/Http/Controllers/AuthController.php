@@ -14,7 +14,8 @@ class AuthController
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
-
+        //hash password before comparing
+        //$credentials['password'] = Hash::make($credentials['password']);
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
