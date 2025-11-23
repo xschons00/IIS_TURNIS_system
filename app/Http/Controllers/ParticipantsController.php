@@ -319,7 +319,7 @@ class ParticipantsController
         }
 
         //update participants
-        self::_UpdateResults($participants, $results);
+        self::_UpdateResults($participants, $results, $type);
 
         return response()->json([
             'event_id' => $event->event_ID,
@@ -329,7 +329,7 @@ class ParticipantsController
     }
 
     // helper for DB updating
-    public static function _UpdateResults($participants, array $results) : void
+    public static function _UpdateResults($participants, array $results, string $type) : void
     {
 
             // update participants
@@ -348,7 +348,7 @@ class ParticipantsController
             }
 
             // update the final score + placement
-            $participant->update([
+            $participant->pivot->update([
                 'final_points'    => $record['total_points'],
                 'final_placement' => $record['placement'],
             ]);
