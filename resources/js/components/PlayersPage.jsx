@@ -8,6 +8,8 @@ function PlayersPage() {
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [search, setSearch] = useState('');
+    const [facultyFilter, setFacultyFilter] = useState('ALL');
 
     useEffect(() => {
         const fetchPlayers = async () => {
@@ -21,15 +23,18 @@ function PlayersPage() {
 
                 const data = await response.json();
                 // Transform backend data to match frontend expectations
-                const transformedData = data.map((user, index) => ({
-                    user_ID: user.user_ID,
-                    rank: index + 1,
-                    user_name: user.user_name,
-                    ranking: user.ranking || 0,
-                    tournaments: 0, // TODO: Get actual tournament count from backend (user.events relation)
-                    wins: 0, // TODO: Calculate wins from player_participants.final_placement
-                    registered: user.created_at ? formatDate(user.created_at) : 'N/A',
-                }));
+                const transformedData = data
+                    .map((user) => ({
+                        user_ID: user.user_ID,
+                        user_name: user.user_name,
+                        ranking: user.ranking || 0,
+                        tournaments: 0, // TODO: backend tournaments count
+                        wins: 0, // TODO: backend wins
+                        registered: user.created_at ? formatDate(user.created_at) : 'N/A',
+                        faculty: user.faculty || 'OTHER',
+                    }))
+                    .sort((a, b) => (b.ranking || 0) - (a.ranking || 0))
+                    .map((user, index) => ({ ...user, rank: index + 1 }));
                 setPlayers(transformedData);
                 setError(null);
             } catch (err) {
@@ -58,6 +63,16 @@ function PlayersPage() {
         return `${day}. ${month}. ${year}`;
     };
 
+    const filteredPlayers = players.filter((player) => {
+        const query = search.trim().toLowerCase();
+        const matchesSearch = !query
+            ? true
+            : `${player.user_name}`.toLowerCase().startsWith(query);
+        const matchesFaculty =
+            facultyFilter === 'ALL' ? true : (player.faculty || 'OTHER') === facultyFilter;
+        return matchesSearch && matchesFaculty;
+    });
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-50 p-5">
             <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -72,6 +87,30 @@ function PlayersPage() {
 
                 {/* Main Content */}
                 <div className="p-6 bg-gradient-to-br from-gray-50 to-blue-50">
+                    <div className="flex flex-col md:flex-row gap-3 mb-4">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="🔍 Hľadať podľa používateľského mena"
+                            className="flex-1 px-4 py-3 border-2 border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:outline-none bg-white"
+                        />
+                        <select
+                            value={facultyFilter}
+                            onChange={(e) => setFacultyFilter(e.target.value)}
+                            className="px-4 py-3 border-2 border-blue-200 rounded-lg shadow-sm bg-white focus:border-blue-500 focus:outline-none"
+                        >
+                            <option value="ALL">Všetky fakulty</option>
+                            <option value="ENGINEERING">Strojárstvo</option>
+                            <option value="CHEMISTRY">Chémia</option>
+                            <option value="COMPUTER_SCIENCE">Informatika</option>
+                            <option value="BUSINESS">Ekonomika</option>
+                            <option value="ARTS">Umenie</option>
+                            <option value="MATHEMATICS">Matematika</option>
+                            <option value="PHYSICS">Fyzika</option>
+                            <option value="OTHER">Iné/nezadané</option>
+                        </select>
+                    </div>
                     {loading ? (
                         <div className="text-center py-20">
                             <div className="animate-pulse text-blue-600 text-xl">Načítavam hráčov...</div>
@@ -93,7 +132,7 @@ function PlayersPage() {
                                 </button>
                             </div>
                         </div>
-                    ) : players.length === 0 ? (
+                    ) : filteredPlayers.length === 0 ? (
                         <div className="max-w-2xl mx-auto py-20">
                             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-8 text-center">
                                 <div className="text-blue-600 text-xl">
@@ -103,9 +142,7 @@ function PlayersPage() {
                         </div>
                     ) : (
                         <div>
-                            <div className="mb-4 text-blue-700 font-semibold border-b-2 border-blue-200 pb-2">
-                                Nájdených hráčov: <span className="text-blue-900">{players.length}</span>
-                            </div>
+                            <div className="mb-4 text-blue-700 font-semibold border-b-2 border-blue-200 pb-2"></div>
 
                             {/* Players Table */}
                             <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-blue-200">
@@ -121,7 +158,7 @@ function PlayersPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {players.map((player, index) => (
+                                        {filteredPlayers.map((player, index) => (
                                             <tr
                                                 key={player.user_ID}
                                                 onClick={() => {

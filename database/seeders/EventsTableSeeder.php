@@ -25,6 +25,7 @@ class EventsTableSeeder extends Seeder
                 'event_type' => 'SOLO',
                 'leader_email' => 'lena.andrejova@example.com',
                 'max_participants' => 16,
+                'event_state' => 'REGISTRATION',
                 'participants' => [
                     ['email' => 'lena.andrejova@example.com', 'final_placement' => 1],
                     ['email' => 'marek.varga@example.com', 'final_placement' => 2],
@@ -63,6 +64,7 @@ class EventsTableSeeder extends Seeder
                 'event_type' => 'TEAM',
                 'leader_email' => 'admin@digitick.test',
                 'max_participants' => 12,
+                'event_state' => 'FINISHED',
                 'teams' => [
                     ['team_name' => 'Cyber Falcons', 'final_placement' => 1],
                     ['team_name' => 'Quantum Owls', 'final_placement' => 2],
@@ -78,6 +80,7 @@ class EventsTableSeeder extends Seeder
                 'event_type' => 'SOLO',
                 'leader_email' => 'denis.kovac@example.com',
                 'max_participants' => 32,
+                'event_state' => 'REGISTRATION',
                 'participants' => [
                     ['email' => 'denis.kovac@example.com', 'final_placement' => 1],
                     ['email' => 'marco.hrasko@example.com', 'final_placement' => 2],
@@ -107,6 +110,34 @@ class EventsTableSeeder extends Seeder
                         'winner' => 'denis.kovac@example.com',
                     ],
                 ],
+            ],
+            [
+                'event_name' => 'Duel of the Duchy',
+                'description' => 'Historický šermiarsky duel v štýle duchov starých čias.',
+                'event_date' => '2025-11-20',
+                'location' => 'Staré Mesto',
+                'event_type' => 'SOLO',
+                'leader_email' => 'admin@digitick.test',
+                'max_participants' => 8,
+                'event_state' => 'REGISTRATION',
+                'participants' => [
+                    ['email' => 'admin@digitick.test', 'final_placement' => 1],
+                ],
+                'matches' => [],
+            ],
+            [
+                'event_name' => 'Duel Duchov 2v2',
+                'description' => 'Tímový duel duchov - rýchle zápasy v pároch.',
+                'event_date' => '2025-11-25',
+                'location' => 'Hradná Sieň',
+                'event_type' => 'TEAM',
+                'leader_email' => 'admin@digitick.test',
+                'max_participants' => 4,
+                'event_state' => 'REGISTRATION',
+                'teams' => [
+                    ['team_name' => 'Cyber Falcons', 'final_placement' => 1],
+                ],
+                'matches' => [],
             ],
         ];
 

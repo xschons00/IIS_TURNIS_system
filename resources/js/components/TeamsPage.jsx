@@ -10,6 +10,7 @@ function TeamsPage() {
     const [teams, setTeams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
         const fetchTeams = async () => {
@@ -70,6 +71,12 @@ function TeamsPage() {
         fetchTeams();
     }, []);
 
+    const filteredTeams = teams.filter((team) => {
+        const query = search.trim().toLowerCase();
+        if (!query) return true;
+        return (team.team_name || '').toLowerCase().startsWith(query);
+    });
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-50 p-5">
             <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -103,6 +110,15 @@ function TeamsPage() {
 
                 {/* Teams Grid */}
                 <div className="p-6 bg-gradient-to-br from-gray-50 to-blue-50">
+                    <div className="flex flex-col md:flex-row gap-3 mb-4">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="🔍 Hľadať tím podľa názvu"
+                            className="flex-1 px-4 py-3 border-2 border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:outline-none bg-white"
+                        />
+                    </div>
                     {loading ? (
                         <div className="text-center py-20">
                             <div className="animate-pulse text-blue-600 text-xl">Načítavam tímy...</div>
@@ -124,7 +140,7 @@ function TeamsPage() {
                                 </button>
                             </div>
                         </div>
-                    ) : teams.length === 0 ? (
+                    ) : filteredTeams.length === 0 ? (
                         <div className="max-w-2xl mx-auto py-20">
                             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-8 text-center">
                                 <div className="text-blue-600 text-xl">
@@ -134,11 +150,8 @@ function TeamsPage() {
                         </div>
                     ) : (
                         <div>
-                            <div className="mb-4 text-blue-700 font-semibold">
-                                Nájdených tímov: <span className="text-blue-900">{teams.length}</span>
-                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {teams.map((team) => (
+                                {filteredTeams.map((team) => (
                                     <TeamCard key={team.team_ID} team={team} />
                                 ))}
                             </div>
