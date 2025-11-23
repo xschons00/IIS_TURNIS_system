@@ -3,6 +3,7 @@ import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import { apiFetch } from '../utils/api';
+import { appUrl } from '../utils/url';
 
 function PlayersPage() {
     const [players, setPlayers] = useState([]);
