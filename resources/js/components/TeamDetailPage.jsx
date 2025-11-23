@@ -15,6 +15,18 @@ function TeamDetailPage() {
     const [error, setError] = useState(null);
     const [isLeader, setIsLeader] = useState(false);
 
+    // Delete modal state
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    // Edit modal state
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editMembers, setEditMembers] = useState([]);
+    const [newMemberUsername, setNewMemberUsername] = useState('');
+    const [memberError, setMemberError] = useState(null);
+    const [editLoading, setEditLoading] = useState(false);
+    const [allPlayers, setAllPlayers] = useState([]);
+
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
@@ -82,6 +94,108 @@ function TeamDetailPage() {
 
     const handleMemberClick = (userId) => {
         window.location.href = appUrl(`/players/${userId}`);
+    };
+
+    // Delete team handler
+    const handleDeleteTeam = async () => {
+        try {
+            setDeleteLoading(true);
+            const response = await apiFetch(`/api/teams/${teamId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error('Nepodarilo sa vymazať tím');
+            }
+
+            // Redirect to teams page
+            window.location.href = appUrl('/teams');
+        } catch (err) {
+            console.error('Error deleting team:', err);
+            alert('Chyba pri mazaní týmu: ' + err.message);
+            setDeleteLoading(false);
+        }
+    };
+
+    // Edit team - open modal
+    const handleEditTeam = async () => {
+        try {
+            // Fetch all players for validation
+            const playersResponse = await apiFetch('/api/players');
+            if (playersResponse.ok) {
+                const players = await playersResponse.json();
+                setAllPlayers(players);
+            }
+
+            // Set current members as edit members
+            setEditMembers([...members]);
+            setShowEditModal(true);
+        } catch (err) {
+            console.error('Error opening edit modal:', err);
+        }
+    };
+
+    // Add member to edit list
+    const handleAddMemberToEdit = () => {
+        const username = newMemberUsername.trim();
+
+        if (!username) {
+            return;
+        }
+
+        // Check if already in list
+        if (editMembers.some(m => m.user_name === username)) {
+            setMemberError('Tento používateľ už je členom týmu');
+            return;
+        }
+
+        // Find user
+        const foundUser = allPlayers.find(p => p.user_name === username);
+        if (!foundUser) {
+            setMemberError('Používateľ s týmto používateľským menom neexistuje');
+            return;
+        }
+
+        // Add to list
+        setEditMembers([...editMembers, foundUser]);
+        setNewMemberUsername('');
+        setMemberError(null);
+    };
+
+    // Remove member from edit list
+    const handleRemoveMemberFromEdit = (userId) => {
+        setEditMembers(editMembers.filter(m => m.user_ID !== userId));
+    };
+
+    // Save edited team members
+    const handleSaveTeamEdit = async () => {
+        try {
+            setEditLoading(true);
+            setMemberError(null);
+
+            const memberIds = editMembers.map(m => m.user_ID);
+
+            const response = await apiFetch(`/api/teams/${teamId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    members: memberIds
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Nepodarilo sa uložiť zmeny');
+            }
+
+            // Reload page to show updated members
+            window.location.reload();
+        } catch (err) {
+            console.error('Error saving team edit:', err);
+            setMemberError('Chyba pri ukladaní: ' + err.message);
+            setEditLoading(false);
+        }
     };
 
     if (loading) {
@@ -189,14 +303,14 @@ function TeamDetailPage() {
                         {isLeader && (
                             <div className="flex flex-col gap-2">
                                 <button
+                                    onClick={handleEditTeam}
                                     className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-                                    disabled
                                 >
                                     ✏️ Upraviť tím
                                 </button>
                                 <button
+                                    onClick={() => setShowDeleteModal(true)}
                                     className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap"
-                                    disabled
                                 >
                                     🗑️ Vymazať tím
                                 </button>
@@ -362,6 +476,150 @@ function TeamDetailPage() {
 
                 <Footer />
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+                        <div className="bg-gradient-to-r from-red-600 to-red-500 p-6 rounded-t-xl">
+                            <h2 className="text-2xl font-bold text-white">🗑️ Vymazať tím</h2>
+                        </div>
+
+                        <div className="p-6">
+                            <p className="text-gray-700 text-lg mb-6">
+                                Naozaj chcete vymazať tím <strong>{team.team_name}</strong>?
+                            </p>
+                            <p className="text-red-600 text-sm mb-6">
+                                ⚠️ Táto akcia je nevratná a tím bude natrvalo odstránený.
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                                    disabled={deleteLoading}
+                                >
+                                    Zrušiť
+                                </button>
+                                <button
+                                    onClick={handleDeleteTeam}
+                                    className="flex-1 px-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                    disabled={deleteLoading}
+                                >
+                                    {deleteLoading ? 'Mažem...' : 'Vymazať'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Team Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-6 rounded-t-xl">
+                            <h2 className="text-2xl font-bold text-white">✏️ Upraviť tím</h2>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="mb-6">
+                                <h3 className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
+                                    👥 Členovia týmu
+                                </h3>
+
+                                {/* Add member input */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                        Používateľské meno člena
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newMemberUsername}
+                                            onChange={(e) => {
+                                                setNewMemberUsername(e.target.value);
+                                                setMemberError(null);
+                                            }}
+                                            className={`flex-1 px-4 py-3 border-2 rounded-lg focus:outline-none text-gray-900 ${
+                                                memberError ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                            }`}
+                                            placeholder="napr. jan123"
+                                            disabled={editLoading}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddMemberToEdit}
+                                            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                            disabled={editLoading || !newMemberUsername.trim()}
+                                        >
+                                            + Pridať
+                                        </button>
+                                    </div>
+                                    {memberError && (
+                                        <div className="mt-2 text-sm text-red-600 font-semibold">
+                                            ⚠ {memberError}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Members list */}
+                                {editMembers.length > 0 && (
+                                    <div>
+                                        <div className="text-sm font-bold text-gray-700 mb-2">
+                                            Členovia ({editMembers.length})
+                                        </div>
+                                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                                            {editMembers.map((member) => (
+                                                <div
+                                                    key={member.user_ID}
+                                                    className="flex justify-between items-center px-4 py-3 bg-white border-2 border-blue-200 rounded-lg"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-gray-900">{member.user_name}</span>
+                                                        {member.user_ID === team.team_leader_id && (
+                                                            <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded">
+                                                                SPRÁVCA
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {member.user_ID !== team.team_leader_id && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveMemberFromEdit(member.user_ID)}
+                                                            className="text-red-600 hover:text-red-800 font-semibold text-sm disabled:opacity-50"
+                                                            disabled={editLoading}
+                                                        >
+                                                            ✖ Odstrániť
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowEditModal(false)}
+                                    className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                                    disabled={editLoading}
+                                >
+                                    Zrušiť
+                                </button>
+                                <button
+                                    onClick={handleSaveTeamEdit}
+                                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all disabled:opacity-50"
+                                    disabled={editLoading}
+                                >
+                                    {editLoading ? 'Ukladám...' : 'Uložiť'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

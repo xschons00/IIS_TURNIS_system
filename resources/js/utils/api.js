@@ -23,5 +23,11 @@ export const apiFetch = (endpoint, options = {}) => {
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = isAbsolute ? endpoint : `${API_BASE_URL}${normalizedEndpoint}`;
 
-    return fetch(url, options);
+    // Include credentials by default for session-based auth
+    const fetchOptions = {
+        credentials: 'include',
+        ...options
+    };
+
+    return fetch(url, fetchOptions);
 };
