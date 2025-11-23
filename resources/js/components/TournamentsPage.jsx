@@ -10,6 +10,7 @@ function TournamentsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState('all'); // all, registration, ongoing, finished
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
         const fetchTournaments = async () => {
@@ -33,8 +34,11 @@ function TournamentsPage() {
                     return stateMap[state] || state;
                 };
 
+                // Filter to only approved/active (not NEW)
+                const approved = data.filter((event) => event.event_state && event.event_state !== 'NEW');
+
                 const transformedData = await Promise.all(
-                    data.map(async (event) => {
+                    approved.map(async (event) => {
                         try {
                             const countResponse = await apiFetch(`/api/events/${event.event_ID}/participants/count`, {
                                 credentials: 'include',
@@ -80,11 +84,18 @@ function TournamentsPage() {
     }, []);
 
     const filteredTournaments = tournaments.filter(tournament => {
-        if (filter === 'all') return true;
-        if (filter === 'registration') return tournament.status === 'REGISTRÁCIA';
-        if (filter === 'ongoing') return tournament.status === 'PREBIEHA';
-        if (filter === 'finished') return tournament.status === 'UKONČENÝ';
-        return true;
+        const matchesFilter =
+            filter === 'all' ||
+            (filter === 'registration' && tournament.status === 'REGISTRÁCIA') ||
+            (filter === 'ongoing' && tournament.status === 'PREBIEHA') ||
+            (filter === 'finished' && tournament.status === 'UKONČENÝ');
+
+        const query = search.trim().toLowerCase();
+        const title = (tournament.title || '').toLowerCase();
+        const type = (tournament.type || '').toLowerCase();
+        const matchesSearch = !query || title.startsWith(query) || type.startsWith(query);
+
+        return matchesFilter && matchesSearch;
     });
 
     return (
@@ -119,7 +130,7 @@ function TournamentsPage() {
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="bg-white border-b border-blue-200 px-6 py-4">
+                <div className="bg-white border-b border-blue-200 px-6 py-4 space-y-3">
                     <div className="flex gap-2">
                         <button
                             onClick={() => setFilter('all')}
@@ -161,6 +172,15 @@ function TournamentsPage() {
                         >
                             Ukončené
                         </button>
+                    </div>
+                    <div className="flex flex-col md:flex-row gap-3">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="🔍 Hľadať podľa názvu alebo typu"
+                            className="flex-1 px-4 py-3 border-2 border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:outline-none bg-white"
+                        />
                     </div>
                 </div>
 
