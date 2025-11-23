@@ -56,6 +56,7 @@ class isEventLeader
             return false;
         }
 
-        return strpos($route->uri(), 'matches/') === 0;
+        $uri = ltrim($route->uri(), '/');
+        return preg_match('#^(api/)?matches/#', $uri) === 1;
     }
 }

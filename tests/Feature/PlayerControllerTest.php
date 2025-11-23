@@ -36,6 +36,7 @@ class PlayerControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
+            ->assertJson(['message' => 'Players retrieved'])
             ->assertJsonFragment(['user_name' => 'player1'])
             ->assertJsonFragment(['user_name' => 'player2']);
     }
@@ -78,7 +79,12 @@ class PlayerControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertJsonFragment(['user_ID' => $player->user_ID]);
+            ->assertJson([
+                'message' => 'Player retrieved',
+                'data' => [
+                    'user_ID' => $player->user_ID,
+                ],
+            ]);
     }
 
     public function test_update_modifies_existing_player(): void

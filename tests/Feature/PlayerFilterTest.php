@@ -19,10 +19,12 @@ class PlayerFilterTest extends TestCase
 
         $request = Request::create('/filters/players', 'GET');
 
-        $result = $filter->GetPlayersFilter($request);
+        $response = $filter->GetPlayersFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(3, $result);
-        $this->assertInstanceOf(User::class, $result->first());
+        $this->assertArrayHasKey('user_ID', $result->first());
     }
 
     public function test_get_players_filter_applies_simple_filters(): void
@@ -36,10 +38,12 @@ class PlayerFilterTest extends TestCase
             'filters' => ['faculty' => 'CHEMISTRY'],
         ]);
 
-        $result = $filter->GetPlayersFilter($request);
+        $response = $filter->GetPlayersFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(1, $result);
-        $this->assertEquals('alice', $result->first()->user_name);
+        $this->assertEquals('alice', $result->first()['user_name']);
     }
 
     public function test_get_players_filter_ignores_null_filters(): void
@@ -53,7 +57,9 @@ class PlayerFilterTest extends TestCase
             'filters' => ['faculty' => null],
         ]);
 
-        $result = $filter->GetPlayersFilter($request);
+        $response = $filter->GetPlayersFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(2, $result);
     }

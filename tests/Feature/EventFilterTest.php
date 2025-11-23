@@ -19,10 +19,12 @@ class EventFilterTest extends TestCase
 
         $request = Request::create('/filters/events', 'GET');
 
-        $result = $filter->GetEventsFilter($request);
+        $response = $filter->GetEventsFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(3, $result);
-        $this->assertInstanceOf(Event::class, $result->first());
+        $this->assertArrayHasKey('event_ID', $result->first());
     }
 
     public function test_get_events_filter_applies_simple_filters(): void
@@ -35,10 +37,12 @@ class EventFilterTest extends TestCase
             'filters' => ['event_type' => 'SOLO']
         ]);
 
-        $result = $filter->GetEventsFilter($request);
+        $response = $filter->GetEventsFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(1, $result);
-        $this->assertEquals('Alpha', $result->first()->event_name);
+        $this->assertEquals('Alpha', $result->first()['event_name']);
     }
 
     public function test_get_events_filter_ignores_null_filters(): void
@@ -51,7 +55,9 @@ class EventFilterTest extends TestCase
             'filters' => ['event_type' => null],
         ]);
 
-        $result = $filter->GetEventsFilter($request);
+        $response = $filter->GetEventsFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(2, $result);
     }

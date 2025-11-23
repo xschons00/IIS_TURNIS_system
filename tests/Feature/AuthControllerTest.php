@@ -25,7 +25,8 @@ class AuthControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertJsonPath('user.email', 'user@example.com');
+            ->assertJsonPath('data.user.email', 'user@example.com')
+            ->assertJson(['message' => 'Login successful']);
 
         $this->assertAuthenticatedAs($user);
     }
@@ -57,7 +58,8 @@ class AuthControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertJsonPath('email', 'me@example.com');
+            ->assertJsonPath('data.email', 'me@example.com')
+            ->assertJson(['message' => 'Authenticated user']);
     }
 
     public function test_me_requires_authentication(): void

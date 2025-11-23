@@ -41,7 +41,8 @@ class AdminAuthorizationTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertJsonPath('team_name', 'Updated Team');
+            ->assertJsonPath('data.team_name', 'Updated Team')
+            ->assertJson(['message' => 'Team updated']);
 
         $this->assertDatabaseHas('teams', [
             'team_ID' => $team->team_ID,

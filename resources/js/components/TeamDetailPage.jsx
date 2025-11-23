@@ -137,7 +137,7 @@ function TeamDetailPage() {
 
         try {
             setLeaveLoading(true);
-            const response = await apiFetch(`/api/teams/${teamId}/members`, {
+            const response = await apiFetch(`/api/teams/${teamId}/members/leave`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
