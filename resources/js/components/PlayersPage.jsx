@@ -25,6 +25,40 @@ function PlayersPage() {
 
                 const { data } = await parseApiJson(response);
                 const playersData = Array.isArray(data) ? data : [];
+
+                // Precompute tournaments and wins from events/matches (solo events only)
+                const tournamentsMap = {};
+                const winsMap = {};
+                try {
+                    const eventsResponse = await apiFetch('/api/events');
+                    const { data: eventsData } = eventsResponse.ok ? await parseApiJson(eventsResponse) : { data: [] };
+                    const events = Array.isArray(eventsData) ? eventsData : [];
+                    const soloEvents = events.filter((event) => (event.event_type || '').toUpperCase() === 'SOLO');
+
+                    for (const event of soloEvents) {
+                        const matchesResponse = await apiFetch(`/api/events/${event.event_ID}/matches`);
+                        if (!matchesResponse.ok) continue;
+                        const { data: matchesData } = await parseApiJson(matchesResponse);
+                        const matches = Array.isArray(matchesData?.matches) ? matchesData.matches : [];
+                        if (matches.length === 0) continue;
+
+                        const participantSet = new Set();
+                        matches.forEach((match) => {
+                            if (match.participant_A) participantSet.add(match.participant_A);
+                            if (match.participant_B) participantSet.add(match.participant_B);
+                            if (match.winner) {
+                                winsMap[match.winner] = (winsMap[match.winner] || 0) + 1;
+                            }
+                        });
+
+                        participantSet.forEach((id) => {
+                            tournamentsMap[id] = (tournamentsMap[id] || 0) + 1;
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error calculating player stats from events:', err);
+                }
+
                 // Transform backend data to match frontend expectations
                 // Filter out admin users - only show regular users
                 const transformedData = playersData
@@ -33,8 +67,8 @@ function PlayersPage() {
                         user_ID: user.user_ID,
                         user_name: user.user_name,
                         ranking: user.ranking || 0,
-                        tournaments: 0, // TODO: backend tournaments count
-                        wins: 0, // TODO: backend wins
+                        tournaments: tournamentsMap[user.user_ID] || 0,
+                        wins: winsMap[user.user_ID] || 0,
                         registered: user.created_at ? formatDate(user.created_at) : 'N/A',
                         faculty: user.faculty || 'OTHER',
                     }))

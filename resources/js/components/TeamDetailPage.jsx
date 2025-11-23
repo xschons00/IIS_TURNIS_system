@@ -31,6 +31,16 @@ function TeamDetailPage() {
     const [leaveLoading, setLeaveLoading] = useState(false);
     const [editTeamName, setEditTeamName] = useState('');
     const [teamNameError, setTeamNameError] = useState(null);
+    const [tournamentHistory, setTournamentHistory] = useState([]);
+    const [activeTournaments, setActiveTournaments] = useState([]);
+    const [tournamentLoading, setTournamentLoading] = useState(false);
+    const [tournamentError, setTournamentError] = useState(null);
+    const [teamStats, setTeamStats] = useState({
+        matchesPlayed: 0,
+        goldMedals: 0,
+        silverMedals: 0,
+        bronzeMedals: 0,
+    });
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -83,6 +93,114 @@ function TeamDetailPage() {
 
         fetchTeamData();
     }, [teamId]);
+
+    useEffect(() => {
+        const loadTeamTournaments = async () => {
+            if (!team?.team_ID) return;
+            setTournamentLoading(true);
+            setTournamentError(null);
+            setTournamentHistory([]);
+            setActiveTournaments([]);
+            setTeamStats({
+                matchesPlayed: 0,
+                goldMedals: 0,
+                silverMedals: 0,
+                bronzeMedals: 0,
+            });
+
+            try {
+                const eventsResponse = await apiFetch('/api/events');
+                const { data: eventsData } = eventsResponse.ok ? await parseApiJson(eventsResponse) : { data: [] };
+                const events = Array.isArray(eventsData) ? eventsData : [];
+                const teamEvents = events.filter((event) => (event.event_type || '').toUpperCase() === 'TEAM');
+
+                let matchesPlayed = 0;
+                let goldMedals = 0;
+                let silverMedals = 0;
+                let bronzeMedals = 0;
+                const history = [];
+                const active = [];
+
+                for (const event of teamEvents) {
+                    const matchesResponse = await apiFetch(`/api/events/${event.event_ID}/matches`);
+                    if (!matchesResponse.ok) continue;
+                    const { data: matchesData } = await parseApiJson(matchesResponse);
+                    const matches = Array.isArray(matchesData?.matches) ? matchesData.matches : [];
+                    if (matches.length === 0) continue;
+
+                    const relevantMatches = matches.filter(
+                        (match) => match.participant_A === team.team_ID || match.participant_B === team.team_ID
+                    );
+
+                    if (relevantMatches.length === 0) continue;
+
+                    matchesPlayed += relevantMatches.length;
+                    const wins = relevantMatches.filter((m) => m.winner === team.team_ID).length;
+
+                    const maxRound = matches.reduce((max, m) => Math.max(max, m.round || 0), 0);
+                    const reachedFinal = maxRound > 0 && relevantMatches.some((m) => (m.round || 0) === maxRound);
+                    const wonFinal = reachedFinal && relevantMatches.some(
+                        (m) => (m.round || 0) === maxRound && m.winner === team.team_ID
+                    );
+                    if (wonFinal) {
+                        goldMedals += 1;
+                    } else if (reachedFinal) {
+                        silverMedals += 1;
+                    } else if (maxRound > 1 && relevantMatches.some((m) => (m.round || 0) === maxRound - 1)) {
+                        bronzeMedals += 1;
+                    }
+
+                    const pointsEarned = relevantMatches.reduce((sum, match) => {
+                        if (match.participant_A === team.team_ID) {
+                            return sum + (match.participant_A_points || 0);
+                        }
+                        if (match.participant_B === team.team_ID) {
+                            return sum + (match.participant_B_points || 0);
+                        }
+                        return sum;
+                    }, 0);
+
+                    history.push({
+                        name: event.event_name,
+                        date: event.event_date,
+                        position: wonFinal ? 1 : reachedFinal ? 2 : null,
+                        points: pointsEarned,
+                    });
+
+                    if (['NEW', 'REGISTRATION', 'ONGOING'].includes((event.event_state || '').toUpperCase())) {
+                        active.push({
+                            name: event.event_name,
+                            status: event.event_state,
+                        });
+                    }
+                }
+
+                setTournamentHistory(history);
+                setActiveTournaments(active);
+                setTeamStats({
+                    matchesPlayed,
+                    goldMedals,
+                    silverMedals,
+                    bronzeMedals,
+                });
+            } catch (err) {
+                console.error('Error loading team tournaments:', err);
+                setTournamentError('Nepodarilo sa načítať turnaje tímu');
+                setTournamentHistory([]);
+                setActiveTournaments([]);
+                setTeamStats({
+                    matchesPlayed: 0,
+                    goldMedals: 0,
+                    silverMedals: 0,
+                    bronzeMedals: 0,
+                });
+            } finally {
+                setTournamentLoading(false);
+            }
+        };
+
+        loadTeamTournaments();
+    }, [team?.team_ID]);
 
     const getInitials = (firstName, lastName) => {
         const first = firstName?.charAt(0)?.toUpperCase() || '';
@@ -289,19 +407,7 @@ function TeamDetailPage() {
         );
     }
 
-    // TODO: Fetch real tournament history from API
-    const tournamentHistory = [];
-
-    // TODO: Fetch real active tournaments from API
-    const activeTournaments = [];
-
-    // Calculate statistics
-    const stats = {
-        matchesPlayed: tournamentHistory.length,
-        goldMedals: tournamentHistory.filter(t => t.position === 1).length,
-        silverMedals: tournamentHistory.filter(t => t.position === 2).length,
-        bronzeMedals: tournamentHistory.filter(t => t.position === 3).length,
-    };
+    const stats = teamStats;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-50 p-5">
@@ -338,7 +444,9 @@ function TeamDetailPage() {
                                 </div>
                                 <div>
                                     <div className="text-xs text-blue-600 mb-1">TURNAJE</div>
-                                    <div className="text-2xl font-bold text-blue-900">{tournamentHistory.length}</div>
+                                    <div className="text-2xl font-bold text-blue-900">
+                                        {tournamentLoading ? '...' : tournamentHistory.length}
+                                    </div>
                                 </div>
                                 <div>
                                     <div className="text-xs text-blue-600 mb-1">VÝHRY</div>
@@ -468,7 +576,13 @@ function TeamDetailPage() {
                                 <h3 className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
                                     🎯 Aktuálne turnaje
                                 </h3>
-                                {activeTournaments.length === 0 ? (
+                                {tournamentLoading ? (
+                                    <div className="text-center py-4 text-blue-600">Načítavam aktuálne turnaje...</div>
+                                ) : tournamentError ? (
+                                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-center text-red-700">
+                                        {tournamentError}
+                                    </div>
+                                ) : activeTournaments.length === 0 ? (
                                     <div className="text-center py-4 text-gray-500">
                                         Žiadne aktuálne turnaje
                                     </div>
@@ -486,12 +600,18 @@ function TeamDetailPage() {
                         </div>
                     </div>
 
-                    {/* Tournament History - Full Width */}
-                    <div className="bg-white rounded-lg shadow-lg border-2 border-blue-200 p-6">
-                        <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
-                            📅 História turnajov
-                        </h2>
-                        {tournamentHistory.length === 0 ? (
+                        {/* Tournament History - Full Width */}
+                        <div className="bg-white rounded-lg shadow-lg border-2 border-blue-200 p-6">
+                            <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
+                                📅 História turnajov
+                            </h2>
+                        {tournamentLoading ? (
+                            <div className="text-center py-6 text-blue-600">Načítavam históriu...</div>
+                        ) : tournamentError ? (
+                            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-center text-red-700">
+                                {tournamentError}
+                            </div>
+                        ) : tournamentHistory.length === 0 ? (
                             <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
                                 <div className="text-gray-500 text-lg">
                                     Tento tím sa zatiaľ nezúčastnil žiadneho turnaja
@@ -511,9 +631,9 @@ function TeamDetailPage() {
                                     <tbody>
                                         {tournamentHistory.map((tournament, index) => (
                                             <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                <td className="p-3 border-b border-gray-200">{tournament.name}</td>
-                                                <td className="p-3 border-b border-gray-200">{formatDate(tournament.date)}</td>
-                                                <td className="p-3 border-b border-gray-200">
+                                                    <td className="p-3 border-b border-gray-200">{tournament.name}</td>
+                                                    <td className="p-3 border-b border-gray-200">{formatDate(tournament.date)}</td>
+                                                    <td className="p-3 border-b border-gray-200">
                                                     <span className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${
                                                         tournament.position === 1 ? 'bg-yellow-100 border-2 border-yellow-600 text-yellow-900' :
                                                         tournament.position === 2 ? 'bg-gray-200 border-2 border-gray-600 text-gray-900' :
@@ -523,12 +643,12 @@ function TeamDetailPage() {
                                                         {tournament.position === 1 ? '🥇 1. miesto' :
                                                          tournament.position === 2 ? '🥈 2. miesto' :
                                                          tournament.position === 3 ? '🥉 3. miesto' :
-                                                         `${tournament.position}. miesto`}
+                                                         tournament.position ? `${tournament.position}. miesto` : 'Účasť'}
                                                     </span>
-                                                </td>
-                                                <td className="p-3 border-b border-gray-200 font-bold text-blue-900">
-                                                    +{tournament.points} b.
-                                                </td>
+                                                    </td>
+                                                    <td className="p-3 border-b border-gray-200 font-bold text-blue-900">
+                                                        +{tournament.points} b.
+                                                    </td>
                                             </tr>
                                         ))}
                                     </tbody>
