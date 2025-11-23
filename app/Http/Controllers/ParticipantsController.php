@@ -130,6 +130,7 @@ class ParticipantsController
             PlayerParticipant::create([
                 'event_ID' => $event->event_ID,
                 'user_ID' => $user->user_ID,
+                'status' => 'REQUESTED',
             ]);
         } elseif ($type === 'TEAM') {
             $team = Team::where('team_leader_id', $user->user_ID)->first();
@@ -153,6 +154,7 @@ class ParticipantsController
             TeamParticipant::create([
                 'event_ID' => $event->event_ID,
                 'team_ID' => $team->team_ID,
+                'status' => 'REQUESTED',
             ]);
         } else {
             return response()->json([

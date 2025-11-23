@@ -13,6 +13,7 @@ class TeamParticipant extends Pivot
     protected $fillable = [
         'event_ID',
         'team_ID',
+        'status',
         'final_placement',
         'final_points',
     ];

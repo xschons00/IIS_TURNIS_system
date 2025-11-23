@@ -40,7 +40,7 @@ class Team extends Model
             'team_participants',
             'team_ID',
             'event_ID'
-        )->withPivot('final_placement')
+        )->withPivot('final_placement')->withPivot('final_points')->withPivot('status')
          ->using(TeamParticipant::class);
     }
 
