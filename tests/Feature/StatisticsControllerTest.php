@@ -76,10 +76,13 @@ class StatisticsControllerTest extends TestCase
         $response
             ->assertStatus(200)
             ->assertJson([
-                'active_events' => 2,
-                'registered_users' => 3,
-                'teams' => 2,
-                'matches' => 1,
+                'message' => 'Statistics retrieved',
+                'data' => [
+                    'active_events' => 2,
+                    'registered_users' => 3,
+                    'teams' => 2,
+                    'matches' => 1,
+                ],
             ]);
     }
 }

@@ -19,10 +19,12 @@ class TeamFilterTest extends TestCase
 
         $request = Request::create('/filters/teams', 'GET');
 
-        $result = $filter->GetTeamsFilter($request);
+        $response = $filter->GetTeamsFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(3, $result);
-        $this->assertInstanceOf(Team::class, $result->first());
+        $this->assertArrayHasKey('team_ID', $result->first());
     }
 
     public function test_get_teams_filter_applies_simple_filters(): void
@@ -35,10 +37,12 @@ class TeamFilterTest extends TestCase
             'filters' => ['ranking' => 100]
         ]);
 
-        $result = $filter->GetTeamsFilter($request);
+        $response = $filter->GetTeamsFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(1, $result);
-        $this->assertEquals('Red', $result->first()->team_name);
+        $this->assertEquals('Red', $result->first()['team_name']);
     }
 
     public function test_get_teams_filter_ignores_null_filters(): void
@@ -51,7 +55,9 @@ class TeamFilterTest extends TestCase
             'filters' => ['ranking' => null],
         ]);
 
-        $result = $filter->GetTeamsFilter($request);
+        $response = $filter->GetTeamsFilter($request);
+        $payload = $response->getData(true);
+        $result = collect($payload['data']);
 
         $this->assertCount(2, $result);
     }

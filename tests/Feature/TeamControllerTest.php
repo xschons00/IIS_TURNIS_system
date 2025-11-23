@@ -27,6 +27,7 @@ class TeamControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
+            ->assertJson(['message' => 'Teams retrieved'])
             ->assertJsonFragment(['team_name' => 'Alpha'])
             ->assertJsonFragment(['team_name' => 'Beta']);
     }
@@ -62,7 +63,12 @@ class TeamControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertJsonFragment(['team_ID' => $team->team_ID]);
+            ->assertJson([
+                'message' => 'Team retrieved',
+                'data' => [
+                    'team_ID' => $team->team_ID,
+                ],
+            ]);
     }
 
     public function test_update_modifies_existing_team(): void

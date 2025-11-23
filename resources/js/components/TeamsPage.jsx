@@ -25,6 +25,39 @@ function TeamsPage() {
                 const { data } = await parseApiJson(response);
                 const teamsData = Array.isArray(data) ? data : [];
 
+                // Precompute tournaments and wins for teams from events/matches (TEAM events)
+                const tournamentsMap = {};
+                const winsMap = {};
+                try {
+                    const eventsResponse = await apiFetch('/api/events');
+                    const { data: eventsData } = eventsResponse.ok ? await parseApiJson(eventsResponse) : { data: [] };
+                    const eventsList = Array.isArray(eventsData) ? eventsData : [];
+                    const teamEvents = eventsList.filter((event) => (event.event_type || '').toUpperCase() === 'TEAM');
+
+                    for (const event of teamEvents) {
+                        const matchesResponse = await apiFetch(`/api/events/${event.event_ID}/matches`);
+                        if (!matchesResponse.ok) continue;
+                        const { data: matchesData } = await parseApiJson(matchesResponse);
+                        const matches = Array.isArray(matchesData?.matches) ? matchesData.matches : [];
+                        if (matches.length === 0) continue;
+
+                        const participantSet = new Set();
+                        matches.forEach((match) => {
+                            if (match.participant_A) participantSet.add(match.participant_A);
+                            if (match.participant_B) participantSet.add(match.participant_B);
+                            if (match.winner) {
+                                winsMap[match.winner] = (winsMap[match.winner] || 0) + 1;
+                            }
+                        });
+
+                        participantSet.forEach((id) => {
+                            tournamentsMap[id] = (tournamentsMap[id] || 0) + 1;
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error calculating team stats from events:', err);
+                }
+
                 // Fetch member counts for each team
                 const teamsWithCounts = await Promise.all(
                     teamsData.map(async (team) => {
@@ -37,8 +70,8 @@ function TeamsPage() {
                                     team_name: team.team_name,
                                     ranking: team.ranking,
                                     members: (countData?.members ?? 0),
-                                    tournaments: 0, // TODO: Get actual tournament count from backend
-                                    wins: 0, // TODO: Calculate wins from team_participants
+                                    tournaments: tournamentsMap[team.team_ID] || 0,
+                                    wins: winsMap[team.team_ID] || 0,
                                     points: team.ranking || 0 // Use ranking as points for now
                                 };
                             }
@@ -51,8 +84,8 @@ function TeamsPage() {
                             team_name: team.team_name,
                             ranking: team.ranking,
                             members: 0,
-                            tournaments: 0,
-                            wins: 0,
+                            tournaments: tournamentsMap[team.team_ID] || 0,
+                            wins: winsMap[team.team_ID] || 0,
                             points: team.ranking || 0
                         };
                     })

@@ -110,10 +110,13 @@ class EventMatchControllerTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJson([
-                     'event_id'   => $event->event_ID,
-                     'event_name' => $event->event_name,
+                     'message' => 'Matches retrieved',
+                     'data' => [
+                         'event_id'   => $event->event_ID,
+                         'event_name' => $event->event_name,
+                     ],
                  ])
-                 ->assertJsonCount(2, 'matches');
+                 ->assertJsonCount(2, 'data.matches');
     }
 
     /* ------------------------------------------------------------
@@ -147,8 +150,11 @@ class EventMatchControllerTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJson([
-                     'event_ID' => $match->event_ID,
-                     'round'    => $match->round,
+                     'message' => 'Match retrieved',
+                     'data' => [
+                         'event_ID' => $match->event_ID,
+                         'round'    => $match->round,
+                     ],
                  ]);
     }
 
@@ -163,7 +169,7 @@ class EventMatchControllerTest extends TestCase
         $response = $this->putJson('/api/matches/999999', []);
 
         $response->assertStatus(404)
-                 ->assertJson(['message' => 'Event not found']);
+                 ->assertJson(['message' => 'Match not found']);
     }
 
     public function test_update_event_match_updates_valid_fields(): void
@@ -192,8 +198,11 @@ class EventMatchControllerTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJson([
-                     'winner' => $participantA->user_ID,
-                     'round'  => 3,
+                     'message' => 'Match updated',
+                     'data' => [
+                         'winner' => $participantA->user_ID,
+                         'round'  => 3,
+                     ],
                  ]);
 
         $this->assertDatabaseHas('event_matches', [
@@ -240,7 +249,7 @@ class EventMatchControllerTest extends TestCase
         $response = $this->deleteJson('/api/matches/999999');
 
         $response->assertStatus(404)
-                 ->assertJson(['message' => 'Event not found']);
+                 ->assertJson(['message' => 'Match not found']);
     }
 
     public function test_delete_event_match_deletes_match(): void

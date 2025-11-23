@@ -37,25 +37,28 @@ class ParticipantsControllerTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJson([
-                     'event_id' => $event->event_ID,
-                     'event_name' => $event->event_name,
-                     'event_type' => 'SOLO',
-                     'participants' => [
-                         [
-                             'user_ID' => $user1->user_ID,
-                             'user_name' => 'user1',
-                             'first_name' => 'First1',
-                             'last_name' => 'Last1',
-                             'faculty' => null,
-                             'ranking' => null,
-                         ],
-                         [
-                             'user_ID' => $user2->user_ID,
-                             'user_name' => 'user2',
-                             'first_name' => 'First2',
-                             'last_name' => 'Last2',
-                             'faculty' => null,
-                             'ranking' => null,
+                     'message' => 'Participants retrieved',
+                     'data' => [
+                         'event_id' => $event->event_ID,
+                         'event_name' => $event->event_name,
+                         'event_type' => 'SOLO',
+                         'participants' => [
+                             [
+                                 'user_ID' => $user1->user_ID,
+                                 'user_name' => 'user1',
+                                 'first_name' => 'First1',
+                                 'last_name' => 'Last1',
+                                 'faculty' => null,
+                                 'ranking' => null,
+                             ],
+                             [
+                                 'user_ID' => $user2->user_ID,
+                                 'user_name' => 'user2',
+                                 'first_name' => 'First2',
+                                 'last_name' => 'Last2',
+                                 'faculty' => null,
+                                 'ranking' => null,
+                             ],
                          ],
                      ],
                  ]);
@@ -74,19 +77,22 @@ class ParticipantsControllerTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJson([
-                     'event_id' => $event->event_ID,
-                     'event_name' => $event->event_name,
-                     'event_type' => 'TEAM',
-                     'participants' => [
-                         [
-                             'team_ID' => $team1->team_ID,
-                             'team_name' => 'Team1',
-                             'ranking' => null,
-                         ],
-                         [
-                             'team_ID' => $team2->team_ID,
-                             'team_name' => 'Team2',
-                             'ranking' => null,
+                     'message' => 'Participants retrieved',
+                     'data' => [
+                         'event_id' => $event->event_ID,
+                         'event_name' => $event->event_name,
+                         'event_type' => 'TEAM',
+                         'participants' => [
+                             [
+                                 'team_ID' => $team1->team_ID,
+                                 'team_name' => 'Team1',
+                                 'ranking' => null,
+                             ],
+                             [
+                                 'team_ID' => $team2->team_ID,
+                                 'team_name' => 'Team2',
+                                 'ranking' => null,
+                             ],
                          ],
                      ],
                  ]);
@@ -120,7 +126,7 @@ class ParticipantsControllerTest extends TestCase
         $response = $this->postJson("/api/events/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
-                 ->assertJson(['message' => 'ok']);
+                 ->assertJson(['message' => 'Registration submitted']);
 
         $this->assertDatabaseHas('player_participants', [
             'event_ID' => $event->event_ID,
@@ -139,7 +145,7 @@ class ParticipantsControllerTest extends TestCase
         $response = $this->postJson("/api/events/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
-                 ->assertJson(['message' => 'ok']);
+                 ->assertJson(['message' => 'Registration submitted']);
 
         $this->assertDatabaseHas('team_participants', [
             'event_ID' => $event->event_ID,
@@ -255,7 +261,7 @@ class ParticipantsControllerTest extends TestCase
         $response = $this->deleteJson("/api/events/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
-                 ->assertJson(['message' => 'ok']);
+                 ->assertJson(['message' => 'Registration removed']);
 
         $this->assertDatabaseMissing('player_participants', [
             'event_ID' => $event->event_ID,
@@ -289,7 +295,7 @@ class ParticipantsControllerTest extends TestCase
         $response = $this->deleteJson("/api/events/{$event->event_ID}/participants");
 
         $response->assertStatus(200)
-                 ->assertJson(['message' => 'ok']);
+                 ->assertJson(['message' => 'Registration removed']);
 
         $this->assertDatabaseMissing('team_participants', [
             'event_ID' => $event->event_ID,
@@ -333,9 +339,12 @@ class ParticipantsControllerTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJson([
-                    'event_id' => $event->event_ID,
-                    'participant_id' => $playerA->user_ID,
-                    'total_points' => 10,
+                    'message' => 'Total points calculated',
+                    'data' => [
+                        'event_id' => $event->event_ID,
+                        'participant_id' => $playerA->user_ID,
+                        'total_points' => 10,
+                    ],
                 ]);
     }
 
@@ -382,8 +391,19 @@ class ParticipantsControllerTest extends TestCase
         $response = $this->getJson("/api/events/{$event->event_ID}/participants/placement");
 
         $response->assertStatus(200)
-            ->assertJsonFragment(['participant_id' => $playerA->user_ID, 'total_points' => 17, 'placement' => 1])
-            ->assertJsonFragment(['participant_id' => $playerB->user_ID, 'total_points' => 16, 'placement' => 2]);
+            ->assertJsonFragment([
+                'message' => 'Final placements calculated',
+            ])
+            ->assertJsonFragment([
+                'participant_id' => $playerA->user_ID,
+                'total_points' => 17,
+                'placement' => 1,
+            ])
+            ->assertJsonFragment([
+                'participant_id' => $playerB->user_ID,
+                'total_points' => 16,
+                'placement' => 2,
+            ]);
 
         $this->assertDatabaseHas('player_participants', [
             'event_ID' => $event->event_ID,

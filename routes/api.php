@@ -38,6 +38,7 @@ Route::get('teams/{id}', [TeamController::class, 'GetTeam']);
 // Team members
 Route::get('teams/{id}/members', [TeamMembersController::class, 'GetTeamMembers']);
 Route::get('teams/{id}/members/count', [TeamMembersController::class, 'GetTeamMemberCount']);
+Route::delete('teams/{id}/members/leave', [TeamMembersController::class, 'LeaveTeam']);
  
 
 // events

@@ -42,6 +42,7 @@ class EventControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
+            ->assertJson(['message' => 'Events retrieved'])
             ->assertJsonFragment(['event_name' => 'Event One'])
             ->assertJsonFragment(['event_name' => 'Event Two']);
     }
@@ -90,7 +91,12 @@ class EventControllerTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertJsonFragment(['event_ID' => $event->event_ID]);
+            ->assertJson([
+                'message' => 'Event retrieved',
+                'data' => [
+                    'event_ID' => $event->event_ID,
+                ],
+            ]);
     }
 
     public function test_update_modifies_existing_event(): void

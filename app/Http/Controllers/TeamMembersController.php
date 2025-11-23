@@ -116,4 +116,42 @@ class TeamMembersController
         return $this->respondWithMessage('Member removed successfully', null, 200);
     }
 
+    /**
+     * DELETE /api/teams/{id}/members/leave
+     * Allows a non-leader member to leave the team.
+     */
+    public function LeaveTeam(Request $request, int $id): JsonResponse
+    {
+        $team = Team::find($id);
+
+        if (! $team) {
+            return $this->respondWithMessage('Team not found', null, 404);
+        }
+
+        $authUser = $request->user();
+        $requestedUserId = $request->input('user_ID');
+        $actingUserId = $authUser->user_ID ?? $requestedUserId;
+
+        if (! $actingUserId) {
+            return $this->respondWithMessage('Unauthorized', null, 401);
+        }
+
+        // If authenticated and acting on someone else without admin rights, block it.
+        if ($authUser && $authUser->user_ID !== $actingUserId && $authUser->role !== 'ADMIN') {
+            return $this->respondWithMessage('Forbidden', null, 403);
+        }
+
+        if ($team->team_leader_id === (int) $actingUserId) {
+            return $this->respondWithMessage('Team leader cannot leave the team', null, 403);
+        }
+
+        if (! $team->members()->where('users.user_ID', $actingUserId)->exists()) {
+            return $this->respondWithMessage('User is not a team member', null, 400);
+        }
+
+        $team->members()->detach($actingUserId);
+
+        return $this->respondWithMessage('Left team successfully', null, 200);
+    }
+
 }
