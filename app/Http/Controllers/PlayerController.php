@@ -85,6 +85,7 @@ class PlayerController
     {
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,user_ID',
+            'user_name' => 'sometimes|string|max:255',
             'first_name' => 'sometimes|string|max:255',
             'last_name' => 'sometimes|string|max:255',
             'faculty' => 'sometimes|string|in:ENGINEERING,CHEMISTRY,COMPUTER_SCIENCE,BUSINESS,ARTS,MATHEMATICS,PHYSICS',
