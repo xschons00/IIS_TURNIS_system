@@ -32,6 +32,7 @@ class EventController
         'location'          => 'required|string|max:255',
         'event_type'        => 'required|in:SOLO,TEAM',
         'event_leader_id'   => 'required',
+        'event_winner'      => 'nullable',
 
         'max_participants' => [
             'required',
@@ -78,6 +79,7 @@ class EventController
             'event_state' => ['sometimes', Rule::in(['NEW', 'REGISTRATION', 'ONGOING', 'FINISHED'])],
             'max_participants' => 'sometimes|integer|min:1',
             'event_leader_id' => ['sometimes', 'exists:users,user_ID'],
+            'event_winner' => ['sometimes', 'exists:users,user_ID'],
         ]);
 
         if (! empty($validated)) {
