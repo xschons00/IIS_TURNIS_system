@@ -8,9 +8,6 @@ use App\Models\User;
 
 class TeamsTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $teams = [
@@ -47,36 +44,27 @@ class TeamsTableSeeder extends Seeder
             ],
         ];
 
-        foreach ($teams as $teamData) {
-            $memberEmails = $teamData['members'];
-            $leaderEmail = $teamData['leader_email'] ?? ($memberEmails[0] ?? null);
-            $leader = null;
+        foreach ($teams as $data) {
 
-            if ($leaderEmail) {
-                $leader = User::where('email', $leaderEmail)->first();
-            }
+            // Leader must exist in users (from UsersTableSeeder)
+            $leader = User::where('email', $data['leader_email'])->firstOrFail();
 
-            if (! $leader) {
-                $leader = User::first();
-            }
-
-            if (! $leader) {
-                $leader = User::factory()->create();
-            }
-
+            // Create/update team
             $team = Team::updateOrCreate(
-                ['team_name' => $teamData['team_name']],
+                ['team_name' => $data['team_name']],
                 [
-                    'ranking' => $teamData['ranking'],
+                    'ranking' => $data['ranking'],
                     'team_leader_id' => $leader->user_ID,
                 ]
             );
 
-            $userIds = User::whereIn('email', $memberEmails)->pluck('user_ID')->all();
+            // Resolve member IDs by email
+            $memberIds = User::whereIn('email', $data['members'])
+                ->pluck('user_ID')
+                ->all();
 
-            if (! empty($userIds)) {
-                $team->members()->sync($userIds);
-            }
+            // Sync pivot entries
+            $team->members()->sync($memberIds);
         }
     }
 }

@@ -11,9 +11,6 @@ use Carbon\Carbon;
 
 class EventsTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $events = [
@@ -142,24 +139,11 @@ class EventsTableSeeder extends Seeder
         ];
 
         foreach ($events as $eventData) {
-            $participants = $eventData['participants'] ?? [];
-            $teams = $eventData['teams'] ?? [];
-            $matches = $eventData['matches'] ?? [];
-            $leaderEmail = $eventData['leader_email'] ?? null;
-            $leader = null;
 
-            if ($leaderEmail) {
-                $leader = User::where('email', $leaderEmail)->first();
-            }
+            // Resolve leader
+            $leader = User::where('email', $eventData['leader_email'])->firstOrFail();
 
-            if (! $leader) {
-                $leader = User::first();
-            }
-
-            if (! $leader) {
-                $leader = User::factory()->create();
-            }
-
+            // Create event
             $event = Event::updateOrCreate(
                 ['event_name' => $eventData['event_name']],
                 [
@@ -169,75 +153,69 @@ class EventsTableSeeder extends Seeder
                     'event_type' => $eventData['event_type'],
                     'max_participants' => $eventData['max_participants'],
                     'event_leader_id' => $leader->user_ID,
-                    'event_state' => $eventData['event_state'] ?? 'NEW',
+                    'event_state' => $eventData['event_state'],
                 ]
             );
 
-            if (! empty($participants)) {
-                $pivotData = [];
-                foreach ($participants as $participant) {
-                    $user = User::where('email', $participant['email'])->first();
-                    if (! $user) {
-                        continue;
-                    }
+            //
+            // SOLO participants → player_participants pivot
+            //
+            if ($eventData['event_type'] === 'SOLO') {
+                $pivot = [];
 
-                    $pivotData[$user->user_ID] = [
-                        'final_placement' => $participant['final_placement'],
+                foreach ($eventData['participants'] ?? [] as $p) {
+                    $user = User::where('email', $p['email'])->first();
+                    if (!$user) continue;
+
+                    $pivot[$user->user_ID] = [
+                        'final_placement' => $p['final_placement'],
+                        'status' => 'ACCEPTED',
                     ];
                 }
 
-                $event->players()->sync($pivotData);
-            } else {
-                $event->players()->detach();
+                $event->players()->sync($pivot);
             }
 
-            if (! empty($teams)) {
-                $pivotData = [];
-                foreach ($teams as $teamInfo) {
-                    $team = Team::where('team_name', $teamInfo['team_name'])->first();
-                    if (! $team) {
-                        continue;
-                    }
+            //
+            // TEAM participants → team_participants pivot
+            //
+            if ($eventData['event_type'] === 'TEAM') {
+                $pivot = [];
 
-                    $pivotData[$team->team_ID] = [
-                        'final_placement' => $teamInfo['final_placement'],
+                foreach ($eventData['teams'] ?? [] as $t) {
+                    $team = Team::where('team_name', $t['team_name'])->first();
+                    if (!$team) continue;
+
+                    $pivot[$team->team_ID] = [
+                        'final_placement' => $t['final_placement'],
+                        'status' => 'ACCEPTED',
                     ];
                 }
 
-                $event->teams()->sync($pivotData);
-            } else {
-                $event->teams()->detach();
+                $event->teams()->sync($pivot);
             }
 
+            //
+            // Matches
+            //
             EventMatch::where('event_ID', $event->event_ID)->delete();
 
-            if (! empty($matches)) {
-                foreach ($matches as $match) {
-                    $participantA = User::where('email', $match['participant_A'])->first();
-                    $participantB = User::where('email', $match['participant_B'])->first();
+            foreach ($eventData['matches'] ?? [] as $m) {
 
-                    if (! $participantA || ! $participantB) {
-                        continue;
-                    }
+                $userA = User::where('email', $m['participant_A'])->first();
+                $userB = User::where('email', $m['participant_B'])->first();
+                if (!$userA || !$userB) continue;
 
-                    $winnerId = null;
-                    if (! empty($match['winner'])) {
-                        $winnerId = optional(User::where('email', $match['winner'])->first())->user_ID;
-                    }
+                $winnerId = optional(User::where('email', $m['winner'])->first())->user_ID;
 
-                    EventMatch::updateOrCreate(
-                        [
-                            'event_ID' => $event->event_ID,
-                            'participant_A' => $participantA->user_ID,
-                            'participant_B' => $participantB->user_ID,
-                        ],
-                        [
-                            'round' => $match['round'],
-                            'time' => Carbon::parse($match['time']),
-                            'winner' => $winnerId,
-                        ]
-                    );
-                }
+                EventMatch::create([
+                    'event_ID' => $event->event_ID,
+                    'participant_A' => $userA->user_ID,
+                    'participant_B' => $userB->user_ID,
+                    'round' => $m['round'],
+                    'time' => Carbon::parse($m['time']),
+                    'winner' => $winnerId,
+                ]);
             }
         }
     }
