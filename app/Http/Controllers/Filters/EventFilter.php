@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Filters;
 
-use App\Http\Controllers\Controller;
+
 use Illuminate\Http\Request;
 use App\Models\Event;
 
-class EventFilter extends Controller
+class EventFilter 
 {
     /**
      * Get events based on provided filters.

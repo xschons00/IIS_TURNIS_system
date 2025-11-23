@@ -16,6 +16,8 @@ class EventMatch extends Model
         'event_ID',
         'participant_A',
         'participant_B',
+        'participant_A_points',
+        'participant_B_points',
         'round',
         'time',
         'winner',

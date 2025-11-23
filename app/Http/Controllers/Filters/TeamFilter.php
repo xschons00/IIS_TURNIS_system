@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Filters;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Team;
 
-class TeamFilter extends Controller
+class TeamFilter 
 {
     /**
      * Get teams based on filters provided in the request.

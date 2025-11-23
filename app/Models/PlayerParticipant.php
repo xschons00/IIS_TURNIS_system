@@ -14,5 +14,6 @@ class PlayerParticipant extends Pivot
         'event_ID',
         'user_ID',
         'final_placement',
+        'final_points',
     ];
 }

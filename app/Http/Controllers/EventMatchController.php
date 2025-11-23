@@ -7,14 +7,14 @@ use App\Models\EventMatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class EventMatchController extends Controller
+class EventMatchController 
 {
 
     /**
      * PUT /api/events/{id}/matches/generate
      * Initializes empty matches for the event.
      */
-    public function GenerateEventMatches(Request $request, int $id): JsonResponse
+    public function GenerateEventMatches(int $id): JsonResponse
     {
         $event = Event::find($id);
 
@@ -52,6 +52,8 @@ class EventMatchController extends Controller
                     'event_ID' => $event->event_ID,
                     'participant_A' => null,
                     'participant_B' => null,
+                    'participant_A_points' => 0,
+                    'participant_B_points' => 0,
                     'round' => $eventRound,
                     'time' => $event->event_date,
                     'winner' => null,
@@ -112,6 +114,8 @@ class EventMatchController extends Controller
             'participant_A' => 'nullable|integer',
             'participant_B' => 'nullable|integer',
             'round' => 'nullable|integer|min:1',
+            'participant_A_points' => 'nullable|integer|min:0',
+            'participant_B_points' => 'nullable|integer|min:0',
             'time' => 'nullable|date',
             'winner' => [
                 'nullable',

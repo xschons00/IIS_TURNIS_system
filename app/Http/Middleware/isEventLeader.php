@@ -2,9 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use Closure;
+
 use App\Models\Event;
 use App\Models\EventMatch;
-use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
