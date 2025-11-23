@@ -16,6 +16,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('event_ID');
                 $table->unsignedBigInteger('user_ID');
                 $table->integer('final_placement')->unsigned()->nullable();
+                $table->integer('final_points')->unsigned()->default(0);
                 $table->timestamps();
 
                 $table->primary(['event_ID','user_ID']);

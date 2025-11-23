@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('event_ID');
             $table->unsignedBigInteger('participant_A')->nullable();
             $table->unsignedBigInteger('participant_B')->nullable();
+            $table->unsignedBigInteger('participant_A_points')->default(0);
+            $table->unsignedBigInteger('participant_B_points')->default(0);
             $table->unsignedInteger('round');
             $table->dateTime('time');
             $table->unsignedBigInteger('winner')->nullable();

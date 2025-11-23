@@ -52,6 +52,8 @@ class EventMatchController
                     'event_ID' => $event->event_ID,
                     'participant_A' => null,
                     'participant_B' => null,
+                    'participant_A_points' => 0,
+                    'participant_B_points' => 0,
                     'round' => $eventRound,
                     'time' => $event->event_date,
                     'winner' => null,
@@ -112,6 +114,8 @@ class EventMatchController
             'participant_A' => 'nullable|integer',
             'participant_B' => 'nullable|integer',
             'round' => 'nullable|integer|min:1',
+            'participant_A_points' => 'nullable|integer|min:0',
+            'participant_B_points' => 'nullable|integer|min:0',
             'time' => 'nullable|date',
             'winner' => [
                 'nullable',
