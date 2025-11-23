@@ -1,5 +1,7 @@
 const DEFAULT_APP_BASE_URL = 'http://localhost:8080';// na deploy -->'https://www.stud.fit.vutbr.cz/~xjakubk00';
 
+//const DEFAULT_APP_BASE_URL = 'https://www.stud.fit.vutbr.cz/~xjakubk00';
+
 /**
  * Resolve the React app base URL from Vite env variables, trimming trailing slash.
  */
