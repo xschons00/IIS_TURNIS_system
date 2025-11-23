@@ -222,4 +222,136 @@ class ParticipantsController
     }
 
 
+
+     // helper to calculate final score
+    public static function _CalculateTotalScore(Event $event, int $participant_ID): int
+    {
+        // get participant if exists
+        $type = strtoupper($event->event_type ?? '');
+        if ($type === 'SOLO') {
+            $participant = $event->players()->where('user_ID', $participant_ID)->first();
+        } elseif ($type === 'TEAM') {
+            $participant = $event->teams()->where('team_ID', $participant_ID)->first();
+        } else {
+            return 0;
+        }
+
+        if (! $participant) {
+            return 0;
+        }
+
+        $matches = $event->matches();
+        $totalPoints = 0;
+        foreach ($matches->get() as $match) {
+            if ($match->participant_A === $participant_ID) {
+                $totalPoints += $match->participant_A_points;
+            } elseif ($match->participant_B === $participant_ID) {
+                $totalPoints += $match->participant_B_points;
+            }
+        }
+        return $totalPoints;
+    }
+
+    // returns calculated score for player from his matchces
+    public function GetTotalScoreForPlayer(int $event_id, int $participant_id): JsonResponse
+    {
+        $event = Event::find($event_id);
+        if (! $event) {
+            return response()->json(['message' => 'Event not found'], 404);
+        }
+
+        $totalPoints = self::_CalculateTotalScore($event, $participant_id);
+
+        return response()->json([
+            'event_id' => $event->event_ID,
+            'participant_id' => $participant_ID,
+            'total_points' => $totalPoints,
+        ]);
+    }
+    
+    // Calculate final placement for participants of event
+    public function GetFinalPlacements(int $id): JsonResponse
+    {
+        $event = Event::find($id);
+        if (! $event) {
+            return response()->json(['message' => 'Event not found'], 404);
+        }
+
+        $type = strtoupper($event->event_type ?? '');
+
+        if ($type === 'SOLO') {
+            $participants = $event->players()->get();
+        } elseif ($type === 'TEAM') {
+            $participants = $event->teams()->get();
+        } else {
+            return response()->json(['message' => 'Invalid event type'], 400);
+        }
+
+        $results = [];
+
+        foreach ($participants->get() as $participant) {
+
+            // determine participant ID column based on event type
+            $participantId = ($type === 'SOLO')
+                ? $participant->user_ID
+                : $participant->team_ID;
+
+            $totalPoints = self::_CalculateTotalScore($event, $participantId);
+
+            $results[] = [
+                'participant_id' => $participantId,
+                'name' => $participant->user_name ?? $participant->team_name ?? null,
+                'total_points' => $totalPoints,
+            ];
+        }
+
+        // sort descending by score
+        usort($results, function ($a, $b) {
+            return $b['total_points'] <=> $a['total_points'];
+        });
+
+        // assign placements after sorting
+        $placement = 1;
+        foreach ($results as &$r) {
+            $r['placement'] = $placement++;
+        }
+
+        //update participants
+        self::_UpdateResults($participants, $results);
+
+        return response()->json([
+            'event_id' => $event->event_ID,
+            'type' => $type,
+            'placements' => $results,
+        ]);
+    }
+
+    // helper for DB updating
+    public static function _UpdateResults($participants, array $results) : void
+    {
+
+            // update participants
+        foreach ($participants as $participant) {
+
+            // determine participant ID column based on event type
+            $participantId = ($type === 'SOLO')
+                ? $participant->user_ID
+                : $participant->team_ID;
+
+            // find this participant's record in $results
+            $record = collect($results)->firstWhere('participant_id', $participantId);
+
+            if (! $record) {
+                continue; // should not happen, but safe fallback
+            }
+
+            // update the final score + placement
+            $participant->update([
+                'final_points'    => $record['total_points'],
+                'final_placement' => $record['placement'],
+            ]);
+        }
+    }
+
+
 }
