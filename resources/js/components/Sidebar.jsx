@@ -45,7 +45,7 @@ function Sidebar() {
 
                 // Transform players data to match frontend expectations
                 const transformedPlayers = playersData.map(user => ({
-                    name: `${user.first_name} ${user.last_name}`,
+                    name: user.user_name,
                     points: user.ranking || 0
                 }));
 

@@ -7,6 +7,7 @@ import { appUrl } from '../utils/url';
 
 function RegisterPage() {
     const [formData, setFormData] = useState({
+        username: '',
         firstName: '',
         lastName: '',
         email: '',
@@ -29,7 +30,7 @@ function RegisterPage() {
         e.preventDefault();
 
         // Validation
-        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.faculty || !formData.password.trim()) {
+        if (!formData.username.trim() || !formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.faculty || !formData.password.trim()) {
             setError('Všetky polia sú povinné');
             return;
         }
@@ -48,16 +49,13 @@ function RegisterPage() {
             setLoading(true);
             setError(null);
 
-            // Generate username from email (part before @)
-            const userName = formData.email.trim().split('@')[0];
-
             const response = await apiFetch('/api/players', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    user_name: userName,
+                    user_name: formData.username.trim(),
                     first_name: formData.firstName.trim(),
                     last_name: formData.lastName.trim(),
                     email: formData.email.trim(),
@@ -134,6 +132,26 @@ function RegisterPage() {
                             <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-blue-200">
                                 <div className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-300">
                                     👤 Osobné údaje
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                        Používateľské meno <span className="text-red-600">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="username"
+                                        value={formData.username}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
+                                        placeholder="napr. jan123"
+                                        autoComplete="username"
+                                        disabled={loading || success}
+                                        required
+                                    />
+                                    <div className="mt-2 text-sm text-gray-600">
+                                        Vaše jedinečné používateľské meno (nickname)
+                                    </div>
                                 </div>
 
                                 <div className="mb-4">

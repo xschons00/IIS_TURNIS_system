@@ -22,17 +22,41 @@ function TeamsPage() {
                 }
 
                 const data = await response.json();
-                // Transform backend data to match frontend expectations
-                const transformedData = data.map(team => ({
-                    team_ID: team.team_ID,
-                    team_name: team.team_name,
-                    ranking: team.ranking,
-                    members: '0', // TODO: Get actual member count from backend (team.members relation)
-                    tournaments: 0, // TODO: Get actual tournament count from backend (team.events relation)
-                    wins: 0, // TODO: Calculate wins from team_participants.final_placement
-                    points: 0 // TODO: Calculate points based on tournament placements
-                }));
-                setTeams(transformedData);
+
+                // Fetch member counts for each team
+                const teamsWithCounts = await Promise.all(
+                    data.map(async (team) => {
+                        try {
+                            const countResponse = await apiFetch(`/api/teams/${team.team_ID}/members/count`);
+                            if (countResponse.ok) {
+                                const countData = await countResponse.json();
+                                return {
+                                    team_ID: team.team_ID,
+                                    team_name: team.team_name,
+                                    ranking: team.ranking,
+                                    members: countData.members || 0,
+                                    tournaments: 0, // TODO: Get actual tournament count from backend
+                                    wins: 0, // TODO: Calculate wins from team_participants
+                                    points: team.ranking || 0 // Use ranking as points for now
+                                };
+                            }
+                        } catch (err) {
+                            console.error(`Error fetching count for team ${team.team_ID}:`, err);
+                        }
+                        // Fallback if count fetch fails
+                        return {
+                            team_ID: team.team_ID,
+                            team_name: team.team_name,
+                            ranking: team.ranking,
+                            members: 0,
+                            tournaments: 0,
+                            wins: 0,
+                            points: team.ranking || 0
+                        };
+                    })
+                );
+
+                setTeams(teamsWithCounts);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching teams:', err);

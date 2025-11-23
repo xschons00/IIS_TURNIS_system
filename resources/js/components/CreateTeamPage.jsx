@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
@@ -8,23 +8,79 @@ import { appUrl } from '../utils/url';
 function CreateTeamPage() {
     const [teamName, setTeamName] = useState('');
     const [description, setDescription] = useState('');
-    const [memberEmail, setMemberEmail] = useState('');
+    const [memberUsername, setMemberUsername] = useState('');
     const [members, setMembers] = useState([]);
     const [contactEmail, setContactEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [usernameError, setUsernameError] = useState(null);
+    const [allPlayers, setAllPlayers] = useState([]);
+
+    // Auto-add team leader on component mount
+    useEffect(() => {
+        const initTeamLeader = async () => {
+            try {
+                const storedUser = localStorage.getItem('logged_in_user');
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    // Add team leader to members list
+                    setMembers([{
+                        username: user.user_name,
+                        user_ID: user.user_ID,
+                        isLeader: true
+                    }]);
+                }
+
+                // Fetch all players for username validation
+                const response = await apiFetch('/api/players');
+                if (response.ok) {
+                    const players = await response.json();
+                    setAllPlayers(players);
+                }
+            } catch (err) {
+                console.error('Error initializing team creation:', err);
+            }
+        };
+
+        initTeamLeader();
+    }, []);
 
     const handleAddMember = (e) => {
         e.preventDefault();
-        if (memberEmail.trim() && !members.includes(memberEmail.trim())) {
-            setMembers([...members, memberEmail.trim()]);
-            setMemberEmail('');
+        const username = memberUsername.trim();
+
+        if (!username) {
+            return;
         }
+
+        // Check if username already in members list
+        if (members.some(member => member.username === username)) {
+            setUsernameError('Tento používateľ už bol pridaný do zoznamu');
+            return;
+        }
+
+        setUsernameError(null);
+
+        // Find user in the players list
+        const foundUser = allPlayers.find(player => player.user_name === username);
+
+        if (!foundUser) {
+            setUsernameError('Používateľ s týmto používateľským menom neexistuje');
+            return;
+        }
+
+        // Add user to members list with user_ID
+        setMembers([...members, {
+            username: username,
+            user_ID: foundUser.user_ID
+        }]);
+        setMemberUsername('');
+        setUsernameError(null);
     };
 
-    const handleRemoveMember = (emailToRemove) => {
-        setMembers(members.filter(email => email !== emailToRemove));
+    const handleRemoveMember = (usernameToRemove) => {
+        setMembers(members.filter(member => member.username !== usernameToRemove));
     };
 
     const handleSubmit = async (e) => {
@@ -47,24 +103,39 @@ function CreateTeamPage() {
             }
             const user = JSON.parse(storedUser);
 
+            const readJsonSafe = async (res) => {
+                try {
+                    return await res.json();
+                } catch (e) {
+                    return null;
+                }
+            };
+
             const response = await apiFetch('/api/teams', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     team_name: teamName.trim(),
                     ranking: 0,
-                    team_leader_id: user.user_ID
+                    team_leader_id: user.user_ID,
+                    members: members.map(member => member.user_ID)
                 })
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Nepodarilo sa vytvoriť tím');
+                const errorData = await readJsonSafe(response);
+                const fallbackText = !errorData ? await response.text().catch(() => '') : '';
+                const message = errorData?.message
+                    || (fallbackText && !fallbackText.startsWith('{') ? fallbackText : '')
+                    || 'Nepodarilo sa vytvoriť tím';
+                throw new Error(message);
             }
 
-            const data = await response.json();
+            const data = await readJsonSafe(response);
             setSuccess(true);
 
             // Redirect to teams page after 2 seconds
@@ -194,28 +265,38 @@ function CreateTeamPage() {
 
                             <div className="mb-4">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Email člena
+                                    Používateľské meno člena
                                 </label>
                                 <div className="flex gap-2">
                                     <input
-                                        type="email"
-                                        value={memberEmail}
-                                        onChange={(e) => setMemberEmail(e.target.value)}
-                                        className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                        placeholder="napr. hrac@example.com"
+                                        type="text"
+                                        value={memberUsername}
+                                        onChange={(e) => {
+                                            setMemberUsername(e.target.value);
+                                            setUsernameError(null);
+                                        }}
+                                        className={`flex-1 px-4 py-3 border-2 rounded-lg focus:outline-none text-gray-900 ${
+                                            usernameError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                        }`}
+                                        placeholder="napr. jan123"
                                         disabled={loading || success}
                                     />
                                     <button
                                         type="button"
                                         onClick={handleAddMember}
                                         className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled={loading || success || !memberEmail.trim()}
+                                        disabled={loading || success || !memberUsername.trim()}
                                     >
                                         + Pridať
                                     </button>
                                 </div>
+                                {usernameError && (
+                                    <div className="mt-2 text-sm text-red-600 font-semibold">
+                                        ⚠ {usernameError}
+                                    </div>
+                                )}
                                 <div className="mt-2 text-sm text-gray-600">
-                                    Pridajte emailové adresy členov, ktorých chcete pozvať do týmu
+                                    Pridajte používateľské mená členov, ktorých chcete pozvať do týmu
                                 </div>
                             </div>
 
@@ -226,20 +307,29 @@ function CreateTeamPage() {
                                         Pridaní členovia ({members.length})
                                     </div>
                                     <div className="space-y-2">
-                                        {members.map((email, index) => (
+                                        {members.map((member, index) => (
                                             <div
                                                 key={index}
                                                 className="flex justify-between items-center px-4 py-3 bg-white border-2 border-blue-200 rounded-lg"
                                             >
-                                                <span className="text-gray-900">{email}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveMember(email)}
-                                                    className="text-red-600 hover:text-red-800 font-semibold text-sm disabled:opacity-50"
-                                                    disabled={loading || success}
-                                                >
-                                                    ✖ Odstrániť
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-gray-900">{member.username}</span>
+                                                    {member.isLeader && (
+                                                        <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded">
+                                                            SPRÁVCA
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {!member.isLeader && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveMember(member.username)}
+                                                        className="text-red-600 hover:text-red-800 font-semibold text-sm disabled:opacity-50"
+                                                        disabled={loading || success}
+                                                    >
+                                                        ✖ Odstrániť
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

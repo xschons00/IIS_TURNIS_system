@@ -55,10 +55,10 @@ function PlayerProfilePage() {
         fetchPlayerProfile();
     }, [id]);
 
-    // Get player initials for avatar
-    const getInitials = (firstName, lastName) => {
-        if (!firstName || !lastName) return '??';
-        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    // Get player initial from username
+    const getUserInitial = (username) => {
+        if (!username) return '?';
+        return username.charAt(0).toUpperCase();
     };
 
     // Format date from ISO to Slovak format
@@ -225,7 +225,7 @@ function PlayerProfilePage() {
                         <a href="/players" className="hover:text-blue-800">Hráči</a>
                         {' > '}
                         <span className="text-blue-900 font-semibold">
-                            {player.first_name} {player.last_name}
+                            {player.user_name}
                         </span>
                     </div>
                 </div>
@@ -235,14 +235,17 @@ function PlayerProfilePage() {
                     <div className="flex gap-8 items-start flex-wrap">
                         {/* Avatar */}
                         <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold text-5xl shadow-xl border-4 border-white flex-shrink-0">
-                            {getInitials(player.first_name, player.last_name)}
+                            {getUserInitial(player.user_name)}
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-4xl font-bold text-blue-900 mb-1">
-                                {player.first_name} {player.last_name}
+                            <h1 className="text-5xl font-bold text-blue-900 mb-2">
+                                {player.user_name}
                             </h1>
+                            <div className="text-xl text-gray-700 mb-1">
+                                {player.first_name} {player.last_name}
+                            </div>
                             <div className="text-blue-600 mb-4">{player.email}</div>
 
                             <div className="flex gap-8 flex-wrap">

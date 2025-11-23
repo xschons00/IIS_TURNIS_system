@@ -24,9 +24,7 @@ function PlayersPage() {
                 const transformedData = data.map((user, index) => ({
                     user_ID: user.user_ID,
                     rank: index + 1,
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    email: user.email,
+                    user_name: user.user_name,
                     ranking: user.ranking || 0,
                     tournaments: 0, // TODO: Get actual tournament count from backend (user.events relation)
                     wins: 0, // TODO: Calculate wins from player_participants.final_placement
@@ -46,9 +44,9 @@ function PlayersPage() {
         fetchPlayers();
     }, []);
 
-    // Get player initials for avatar
-    const getInitials = (firstName, lastName) => {
-        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    // Get player initial from username
+    const getUserInitial = (username) => {
+        return username ? username.charAt(0).toUpperCase() : '?';
     };
 
     // Format date from ISO to Slovak format
@@ -115,7 +113,7 @@ function PlayersPage() {
                                     <thead>
                                         <tr className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
                                             <th className="py-3 px-4 text-left font-bold" style={{width: '60px'}}>#</th>
-                                            <th className="py-3 px-4 text-left font-bold">Hráč</th>
+                                            <th className="py-3 px-4 text-left font-bold">Používateľské meno</th>
                                             <th className="py-3 px-4 text-left font-bold" style={{width: '120px'}}>Body</th>
                                             <th className="py-3 px-4 text-left font-bold" style={{width: '120px'}}>Turnaje</th>
                                             <th className="py-3 px-4 text-left font-bold" style={{width: '120px'}}>Výhry</th>
@@ -134,17 +132,14 @@ function PlayersPage() {
                                                 }`}
                                             >
                                                 <td className="py-3 px-4 text-blue-900 font-semibold">{player.rank}</td>
-                                                <td className="py-3 px-4">
+                                                <td className="py-4 px-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                                                            {getInitials(player.first_name, player.last_name)}
+                                                            {getUserInitial(player.user_name)}
                                                         </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-blue-900">
-                                                                {player.first_name} {player.last_name}
-                                                            </span>
-                                                            <span className="text-xs text-gray-500">{player.email}</span>
-                                                        </div>
+                                                        <span className="font-bold text-blue-900 text-lg">
+                                                            {player.user_name}
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td className="py-3 px-4">

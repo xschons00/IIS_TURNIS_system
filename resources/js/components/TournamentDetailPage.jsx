@@ -15,6 +15,8 @@ function TournamentDetailPage() {
     const [userTeams, setUserTeams] = useState([]);
     const [showTeamPopup, setShowTeamPopup] = useState(false);
     const [registering, setRegistering] = useState(false);
+    const [teamLoadError, setTeamLoadError] = useState('');
+    const [participantsError, setParticipantsError] = useState('');
 
     useEffect(() => {
         const fetchTournament = async () => {
@@ -43,13 +45,18 @@ function TournamentDetailPage() {
             if (!tournament) return;
 
             try {
-                // TODO: Replace with actual API endpoint for participants
-                // const response = await apiFetch(`/api/events/${id}/participants`);
-                // const data = await response.json();
-                // setParticipants(data);
-                setParticipants([]);
+                const response = await apiFetch(`/api/events/${id}/participants`, {
+                    credentials: 'include',
+                });
+                if (!response.ok) {
+                    throw new Error('Nepodarilo sa načítať účastníkov');
+                }
+                const data = await response.json();
+                setParticipants(data.participants || []);
+                setParticipantsError('');
             } catch (err) {
                 console.error('Error fetching participants:', err);
+                setParticipantsError('Nepodarilo sa načítať účastníkov turnaja.');
             }
         };
 
@@ -60,13 +67,17 @@ function TournamentDetailPage() {
                 const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
                 if (!loggedInUser.user_ID) return;
 
-                // TODO: Replace with actual API endpoint for user's teams
-                // const response = await apiFetch(`/api/users/${loggedInUser.user_ID}/teams`);
-                // const data = await response.json();
-                // setUserTeams(data);
-                setUserTeams([]);
+                const response = await apiFetch('/api/teams', { credentials: 'include' });
+                if (!response.ok) {
+                    throw new Error('Nepodarilo sa načítať tímy');
+                }
+                const teams = await response.json();
+                const ownedTeams = teams.filter((team) => team.team_leader_id === loggedInUser.user_ID);
+                setUserTeams(ownedTeams);
+                setTeamLoadError(ownedTeams.length === 0 ? 'Nemáte žiadne tímy, ktoré by sa dali prihlásiť.' : '');
             } catch (err) {
                 console.error('Error fetching user teams:', err);
+                setTeamLoadError('Nepodarilo sa načítať tímy priradené k vášmu účtu.');
             }
         };
 
@@ -89,20 +100,29 @@ function TournamentDetailPage() {
             // Register immediately for solo tournament
             try {
                 setRegistering(true);
-                // TODO: Replace with actual registration API endpoint
-                // const response = await apiFetch(`/api/events/${id}/register`, {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ user_id: loggedInUser.user_ID })
-                // });
-                // if (response.ok) {
-                //     alert('Úspešne ste sa zaregistrovali na turnaj!');
-                //     window.location.reload();
-                // }
-                alert('Registrácia na SOLO turnaj (TODO: implementovať API endpoint)');
+                const response = await apiFetch(`/api/events/${id}/participants`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    credentials: 'include',
+                });
+
+                if (response.status === 401) {
+                    throw new Error('Musíte byť prihlásený, aby ste sa mohli registrovať.');
+                }
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Registrácia zlyhala');
+                }
+
+                alert('Úspešne ste sa zaregistrovali na turnaj!');
+                window.location.reload();
             } catch (err) {
                 console.error('Registration error:', err);
-                alert('Registrácia zlyhala');
+                alert(err.message || 'Registrácia zlyhala');
             } finally {
                 setRegistering(false);
             }
@@ -115,22 +135,31 @@ function TournamentDetailPage() {
     const handleTeamRegistration = async (teamId) => {
         try {
             setRegistering(true);
-            // TODO: Replace with actual registration API endpoint
-            // const response = await apiFetch(`/api/events/${id}/register`, {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ team_id: teamId })
-            // });
-            // if (response.ok) {
-            //     alert('Úspešne ste zaregistrovali tím na turnaj!');
-            //     setShowTeamPopup(false);
-            //     window.location.reload();
-            // }
-            alert(`Registrácia tímu ${teamId} na TEAM turnaj (TODO: implementovať API endpoint)`);
+            const response = await apiFetch(`/api/events/${id}/participants`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ team_id: teamId }),
+            });
+
+            if (response.status === 401) {
+                throw new Error('Musíte byť prihlásený ako líder tímu, aby ste registrovali tím.');
+            }
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || 'Registrácia tímu zlyhala');
+            }
+
+            alert('Úspešne ste zaregistrovali tím na turnaj!');
             setShowTeamPopup(false);
+            window.location.reload();
         } catch (err) {
             console.error('Registration error:', err);
-            alert('Registrácia zlyhala');
+            alert(err.message || 'Registrácia zlyhala');
         } finally {
             setRegistering(false);
         }
@@ -335,7 +364,11 @@ function TournamentDetailPage() {
                         <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
                             👥 {tournament.event_type === 'SOLO' ? 'Prihlásení účastníci' : 'Prihlásené tímy'} ({participantsCount}/{tournament.max_participants})
                         </h2>
-                        {participants.length === 0 ? (
+                        {participantsError ? (
+                            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-8 text-center text-red-700">
+                                {participantsError}
+                            </div>
+                        ) : participants.length === 0 ? (
                             <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
                                 <div className="text-gray-500 text-lg">
                                     Zatiaľ nie sú prihlásení žiadni {tournament.event_type === 'SOLO' ? 'účastníci' : 'tímy'}
@@ -376,10 +409,15 @@ function TournamentDetailPage() {
                         </div>
 
                         <div className="p-6">
+                            {teamLoadError && (
+                                <div className="mb-4 bg-red-50 border-2 border-red-200 rounded-lg p-4 text-red-700">
+                                    {teamLoadError}
+                                </div>
+                            )}
                             {userTeams.length === 0 ? (
                                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-8 text-center">
                                     <div className="text-yellow-700 text-lg mb-4">
-                                        Nie ste členom žiadneho tímu
+                                        Nemáte žiadny tím, ktorý by sa dal prihlásiť
                                     </div>
                                     <a
                                         href="/teams/create"

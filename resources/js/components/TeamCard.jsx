@@ -36,9 +36,12 @@ function TeamCard({ team }) {
 
             {/* Action Button */}
             <div className="pt-4 border-t border-blue-200">
-                <button className="w-full py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all">
+                <a
+                    href={`/teams/${team.team_ID}`}
+                    className="block w-full py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all text-center"
+                >
                     Zobraziť detail
-                </button>
+                </a>
             </div>
         </div>
     );
