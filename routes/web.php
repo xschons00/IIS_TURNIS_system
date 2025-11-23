@@ -45,3 +45,11 @@ Route::get('/players/{id}', function ($id) {
 Route::get('/tournaments/{id}', function ($id) {
     return view('tournament-detail');
 });
+
+Route::get('/admin/approve-tournaments', function () {
+    return view('admin-approve-tournaments');
+});
+
+Route::get('/admin/users', function () {
+    return view('admin-users');
+});
