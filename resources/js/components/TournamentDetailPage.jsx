@@ -52,7 +52,33 @@ function TournamentDetailPage() {
                     throw new Error('Nepodarilo sa načítať účastníkov');
                 }
                 const data = await response.json();
-                setParticipants(data.participants || []);
+                let participantsList = data.participants || [];
+
+                // For team tournaments, fetch member count for each team
+                if (tournament.event_type === 'TEAM' && participantsList.length > 0) {
+                    participantsList = await Promise.all(
+                        participantsList.map(async (participant) => {
+                            try {
+                                const countResponse = await apiFetch(`/api/teams/${participant.team_ID}/members/count`);
+                                if (countResponse.ok) {
+                                    const countData = await countResponse.json();
+                                    return {
+                                        ...participant,
+                                        member_count: countData.members || 0
+                                    };
+                                }
+                            } catch (err) {
+                                console.error(`Error fetching member count for team ${participant.team_ID}:`, err);
+                            }
+                            return {
+                                ...participant,
+                                member_count: 0
+                            };
+                        })
+                    );
+                }
+
+                setParticipants(participantsList);
                 setParticipantsError('');
             } catch (err) {
                 console.error('Error fetching participants:', err);
@@ -198,6 +224,14 @@ function TournamentDetailPage() {
             'FINISHED': 'bg-gray-50 border-gray-600 text-gray-900'
         };
         return colorMap[status] || 'bg-white border-blue-600 text-blue-900';
+    };
+
+    const getUserInitial = (username) => {
+        return username ? username.charAt(0).toUpperCase() : '?';
+    };
+
+    const getTeamInitials = (teamName) => {
+        return teamName ? teamName.substring(0, 2).toUpperCase() : '??';
     };
 
     if (loading) {
@@ -374,21 +408,57 @@ function TournamentDetailPage() {
                                     Zatiaľ nie sú prihlásení žiadni {tournament.event_type === 'SOLO' ? 'účastníci' : 'tímy'}
                                 </div>
                             </div>
+                        ) : tournament.event_type === 'SOLO' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {participants.map((participant, index) => (
+                                    <div
+                                        key={index}
+                                        className="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 transition-colors cursor-pointer"
+                                        onClick={() => window.location.href = appUrl(`/players/${participant.user_ID}`)}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            {/* Player Avatar */}
+                                            <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                                {getUserInitial(participant.user_name)}
+                                            </div>
+
+                                            {/* Player Details */}
+                                            <div className="flex-1">
+                                                <div className="font-bold text-blue-900 text-xl">
+                                                    {participant.user_name}
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    {participant.first_name} {participant.last_name}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {participants.map((participant, index) => (
-                                    <div key={index} className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
-                                        <div className="font-bold text-blue-900">
-                                            {tournament.event_type === 'SOLO'
-                                                ? `${participant.first_name} ${participant.last_name}`
-                                                : participant.team_name
-                                            }
-                                        </div>
-                                        {tournament.event_type === 'TEAM' && (
-                                            <div className="text-sm text-blue-600 mt-1">
-                                                {participant.member_count} členov
+                                    <div
+                                        key={index}
+                                        className="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 transition-colors cursor-pointer"
+                                        onClick={() => window.location.href = appUrl(`/teams/${participant.team_ID}`)}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            {/* Team Logo */}
+                                            <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                                {getTeamInitials(participant.team_name)}
                                             </div>
-                                        )}
+
+                                            {/* Team Details */}
+                                            <div className="flex-1">
+                                                <div className="font-bold text-blue-900 text-xl">
+                                                    {participant.team_name}
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    {participant.member_count || 0} členov
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
