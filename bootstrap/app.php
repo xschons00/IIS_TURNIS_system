@@ -15,6 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\isAdmin::class,
         ]);
+
+        // Enable session-based auth for API routes so admin checks work with login cookies.
+        $middleware->appendToGroup('api', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

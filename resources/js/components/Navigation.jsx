@@ -1,12 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { appUrl } from '../utils/url';
 
 function Navigation({ activePage = 'Domov' }) {
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        try {
+            const storedUser = localStorage.getItem('logged_in_user');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                setIsAdmin(user.role === 'ADMIN');
+            }
+        } catch (err) {
+            console.error('Error reading logged user', err);
+        }
+    }, []);
+
     const navItems = [
         { label: 'Domov', href: '/' },
         { label: 'Turnaje', href: '/tournaments' },
         { label: 'Tímy', href: '/teams' },
-        { label: 'Hráči', href: '/players' }
+        { label: 'Hráči', href: '/players' },
+        ...(isAdmin
+            ? [
+                {
+                    label: 'Admin Panel',
+                    href: '/admin/approve-tournaments',
+                }
+            ]
+            : [])
     ];
 
     return (
