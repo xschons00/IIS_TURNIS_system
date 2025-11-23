@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 
 class PlayerController 
 {
@@ -31,6 +32,8 @@ class PlayerController
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:6',
         ]);
+        //hash password before saving
+        $validated['password'] = Hash::make($validated['password']);
 
         $user = User::create($validated);
 
@@ -72,7 +75,10 @@ class PlayerController
             ],
             'password' => ['sometimes', 'string', 'min:6'],
         ]);
-
+        //hash password before saving
+        if (isset($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        }
         $player->update($validated);
 
         return $player;
