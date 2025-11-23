@@ -66,7 +66,7 @@ function Header() {
                                 <div className="font-bold text-blue-900">{user.email}</div>
                             </div>
                             <a
-                                href={`/players/${user.user_ID}`}
+                                href={appUrl(`/players/${user.user_ID}`)}
                                 className="w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors flex items-center gap-2 block no-underline"
                             >
                                 <span>👤</span>

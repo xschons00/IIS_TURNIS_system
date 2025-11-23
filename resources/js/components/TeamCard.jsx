@@ -1,4 +1,5 @@
 import React from 'react';
+import { appUrl } from '../utils/url';
 
 function TeamCard({ team }) {
     return (
@@ -37,7 +38,7 @@ function TeamCard({ team }) {
             {/* Action Button */}
             <div className="pt-4 border-t border-blue-200">
                 <a
-                    href={`/teams/${team.team_ID}`}
+                    href={appUrl(`/teams/${team.team_ID}`)}
                     className="block w-full py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all text-center"
                 >
                     Zobraziť detail

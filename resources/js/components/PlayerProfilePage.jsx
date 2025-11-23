@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import { appUrl } from '../utils/url';
 
 function PlayerProfilePage() {
     // Get player ID from URL path
@@ -181,7 +182,7 @@ function PlayerProfilePage() {
                                 {error || 'Hráč nenájdený'}
                             </div>
                             <button
-                                onClick={() => window.location.href = '/players'}
+                                onClick={() => window.location.href = appUrl('/players')}
                                 className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                             >
                                 Späť na zoznam hráčov
@@ -220,9 +221,9 @@ function PlayerProfilePage() {
                 {/* Breadcrumb */}
                 <div className="px-6 py-3 bg-gradient-to-br from-gray-50 to-blue-50 border-b border-blue-200">
                     <div className="text-blue-600 text-sm">
-                        <a href="/" className="hover:text-blue-800">Domov</a>
+                        <a href={appUrl('/')} className="hover:text-blue-800">Domov</a>
                         {' > '}
-                        <a href="/players" className="hover:text-blue-800">Hráči</a>
+                        <a href={appUrl('/players')} className="hover:text-blue-800">Hráči</a>
                         {' > '}
                         <span className="text-blue-900 font-semibold">
                             {player.user_name}

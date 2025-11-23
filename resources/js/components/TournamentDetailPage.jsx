@@ -260,7 +260,7 @@ function TournamentDetailPage() {
                             <div className="text-red-600 text-2xl font-semibold mb-3">⚠️ Chyba</div>
                             <div className="text-red-500 mb-4">{error || 'Turnaj nenájdený'}</div>
                             <button
-                                onClick={() => window.location.href = '/tournaments'}
+                                onClick={() => window.location.href = appUrl('/tournaments')}
                                 className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                             >
                                 Späť na zoznam turnajov
@@ -490,7 +490,7 @@ function TournamentDetailPage() {
                                         Nemáte žiadny tím, ktorý by sa dal prihlásiť
                                     </div>
                                     <a
-                                        href="/teams/create"
+                                        href={appUrl('/teams/create')}
                                         className="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                                     >
                                         Vytvoriť tím
