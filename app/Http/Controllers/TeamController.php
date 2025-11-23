@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
+use App\Models\TeamMember;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class TeamController 
 {
@@ -29,10 +32,35 @@ class TeamController
         $validated = $request->validate([
             'team_name' => 'required|string|max:255|unique:teams,team_name',
             'ranking' => 'nullable|integer|min:0',
-            'team_leader_id' => 'required|exists:users,user_ID',
+            'team_leader_id' => 'sometimes|exists:users,user_ID',
+            'members' => 'sometimes|array',
+            'members.*' => 'integer|exists:users,user_ID',
         ]);
 
-        return Team::create($validated);
+        // Resolve leader from payload or authenticated user
+        $leaderId = $validated['team_leader_id'] ?? optional($request->user())->user_ID;
+        if (! $leaderId) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        // Always include the leader as a member
+        $memberIds = collect($validated['members'] ?? [])
+            ->push($leaderId)
+            ->unique()
+            ->values();
+
+        return DB::transaction(function () use ($validated, $memberIds, $leaderId) {
+            $team = Team::create([
+                'team_name' => $validated['team_name'],
+                'ranking' => $validated['ranking'] ?? 0,
+                'team_leader_id' => $leaderId,
+            ]);
+
+            // attach/sync members including leader
+            $team->members()->sync($memberIds);
+
+            return $team;
+        });
     }
 
     /**
@@ -61,11 +89,26 @@ class TeamController
             ],
             'ranking' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'team_leader_id' => ['sometimes', 'exists:users,user_ID'],
+            'members' => 'sometimes|array',
+            'members.*' => 'integer|exists:users,user_ID',
         ]);
 
-        $team->update($validated);
+        return DB::transaction(function () use ($validated, $team) {
+            $team->update($validated);
 
-        return $team;
+            if (array_key_exists('members', $validated)) {
+                // Always keep leader in the members list
+                $leaderId = $validated['team_leader_id'] ?? $team->team_leader_id;
+                $memberIds = collect($validated['members'] ?? [])
+                    ->push($leaderId)
+                    ->unique()
+                    ->values();
+
+                $team->members()->sync($memberIds);
+            }
+
+            return $team;
+        });
     }
 
     /**

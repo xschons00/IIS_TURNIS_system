@@ -2,6 +2,7 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\EventMatch;
 use App\Models\User;
 use App\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -308,5 +309,43 @@ class ParticipantsControllerTest extends TestCase
 
         $response->assertStatus(409)
                  ->assertJson(['message' => 'Team not registered']);
+    }
+
+    public function test_returns_score_for_valid_player_and_event()
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+
+        $playerA = User::factory()->create();
+        $playerB = User::factory()->create();
+
+        $event->players()->attach([$playerA->user_ID, $playerB->user_ID]);
+
+        EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => $playerA->user_ID,
+            'participant_B' => $playerB->user_ID,
+            'participant_A_points' => 10,
+            'participant_B_points' => 2,
+            'winner' => $playerA->user_ID,
+        ]);
+
+        $response = $this->getJson("/api/events/{$event->event_ID}/participants/{$playerA->user_ID}/points");
+
+        $response->assertStatus(200)
+                ->assertJson([
+                    'event_id' => $event->event_ID,
+                    'participant_id' => $playerA->user_ID,
+                    'total_points' => 10,
+                ]);
+    }
+
+
+
+    public function test_returns_404_if_points_event_not_found()
+    {
+        $response = $this->getJson("/api/events/999/participants/1/points");
+
+        $response->assertStatus(404)
+                 ->assertJson(['message' => 'Event not found']);
     }
 }
