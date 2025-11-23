@@ -10,7 +10,6 @@ function CreateTeamPage() {
     const [description, setDescription] = useState('');
     const [memberUsername, setMemberUsername] = useState('');
     const [members, setMembers] = useState([]);
-    const [contactEmail, setContactEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -324,30 +323,6 @@ function CreateTeamPage() {
                                     </div>
                                 </div>
                             )}
-                        </div>
-
-                        {/* Contact Information Section */}
-                        <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-blue-200">
-                            <div className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-300">
-                                📧 Kontaktné informácie
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Kontaktný email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={contactEmail}
-                                    onChange={(e) => setContactEmail(e.target.value)}
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                    placeholder="napr. kontakt@tím.com"
-                                    disabled={loading || success}
-                                />
-                                <div className="mt-2 text-sm text-gray-600">
-                                    Nepovinné pole - kontaktný email pre komunikáciu s tímom
-                                </div>
-                            </div>
                         </div>
 
                         {/* Info Note */}

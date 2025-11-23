@@ -23,7 +23,9 @@ function PlayersPage() {
 
                 const data = await response.json();
                 // Transform backend data to match frontend expectations
+                // Filter out admin users - only show regular users
                 const transformedData = data
+                    .filter((user) => user.role === 'USER')
                     .map((user) => ({
                         user_ID: user.user_ID,
                         user_name: user.user_name,
