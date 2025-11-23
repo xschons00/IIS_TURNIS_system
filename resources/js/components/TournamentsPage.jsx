@@ -22,15 +22,49 @@ function TournamentsPage() {
                 }
 
                 const data = await response.json();
-                const transformedData = data.map(event => ({
-                    id: event.event_ID,
-                    title: event.event_name,
-                    date: event.event_date,
-                    type: event.event_type,
-                    maxParticipants: event.max_participants,
-                    registered: 0,
-                    status: 'REGISTRÁCIA'
-                }));
+
+                const mapEventState = (state) => {
+                    const stateMap = {
+                        'NEW': 'NOVÝ',
+                        'REGISTRATION': 'REGISTRÁCIA',
+                        'ONGOING': 'PREBIEHA',
+                        'FINISHED': 'UKONČENÝ'
+                    };
+                    return stateMap[state] || state;
+                };
+
+                const transformedData = await Promise.all(
+                    data.map(async (event) => {
+                        try {
+                            const countResponse = await apiFetch(`/api/events/${event.event_ID}/participants/count`, {
+                                credentials: 'include',
+                            });
+                            if (countResponse.ok) {
+                                const countData = await countResponse.json();
+                                return {
+                                    id: event.event_ID,
+                                    title: event.event_name,
+                                    date: event.event_date,
+                                    type: event.event_type,
+                                    maxParticipants: event.max_participants,
+                                    registered: countData.participants || 0,
+                                    status: mapEventState(event.event_state),
+                                };
+                            }
+                        } catch (err) {
+                            console.error(`Error fetching participant count for event ${event.event_ID}`, err);
+                        }
+                        return {
+                            id: event.event_ID,
+                            title: event.event_name,
+                            date: event.event_date,
+                            type: event.event_type,
+                            maxParticipants: event.max_participants,
+                            registered: 0,
+                            status: mapEventState(event.event_state),
+                        };
+                    })
+                );
                 setTournaments(transformedData);
                 setError(null);
             } catch (err) {

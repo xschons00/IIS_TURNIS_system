@@ -103,11 +103,21 @@ function CreateTeamPage() {
             }
             const user = JSON.parse(storedUser);
 
+            const readJsonSafe = async (res) => {
+                try {
+                    return await res.json();
+                } catch (e) {
+                    return null;
+                }
+            };
+
             const response = await apiFetch('/api/teams', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     team_name: teamName.trim(),
                     ranking: 0,
@@ -117,11 +127,15 @@ function CreateTeamPage() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Nepodarilo sa vytvoriť tím');
+                const errorData = await readJsonSafe(response);
+                const fallbackText = !errorData ? await response.text().catch(() => '') : '';
+                const message = errorData?.message
+                    || (fallbackText && !fallbackText.startsWith('{') ? fallbackText : '')
+                    || 'Nepodarilo sa vytvoriť tím';
+                throw new Error(message);
             }
 
-            const data = await response.json();
+            const data = await readJsonSafe(response);
             setSuccess(true);
 
             // Redirect to teams page after 2 seconds
