@@ -102,12 +102,19 @@ function TournamentsPage() {
                                 Prehľad všetkých dostupných turnajov. Vyberte si turnaj a zaregistrujte sa!
                             </p>
                         </div>
-                        <a
-                            href="/create-tournament"
-                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl inline-block"
+                        <button
+                            onClick={() => {
+                                const loggedInUser = localStorage.getItem('logged_in_user');
+                                if (!loggedInUser) {
+                                    alert('⚠️ Túto akciu môže vykonať len prihlásený používateľ.\n\nProsím, prihláste sa do svojho účtu.');
+                                    return;
+                                }
+                                window.location.href = '/create-tournament';
+                            }}
+                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl"
                         >
                             + Vytvoriť turnaj
-                        </a>
+                        </button>
                     </div>
                 </div>
 

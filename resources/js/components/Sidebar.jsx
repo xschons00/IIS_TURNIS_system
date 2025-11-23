@@ -150,12 +150,32 @@ function Sidebar() {
                 <div className="text-xl font-bold mb-4 pb-3 border-b-2 border-blue-200 text-blue-900">
                     ⚡ Rýchle akcie
                 </div>
-                <a href={appUrl('/tournaments/create')} className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
+                <button
+                    onClick={() => {
+                        const loggedInUser = localStorage.getItem('logged_in_user');
+                        if (!loggedInUser) {
+                            alert('⚠️ Túto akciu môže vykonať len prihlásený používateľ.\n\nProsím, prihláste sa do svojho účtu.');
+                            return;
+                        }
+                        window.location.href = appUrl('/tournaments/create');
+                    }}
+                    className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center"
+                >
                     + Vytvoriť turnaj
-                </a>
-                <a href={appUrl('/teams/create')} className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center">
+                </button>
+                <button
+                    onClick={() => {
+                        const loggedInUser = localStorage.getItem('logged_in_user');
+                        if (!loggedInUser) {
+                            alert('⚠️ Túto akciu môže vykonať len prihlásený používateľ.\n\nProsím, prihláste sa do svojho účtu.');
+                            return;
+                        }
+                        window.location.href = appUrl('/teams/create');
+                    }}
+                    className="block w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer mb-3 hover:bg-blue-50 rounded-lg transition-colors text-center"
+                >
                     + Vytvoriť tím
-                </a>
+                </button>
                 <button className="w-full px-4 py-2 border-2 border-blue-600 bg-white text-blue-600 font-semibold cursor-pointer hover:bg-blue-50 rounded-lg transition-colors">
                     🔍 Hľadať hráčov
                 </button>
