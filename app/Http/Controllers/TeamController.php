@@ -6,7 +6,7 @@ use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class TeamController extends Controller
+class TeamController 
 {
     /**
      * Resource-style method: list all teams.

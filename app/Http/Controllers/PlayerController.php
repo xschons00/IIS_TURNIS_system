@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class PlayerController extends Controller
+class PlayerController 
 {
     /**
      * Resource-style method: list all players.

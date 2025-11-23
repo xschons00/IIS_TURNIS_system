@@ -3,16 +3,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\PlayerParticipant;
 use App\Models\TeamParticipant;
 use App\Models\Team;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Event;
 
-class ParticipantsController extends Controller
+class ParticipantsController 
 {
 
     /**
@@ -22,7 +20,7 @@ class ParticipantsController extends Controller
      * route::get('/api/teams/{id}/members', [TeamMembersController::class, 'GetTeamMembers']);
      */
 
-    public function GetParticipants(Request $request, int $id): JsonResponse
+    public function GetParticipants(int $id): JsonResponse
     {
         $event = Event::find($id);
 
@@ -67,7 +65,7 @@ class ParticipantsController extends Controller
      *
      * @return JsonResponse data with participant count
      */
-    public function GetParticipantCount(Request $request, int $id): JsonResponse
+    public function GetParticipantCount(int $id): JsonResponse
     {
         $event = Event::find($id);
 

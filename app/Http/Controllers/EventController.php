@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Event;
-use App\Models\EventMatch;
 use Illuminate\Validation\Rule;
-use App\Http\Controllers\ParicipantsController;
 
-class EventController extends Controller
+
+class EventController 
 {
     /**
      * Resource-style method: list all events.

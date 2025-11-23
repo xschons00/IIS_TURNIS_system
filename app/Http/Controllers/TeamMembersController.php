@@ -6,7 +6,7 @@ use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-class TeamMembersController extends Controller
+class TeamMembersController 
 {
 
     /**
@@ -15,7 +15,7 @@ class TeamMembersController extends Controller
      * @return JsonResponse data with team members
      * route::get('/api/teams/{id}/members', [TeamMembersController::class, 'GetTeamMembers']);
      */
-    public function GetTeamMembers(Request $request, int $id): JsonResponse
+    public function GetTeamMembers(int $id): JsonResponse
     {
         $team = Team::find($id);
 
@@ -39,7 +39,7 @@ class TeamMembersController extends Controller
      * @return JsonResponse data with team member count
      * route::get('/api/teams/{id}/members/count', [TeamMembersController::class, 'GetTeamMemberCount']);
      */
-    public function GetTeamMemberCount(Request $request, int $id): JsonResponse
+    public function GetTeamMemberCount(int $id): JsonResponse
     {
         $team = Team::find($id);
 

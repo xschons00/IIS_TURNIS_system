@@ -7,7 +7,7 @@ use App\Models\EventMatch;
 use App\Models\Team;
 use App\Models\User;
 
-class StatisticsController extends Controller
+class StatisticsController 
 {
     public function index(): array
     {
