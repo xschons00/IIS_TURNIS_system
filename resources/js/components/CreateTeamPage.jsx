@@ -17,21 +17,10 @@ function CreateTeamPage() {
     const [usernameError, setUsernameError] = useState(null);
     const [allPlayers, setAllPlayers] = useState([]);
 
-    // Auto-add team leader on component mount
+    // Load players and (optionally) logged-in user info
     useEffect(() => {
         const initTeamLeader = async () => {
             try {
-                const storedUser = localStorage.getItem('logged_in_user');
-                if (storedUser) {
-                    const user = JSON.parse(storedUser);
-                    // Add team leader to members list
-                    setMembers([{
-                        username: user.user_name,
-                        user_ID: user.user_ID,
-                        isLeader: true
-                    }]);
-                }
-
                 // Fetch all players for username validation
                 const response = await apiFetch('/api/players');
                 if (response.ok) {

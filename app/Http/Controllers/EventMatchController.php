@@ -190,7 +190,7 @@ class EventMatchController
     // returns calculated score for player from his matchces
     public function GetTotalScoreForPlayer(int $event_id, int $participant_ID): JsonResponse
     {
-        $event = Event::find($event->event_ID);
+        $event = Event::find($event_id);
         if (! $event) {
             return response()->json(['message' => 'Event not found'], 404);
         }
@@ -224,7 +224,7 @@ class EventMatchController
 
         $results = [];
 
-        foreach ($participants->get() as $participant) {
+        foreach ($participants->all() as $participant) {
 
             // determine participant ID column based on event type
             $participantId = ($type === 'SOLO')

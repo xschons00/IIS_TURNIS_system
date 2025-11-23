@@ -229,9 +229,9 @@ class ParticipantsController
         // get participant if exists
         $type = strtoupper($event->event_type ?? '');
         if ($type === 'SOLO') {
-            $participant = $event->players()->where('user_ID', $participant_ID)->first();
+            $participant = $event->players()->where('users.user_ID', $participant_ID)->first();
         } elseif ($type === 'TEAM') {
-            $participant = $event->teams()->where('team_ID', $participant_ID)->first();
+            $participant = $event->teams()->where('teams.team_ID', $participant_ID)->first();
         } else {
             return 0;
         }
@@ -264,7 +264,7 @@ class ParticipantsController
 
         return response()->json([
             'event_id' => $event->event_ID,
-            'participant_id' => $participant_ID,
+            'participant_id' => $participant_id,
             'total_points' => $totalPoints,
         ]);
     }
@@ -289,7 +289,7 @@ class ParticipantsController
 
         $results = [];
 
-        foreach ($participants->get() as $participant) {
+        foreach ($participants->all() as $participant) {
 
             // determine participant ID column based on event type
             $participantId = ($type === 'SOLO')

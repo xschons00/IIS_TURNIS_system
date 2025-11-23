@@ -55,7 +55,7 @@ Route::get('events/{id}/participants/count', [ParticipantsController::class, 'Ge
 Route::post('events/{id}/participants', [ParticipantsController::class, 'AddParticipant']);
 Route::delete('events/{id}/participants', [ParticipantsController::class, 'RemoveParticipant']);
 // score counters
-Route::get('events/{event_id}/participants/{particimant_id}/points', [ParticipantsController::class, 'GetTotalScoreForPlayer']);
+Route::get('events/{event_id}/participants/{participant_id}/points', [ParticipantsController::class, 'GetTotalScoreForPlayer']);
 Route::get('events/{id}/participants/placement', [ParticipantsController::class, 'GetFinalPlacements']);
 
 Route::get('statistics', [StatisticsController::class, 'index']);
