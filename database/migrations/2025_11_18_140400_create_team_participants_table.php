@@ -15,7 +15,9 @@ return new class extends Migration
             Schema::create('team_participants', function (Blueprint $table) {
                 $table->unsignedBigInteger('event_ID');
                 $table->unsignedBigInteger('team_ID');
+                $table->enum('status', ['REQUESTED', 'ACCEPTED'])->default('REQUESTED');
                 $table->integer('final_placement')->unsigned()->nullable();
+                $table->integer('final_points')->unsigned()->default(0);
                 $table->timestamps();
 
                 $table->primary(['event_ID','team_ID']);

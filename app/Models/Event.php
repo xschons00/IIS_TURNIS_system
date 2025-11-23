@@ -40,7 +40,7 @@ class Event extends Model
             'player_participants',
             'event_ID',
             'user_ID'
-        )->withPivot('final_placement')
+        )->withPivot('final_placement')->withPivot('final_points')->withPivot('status')
          ->using(PlayerParticipant::class);
     }
 
@@ -52,7 +52,7 @@ class Event extends Model
             'team_participants',
             'event_ID',
             'team_ID'
-        )->withPivot('final_placement')
+        )->withPivot('final_placement')->withPivot('final_points')->withPivot('status')
          ->using(TeamParticipant::class);
     }
 

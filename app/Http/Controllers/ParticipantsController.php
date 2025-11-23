@@ -130,6 +130,7 @@ class ParticipantsController
             PlayerParticipant::create([
                 'event_ID' => $event->event_ID,
                 'user_ID' => $user->user_ID,
+                'status' => 'REQUESTED',
             ]);
         } elseif ($type === 'TEAM') {
             $team = Team::where('team_leader_id', $user->user_ID)->first();
@@ -153,6 +154,7 @@ class ParticipantsController
             TeamParticipant::create([
                 'event_ID' => $event->event_ID,
                 'team_ID' => $team->team_ID,
+                'status' => 'REQUESTED',
             ]);
         } else {
             return response()->json([
@@ -317,7 +319,7 @@ class ParticipantsController
         }
 
         //update participants
-        self::_UpdateResults($participants, $results);
+        self::_UpdateResults($participants, $results, $type);
 
         return response()->json([
             'event_id' => $event->event_ID,
@@ -327,7 +329,7 @@ class ParticipantsController
     }
 
     // helper for DB updating
-    public static function _UpdateResults($participants, array $results) : void
+    public static function _UpdateResults($participants, array $results, string $type) : void
     {
 
             // update participants
@@ -346,7 +348,7 @@ class ParticipantsController
             }
 
             // update the final score + placement
-            $participant->update([
+            $participant->pivot->update([
                 'final_points'    => $record['total_points'],
                 'final_placement' => $record['placement'],
             ]);

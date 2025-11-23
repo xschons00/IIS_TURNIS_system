@@ -348,4 +348,55 @@ class ParticipantsControllerTest extends TestCase
         $response->assertStatus(404)
                  ->assertJson(['message' => 'Event not found']);
     }
+
+    public function test_final_placements_update_points_and_rankings(): void
+    {
+        $event = Event::factory()->create(['event_type' => 'SOLO']);
+        $playerA = User::factory()->create();
+        $playerB = User::factory()->create();
+
+        $event->players()->attach([$playerA->user_ID, $playerB->user_ID]);
+
+        EventMatch::create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => $playerA->user_ID,
+            'participant_B' => $playerB->user_ID,
+            'participant_A_points' => 12,
+            'participant_B_points' => 7,
+            'round' => 1,
+            'time' => now(),
+            'winner' => $playerA->user_ID,
+        ]);
+
+        EventMatch::create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => $playerA->user_ID,
+            'participant_B' => $playerB->user_ID,
+            'participant_A_points' => 5,
+            'participant_B_points' => 9,
+            'round' => 2,
+            'time' => now(),
+            'winner' => $playerB->user_ID,
+        ]);
+
+        $response = $this->getJson("/api/events/{$event->event_ID}/participants/placement");
+
+        $response->assertStatus(200)
+            ->assertJsonFragment(['participant_id' => $playerA->user_ID, 'total_points' => 17, 'placement' => 1])
+            ->assertJsonFragment(['participant_id' => $playerB->user_ID, 'total_points' => 16, 'placement' => 2]);
+
+        $this->assertDatabaseHas('player_participants', [
+            'event_ID' => $event->event_ID,
+            'user_ID' => $playerA->user_ID,
+            'final_points' => 17,
+            'final_placement' => 1,
+        ]);
+
+        $this->assertDatabaseHas('player_participants', [
+            'event_ID' => $event->event_ID,
+            'user_ID' => $playerB->user_ID,
+            'final_points' => 16,
+            'final_placement' => 2,
+        ]);
+    }
 }
