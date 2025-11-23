@@ -23,9 +23,14 @@ return new class extends Migration {
             $table->enum('event_type', ['SOLO', 'TEAM']);
             $table->enum('event_state', ['NEW', 'REGISTRATION', 'ONGOING', 'FINISHED'])->default('NEW');
             $table->integer('max_participants')->unsigned();
+            $table->unsignedBigInteger('event_leader_id');
+            $table->unsignedBigInteger('event_winner')->nullable();
             $table->timestamps();
-            $table->bigInteger('event_leader_id')->unsigned();
+            
+
+            //FK
             $table->foreign('event_leader_id')->references('user_ID')->on('users')->onDelete('cascade');
+            $table->foreign('event_winner')->references('user_ID')->on('users')->onDelete('set null');
 
         });
     }

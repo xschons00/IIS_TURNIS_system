@@ -19,8 +19,6 @@ function CreateTournamentPage() {
     const [registrationDeadline, setRegistrationDeadline] = useState('');
     const [entryFee, setEntryFee] = useState('');
     const [prize, setPrize] = useState('');
-    const [contactEmail, setContactEmail] = useState('');
-    const [contactPhone, setContactPhone] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -71,6 +69,8 @@ function CreateTournamentPage() {
                     event_type: participationType,
                     max_participants: maxParticipantsNumber,
                     event_leader_id: user.user_ID,
+                    entry_fee: entryFee.trim() || null,
+                    prize: prize.trim() || null,
                 })
             });
 
@@ -378,43 +378,6 @@ function CreateTournamentPage() {
                                         onChange={(e) => setPrize(e.target.value)}
                                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
                                         placeholder="napr. Pohár + 50€"
-                                        disabled={loading || success}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Contact */}
-                        <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-blue-200">
-                            <div className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-300">
-                                📞 Kontaktné informácie
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                                        Kontaktný email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={contactEmail}
-                                        onChange={(e) => setContactEmail(e.target.value)}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                        placeholder="vas.email@student.sk"
-                                        disabled={loading || success}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                                        Telefón
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={contactPhone}
-                                        onChange={(e) => setContactPhone(e.target.value)}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                        placeholder="+421 123 456 789"
                                         disabled={loading || success}
                                     />
                                 </div>

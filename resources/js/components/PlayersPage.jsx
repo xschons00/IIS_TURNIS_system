@@ -86,8 +86,10 @@ function PlayersPage() {
 
                 {/* Page Header */}
                 <div className="bg-gradient-to-br from-blue-50 to-cyan-50 py-12 px-6 border-b border-blue-200">
-                    <h1 className="text-4xl font-bold text-blue-900 mb-2">👥 Registrovaní hráči</h1>
-                    <div className="text-blue-600 text-sm">Domov / Hráči</div>
+                    <h1 className="text-4xl font-bold text-blue-900 mb-3">👤 Registrovaní hráči</h1>
+                    <p className="text-blue-700 text-lg">
+                        Prehľad všetkých registrovaných hráčov a ich umiestnenia v rebríčku.
+                    </p>
                 </div>
 
                 {/* Main Content */}

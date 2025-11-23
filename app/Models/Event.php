@@ -28,6 +28,7 @@ class Event extends Model
         'event_state',
         'max_participants',
         'event_leader_id',
+        'event_winner',
     ];
 
     protected $attributes = [
