@@ -17,6 +17,10 @@ function TournamentDetailPage() {
     const [registering, setRegistering] = useState(false);
     const [teamLoadError, setTeamLoadError] = useState('');
     const [participantsError, setParticipantsError] = useState('');
+    const [contact, setContact] = useState({ name: null, email: null });
+    const [matches, setMatches] = useState([]);
+    const [matchesLoading, setMatchesLoading] = useState(false);
+    const [matchesError, setMatchesError] = useState(null);
 
     useEffect(() => {
         const fetchTournament = async () => {
@@ -28,6 +32,21 @@ function TournamentDetailPage() {
                 }
                 const { data } = await parseApiJson(response);
                 setTournament(data || null);
+                // Load contact (creator) info
+                if (data?.event_leader_id) {
+                    try {
+                        const leaderResponse = await apiFetch(`/api/players/${data.event_leader_id}`);
+                        if (leaderResponse.ok) {
+                            const { data: leaderData } = await parseApiJson(leaderResponse);
+                            setContact({
+                                name: leaderData?.user_name || null,
+                                email: leaderData?.email || null,
+                            });
+                        }
+                    } catch (leaderErr) {
+                        console.error('Error fetching event leader contact:', leaderErr);
+                    }
+                }
                 setError(null);
             } catch (err) {
                 console.error('Error fetching tournament:', err);
@@ -120,7 +139,75 @@ function TournamentDetailPage() {
         fetchUserTeams();
     }, [tournament, id]);
 
+    useEffect(() => {
+        const fetchMatches = async () => {
+            if (!tournament) return;
+            setMatchesLoading(true);
+            setMatchesError(null);
+            setMatches([]);
+            try {
+                const response = await apiFetch(`/api/events/${id}/matches`);
+                if (!response.ok) {
+                    throw new Error('Nepodarilo sa načítať zápasy turnaja');
+                }
+                const { data } = await parseApiJson(response);
+                const matchesData = Array.isArray(data?.matches) ? data.matches : [];
+                setMatches(matchesData);
+            } catch (err) {
+                console.error('Error fetching matches:', err);
+                setMatchesError(err.message);
+            } finally {
+                setMatchesLoading(false);
+            }
+        };
+
+        fetchMatches();
+    }, [tournament, id]);
+
     const participantsCount = participants.length;
+
+    const participantName = (participantId) => {
+        if (!participantId) return 'TBD';
+        const list = Array.isArray(participants) ? participants : [];
+        if (tournament?.event_type === 'TEAM') {
+            return list.find((p) => p.team_ID === participantId)?.team_name || 'Tím TBD';
+        }
+        const player = list.find((p) => p.user_ID === participantId);
+        if (!player) return 'Hráč TBD';
+        return `${player.first_name || ''} ${player.last_name || ''}`.trim() || player.user_name || 'Hráč TBD';
+    };
+
+    const rounds = (() => {
+        const maxParticipants = Number(tournament?.max_participants) || 0;
+        const maxRoundFromMatches = matches.reduce((max, m) => Math.max(max, m.round || 0), 0);
+        const totalRounds = maxParticipants > 1 ? Math.max(Math.log2(maxParticipants), maxRoundFromMatches) : maxRoundFromMatches;
+        const roundsCount = Number.isFinite(totalRounds) && totalRounds > 0 ? Math.ceil(totalRounds) : 0;
+        const byRound = matches.reduce((acc, match) => {
+            const r = match.round || 1;
+            acc[r] = acc[r] || [];
+            acc[r].push(match);
+            return acc;
+        }, {});
+
+        const roundsArray = [];
+        for (let r = 1; r <= roundsCount; r++) {
+            const expectedMatches = Math.max(1, Math.ceil((maxParticipants || 2) / (2 ** r)));
+            const list = (byRound[r] || []).slice(0, expectedMatches);
+            while (list.length < expectedMatches) {
+                list.push({
+                    participant_A: null,
+                    participant_B: null,
+                    participant_A_points: null,
+                    participant_B_points: null,
+                    winner: null,
+                    round: r,
+                });
+            }
+            roundsArray.push({ round: r, matches: list });
+        }
+
+        return roundsArray;
+    })();
 
     const handleRegistration = async () => {
         if (!tournament) return;
@@ -323,12 +410,10 @@ function TournamentDetailPage() {
                     {/* Meta Information */}
                     <div className="grid grid-cols-2 gap-x-8 gap-y-3 max-w-4xl">
                         <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">Vytvorené:</span>
-                            <span className="font-bold text-blue-900">{formatDate(tournament.created_at)}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <span className="text-blue-600 min-w-[160px]">Uzávierka prihlášok:</span>
-                            <span className="font-bold text-blue-900">{formatDate(tournament.registration_deadline)}</span>
+                            <span className="text-blue-600 min-w-[160px]">Koniec turnaja:</span>
+                            <span className="font-bold text-blue-900">
+                                {formatDate(tournament.event_end_date || tournament.event_date)}
+                            </span>
                         </div>
                         <div className="flex items-center">
                             <span className="text-blue-600 min-w-[160px]">Začiatok turnaja:</span>
@@ -336,7 +421,10 @@ function TournamentDetailPage() {
                         </div>
                         <div className="flex items-center">
                             <span className="text-blue-600 min-w-[160px]">Kontakt:</span>
-                            <span className="font-bold text-blue-900">{tournament.contact_email || 'Neuvedené'}</span>
+                            <span className="font-bold text-blue-900">
+                                {contact.email || tournament.contact_email || 'Neuvedené'}
+                                {contact.name ? ` (${contact.name})` : ''}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -392,16 +480,72 @@ function TournamentDetailPage() {
                         </div>
                     </div>
 
-                    {/* Bracket Section */}
+                    {/* Bracket */}
                     <div className="bg-white rounded-lg shadow-lg border-2 border-blue-200 p-6 mb-6">
-                        <h2 className="text-2xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-200">
-                            🎯 Pavúk turnaja
-                        </h2>
-                        <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
-                            <div className="text-gray-500 text-lg">
-                                Pavúk bude vygenerovaný po uzávierke registrácií
-                            </div>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-blue-900">🎯 Pavúk turnaja</h3>
+                            {matchesLoading && <span className="text-blue-600 text-sm">Načítavam zápasy...</span>}
                         </div>
+                        {matchesError ? (
+                            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-red-700 text-sm">
+                                {matchesError}
+                            </div>
+                        ) : rounds.length === 0 ? (
+                            <div className="text-center py-6 text-gray-500">Zápasy zatiaľ nie sú k dispozícii.</div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <div className="flex gap-10 justify-center items-start min-w-full">
+                                    {rounds.map((round) => {
+                                        const remaining = rounds.length - round.round;
+                                        const offset = Math.max(0, ((2 ** remaining) - 1) * 30);
+                                        return (
+                                            <div
+                                                key={round.round}
+                                                className="flex-1 min-w-[220px] max-w-[240px]"
+                                                style={{ marginTop: offset }}
+                                            >
+                                                <div className="text-center font-bold text-blue-900 mb-4 px-3 py-2 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                                                    {round.round === rounds.length
+                                                        ? 'Finále'
+                                                        : round.round === rounds.length - 1
+                                                        ? 'Semifinále'
+                                                        : `Kolo ${round.round}`}
+                                                </div>
+                                                <div className="flex flex-col gap-6 items-stretch">
+                                                    {round.matches.map((match, idx) => {
+                                                        const isAWinner = match.winner && match.winner === match.participant_A;
+                                                        const isBWinner = match.winner && match.winner === match.participant_B;
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-md min-h-[90px] flex flex-col justify-between"
+                                                            >
+                                                                <div
+                                                                    className={`flex justify-between items-center px-3 py-2 border-b border-blue-100 ${isAWinner ? 'bg-green-50 font-semibold text-green-800' : ''}`}
+                                                                >
+                                                                    <span className="truncate mr-2">{participantName(match.participant_A)}</span>
+                                                                    <span className="font-bold text-blue-900">
+                                                                        {match.participant_A_points ?? '-'}
+                                                                    </span>
+                                                                </div>
+                                                                <div
+                                                                    className={`flex justify-between items-center px-3 py-2 ${isBWinner ? 'bg-green-50 font-semibold text-green-800' : ''}`}
+                                                                >
+                                                                    <span className="truncate mr-2">{participantName(match.participant_B)}</span>
+                                                                    <span className="font-bold text-blue-900">
+                                                                        {match.participant_B_points ?? '-'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Participants Section */}

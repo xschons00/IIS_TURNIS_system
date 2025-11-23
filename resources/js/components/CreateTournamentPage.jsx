@@ -7,16 +7,11 @@ import { appUrl } from '../utils/url';
 
 function CreateTournamentPage() {
     const [tournamentName, setTournamentName] = useState('');
-    const [sport, setSport] = useState('');
     const [description, setDescription] = useState('');
     const [participationType, setParticipationType] = useState('SOLO');
     const [maxParticipants, setMaxParticipants] = useState('');
-    const [teamSize, setTeamSize] = useState('');
-    const [gameSystem, setGameSystem] = useState('knockout');
     const [eventDate, setEventDate] = useState('');
-    const [startTime, setStartTime] = useState('');
     const [location, setLocation] = useState('');
-    const [registrationDeadline, setRegistrationDeadline] = useState('');
     const [entryFee, setEntryFee] = useState('');
     const [prize, setPrize] = useState('');
     const [loading, setLoading] = useState(false);
@@ -27,8 +22,8 @@ function CreateTournamentPage() {
         e.preventDefault();
 
         // Validation
-        if (!tournamentName.trim() || !sport || !maxParticipants || !eventDate || !location.trim()) {
-            setError('Názov, šport, miesto, maximálny počet účastníkov a dátum konania sú povinné');
+        if (!tournamentName.trim() || !maxParticipants || !eventDate || !location.trim()) {
+            setError('Názov, miesto, maximálny počet účastníkov a dátum konania sú povinné');
             return;
         }
 
@@ -70,7 +65,7 @@ function CreateTournamentPage() {
                     max_participants: maxParticipantsNumber,
                     event_leader_id: user.user_ID,
                     entry_fee: entryFee.trim() || null,
-                    prize: prize.trim() || null,
+                    winner_price: prize.trim() || null,
                 })
             });
 
@@ -137,64 +132,41 @@ function CreateTournamentPage() {
                 {/* Form */}
                 <form onSubmit={handleSubmit}>
                     <div className="p-8">
-                        {/* Basic Information */}
-                        <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-blue-200">
-                            <div className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-300">
-                                📋 Základné informácie
-                            </div>
+                {/* Basic Information */}
+                <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-blue-200">
+                    <div className="text-xl font-bold text-blue-900 mb-4 pb-3 border-b-2 border-blue-300">
+                        📋 Základné informácie
+                    </div>
 
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Názov turnaja <span className="text-red-600">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={tournamentName}
-                                    onChange={(e) => setTournamentName(e.target.value)}
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                    placeholder="napr. Šachový turnaj 2025"
-                                    disabled={loading || success}
-                                    required
-                                />
-                            </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Názov turnaja <span className="text-red-600">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={tournamentName}
+                            onChange={(e) => setTournamentName(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
+                            placeholder="napr. Šachový turnaj 2025"
+                            disabled={loading || success}
+                            required
+                        />
+                    </div>
 
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Šport/Hra <span className="text-red-600">*</span>
-                                </label>
-                                <select
-                                    value={sport}
-                                    onChange={(e) => setSport(e.target.value)}
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                    disabled={loading || success}
-                                    required
-                                >
-                                    <option value="">-- Vyberte šport/hru --</option>
-                                    <option value="chess">Šach</option>
-                                    <option value="darts">Šípky</option>
-                                    <option value="table-tennis">Stolný tenis</option>
-                                    <option value="csgo">CS:GO</option>
-                                    <option value="fifa">FIFA</option>
-                                    <option value="lol">League of Legends</option>
-                                    <option value="beer">Konzumácia piva</option>
-                                    <option value="other">Iné</option>
-                                </select>
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Popis turnaja
-                                </label>
-                                <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900 resize-vertical"
-                                    placeholder="Popíšte turnaj, pravidlá, program, atď..."
-                                    rows="4"
-                                    disabled={loading || success}
-                                />
-                            </div>
-                        </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Popis turnaja
+                        </label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900 resize-vertical"
+                            placeholder="Popíšte turnaj, pravidlá, program, atď..."
+                            rows="4"
+                            disabled={loading || success}
+                        />
+                    </div>
+                </div>
 
                         {/* Tournament Settings */}
                         <div className="mb-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-blue-200">
@@ -234,52 +206,20 @@ function CreateTournamentPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                                        Maximálny počet účastníkov/tímov <span className="text-red-600">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={maxParticipants}
-                                        onChange={(e) => setMaxParticipants(e.target.value)}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                        placeholder="napr. 16"
-                                        min="4"
-                                        disabled={loading || success}
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                                        Počet hráčov v tíme
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={teamSize}
-                                        onChange={(e) => setTeamSize(e.target.value)}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                        placeholder="napr. 5"
-                                        min="1"
-                                        disabled={loading || success}
-                                    />
-                                </div>
-                            </div>
-
                             <div className="mb-4">
                                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Herný systém <span className="text-red-600">*</span>
+                                    Maximálny počet účastníkov/tímov <span className="text-red-600">*</span>
                                 </label>
-                                <select
-                                    value={gameSystem}
-                                    onChange={(e) => setGameSystem(e.target.value)}
+                                <input
+                                    type="number"
+                                    value={maxParticipants}
+                                    onChange={(e) => setMaxParticipants(e.target.value)}
                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
+                                    placeholder="napr. 16"
+                                    min="4"
                                     disabled={loading || success}
                                     required
-                                >
-                                    <option value="knockout">Vyraďovací systém (Pavúk)</option>
-                                </select>
+                                />
                             </div>
                         </div>
 
@@ -304,18 +244,6 @@ function CreateTournamentPage() {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">
-                                        Čas začiatku
-                                    </label>
-                                    <input
-                                        type="time"
-                                        value={startTime}
-                                        onChange={(e) => setStartTime(e.target.value)}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                        disabled={loading || success}
-                                    />
-                                </div>
                             </div>
 
                             <div className="mb-4">
@@ -333,18 +261,7 @@ function CreateTournamentPage() {
                                 />
                             </div>
 
-                            <div className="mb-4">
-                                <label className="block text-sm font-bold text-gray-700 mb-2">
-                                    Uzávierka prihlášok
-                                </label>
-                                <input
-                                    type="date"
-                                    value={registrationDeadline}
-                                    onChange={(e) => setRegistrationDeadline(e.target.value)}
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
-                                    disabled={loading || success}
-                                />
-                            </div>
+                            <div className="mb-4" />
                         </div>
 
                         {/* Entry and Prize */}
