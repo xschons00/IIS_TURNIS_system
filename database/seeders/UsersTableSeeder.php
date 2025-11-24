@@ -18,7 +18,7 @@ class UsersTableSeeder extends Seeder
                 'user_name' => 'admin',
                 'first_name' => 'Admin',
                 'last_name' => 'User',
-                'email' => 'admin@digitick.test',
+                'email' => 'admin@a',
                 'password' => Hash::make('password'),
                 'faculty' => 'COMPUTER_SCIENCE',
                 'ranking' => null,
