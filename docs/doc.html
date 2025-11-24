@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Projekt IIS - dokumentácia</title>
+    <style type="text/css">
+        table { border-collapse: collapse; }
+        td, th { border: 1px solid black; padding: 0.3em 0.5em; text-align: left; }
+        dt { font-weight: bold; margin-top: 0.5em; }
+    </style>
+</head>
+<body>
+
+<h1>Študentské turnaje</h1>
+
+<dl>
+    <dt>Autori</dt>
+    <dd>Šimon Schon (xschons00): Návrh a tvorba databázy, Controléry, testovanie</dd>
+    <dd>Kamil Jakubčák (xjakubk00): Pokročilé kontroléry, authentifikácia, testovanie </dd>
+    <dd>Adrián Pitka Kester (xpitkaa00): návrh a tvorba GUI, testovanie</dd>
+    <dt>URL aplikácie</dt>
+    <dd><code>https://www.stud.fit.vutbr.cz/~xjakubk00/</code>.</dd>
+</dl>
+
+<h2>Užívatelia systému na testovanie</h2>
+<p>Pre každú rolu uveďte aspoň jedného používateľa (login/heslo): administrátor, bežný používateľ, vedúci tímu/eventu, a pod.</p>
+<table>
+    <tr><th>Login</th><th>Heslo</th><th>Rola</th></tr>
+    <tr><td>admin@a</td><td>password</td><td>Administrátor</td></tr>
+    <tr><td>lena.andrejova@example.com</td><td>password</td><td>Vedúci tímu/eventu: [Cyber Falcons/Campus Clash 2025</td></tr>
+    <tr><td>peter.novak@example.com</td><td>password</td><td>Bežný používateľ, člen tímu: [Pixel Titans]</td></tr>
+</table>
+
+<h3>Video</h3>
+<p>Odkaz na komentované video: <code>https://drive.google.com/drive/folders/1UI8hD4AQQxLTC17jQ6wdTSO08liIUtZ9?usp=sharing.</code></p>
+
+<h2>Implementácia (prípady použitia)</h2>
+<p>Use-Case je k dispozícii v <code>docs/usecase_diagram.drawio(.png)</code>.</p>
+<p>Nižšie je stručná dokumentácia k implementácii, ktorá mapuje PHP controllery na prípady použitia.</p>
+
+<h3>Autentifikácia a používatelia</h3>
+<ul>
+    <li><code>App\Http\Controllers\AuthController</code> – login, logout, me (<code>/api/auth/login</code>, <code>/api/auth/logout</code>, <code>/api/auth/me</code>).</li>
+    <li><code>App\Http\Controllers\PlayerController</code> – CRUD hráčov, profil, úprava vlastného profilu (<code>/api/players</code>, <code>/api/players/{id}</code>, <code>/api/profile</code>).</li>
+</ul>
+
+<h3>Tímy</h3>
+<ul>
+    <li><code>App\Http\Controllers\TeamController</code> – CRUD tímov (<code>/api/teams</code>, <code>/api/teams/{id}</code>).</li>
+    <li><code>App\Http\Controllers\TeamMembersController</code> – pridanie/odobratie člena, výpis členov a počtu, odchod člena (<code>/api/teams/{id}/members</code>, <code>/api/teams/{id}/members/count</code>, <code>/api/teams/{id}/members/leave</code>).</li>
+</ul>
+
+<h3>Turnaje (Events)</h3>
+<ul>
+    <li><code>App\Http\Controllers\EventController</code>
+         – CRUD turnajov (<code>/api/events</code>, <code>/api/events/{id}</code>).</li>
+    <li><code>App\Http\Controllers\ParticipantsController</code> – registrácia/odhlásenie hráčov alebo tímov, výpis účastníkov, výpočet bodov a umiestnenia (<code>/api/events/{id}/participants</code>, <code>/api/events/{id}/participants/count</code>, <code>/api/events/{event_id}/participants/{participant_id}/points</code>, <code>/api/events/{id}/participants/placement</code>).</li>
+    <li><code>App\Http\Controllers\EventMatchController</code> – generovanie pavúka a správa zápasov, výpis všetkých zápasov, detail/úprava/mazanie zápasu (<code>/api/events/{id}/matches</code>, <code>/api/matches/{id}</code>, <code>/api/events/{id}/matches/generate</code>).</li>
+</ul>
+
+<h3>Štatistiky a filtre</h3>
+<ul>
+    <li><code>App\Http\Controllers\StatisticsController</code> – súhrnné metriky (<code>/api/statistics</code>).</li>
+    <li><code>App\Http\Controllers\Filters\PlayerFilter</code>, <code>TeamFilter</code>, <code>EventFilter</code> – filtrované zoznamy pre frontend (<code>/api/filters/players</code>, <code>/api/filters/teams</code>, <code>/api/filters/events</code>).</li>
+</ul>
+
+<h3>Databáza</h3>
+<p>ERD schéma je k dispozícii v <code>docs/erd_diagram.drawio(.png)</code>. Migračné skripty sú v <code>database/migrations</code>.</p>
+
+<h2>Inštalácia</h2>
+<ul>
+    <li>Backend: Laravel (PHP 8.x), závislosti cez <code>composer install</code>, migrácie <code>php artisan migrate --seed</code>.</li>
+    <li>Frontend: Vite/React, závislosti cez <code>npm install</code>, build <code>npm run build</code>, dev <code>npm run dev</code>.</li>
+    <li>DB systém: MySQL (schéma DB sa vytvára cez Laravel migrácie)</li>
+    <li>Konfigurácia: skopírujte <code>.env.example</code> na <code>.env</code>, nastavte DB prístup, spustite <code>php artisan key:generate</code>.</li>
+</ul>
+
+</body>
+</html>
