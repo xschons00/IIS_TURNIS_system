@@ -26,9 +26,9 @@
 <p>Pre každú rolu uveďte aspoň jedného používateľa (login/heslo): administrátor, bežný používateľ, vedúci tímu/eventu, a pod.</p>
 <table>
     <tr><th>Login</th><th>Heslo</th><th>Rola</th></tr>
-    <tr><td>admin</td><td>admin</td><td>Administrátor</td></tr>
-    <tr><td>leader</td><td>leader</td><td>Vedúci tímu/eventu</td></tr>
-    <tr><td>user</td><td>user</td><td>Bežný používateľ</td></tr>
+    <tr><td>admin@a</td><td>password</td><td>Administrátor</td></tr>
+    <tr><td>lena.andrejova@example.com</td><td>password</td><td>Vedúci tímu/eventu: [Cyber Falcons/Campus Clash 2025</td></tr>
+    <tr><td>peter.novak@example.com</td><td>password</td><td>Bežný používateľ, člen tímu: [Pixel Titans]</td></tr>
 </table>
 
 <h3>Video</h3>
@@ -71,11 +71,9 @@
 <ul>
     <li>Backend: Laravel (PHP 8.x), závislosti cez <code>composer install</code>, migrácie <code>php artisan migrate --seed</code>.</li>
     <li>Frontend: Vite/React, závislosti cez <code>npm install</code>, build <code>npm run build</code>, dev <code>npm run dev</code>.</li>
+    <li>DB systém: MySQL (schéma DB sa vytvára cez Laravel migrácie)</li>
     <li>Konfigurácia: skopírujte <code>.env.example</code> na <code>.env</code>, nastavte DB prístup, spustite <code>php artisan key:generate</code>.</li>
 </ul>
-
-<h2>Známé problémy</h2>
-<p>Uveďte prípadné neimplementované časti alebo obmedzenia podľa aktuálneho stavu projektu.</p>
 
 </body>
 </html>
