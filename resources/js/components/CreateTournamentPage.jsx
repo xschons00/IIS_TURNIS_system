@@ -27,6 +27,23 @@ function CreateTournamentPage() {
             return;
         }
 
+        // Validate date format (YYYY-MM-DD and real date within MySQL range)
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (!datePattern.test(eventDate)) {
+            setError('Zadajte dátum v tvare RRRR-MM-DD');
+            return;
+        }
+        const dateObj = new Date(eventDate);
+        if (Number.isNaN(dateObj.getTime()) || eventDate !== dateObj.toISOString().slice(0, 10)) {
+            setError('Zadajte platný dátum');
+            return;
+        }
+        const year = Number(eventDate.slice(0, 4));
+        if (year < 1000 || year > 9999) {
+            setError('Rok musí byť v rozsahu 1000 až 9999');
+            return;
+        }
+
         const maxParticipantsNumber = parseInt(maxParticipants, 10);
 
         if (Number.isNaN(maxParticipantsNumber)) {

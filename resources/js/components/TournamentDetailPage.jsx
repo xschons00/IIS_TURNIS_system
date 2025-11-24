@@ -788,6 +788,66 @@ function TournamentDetailPage() {
                             </div>
                         ) : (
                             <>
+                                {isEventLeader && tournament.event_state === 'REGISTRATION' && (
+                                    <div className="mb-6 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="font-bold text-yellow-800">
+                                                Čakajúce žiadosti ({pendingParticipants.length})
+                                            </div>
+                                            {pendingParticipants.length === 0 && (
+                                                <span className="text-sm text-yellow-700">Žiadne nové žiadosti</span>
+                                            )}
+                                        </div>
+                                        {pendingParticipants.length > 0 && (
+                                            <div className="space-y-3">
+                                                {pendingParticipants.map((participant) => {
+                                                    const participantId = tournament.event_type === 'SOLO' ? participant.user_ID : participant.team_ID;
+                                                    return (
+                                                        <div
+                                                            key={participantId}
+                                                            className="flex items-center justify-between bg-white border-2 border-yellow-200 rounded-lg p-3"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow">
+                                                                    {tournament.event_type === 'SOLO'
+                                                                        ? getUserInitial(participant.user_name)
+                                                                        : getTeamInitials(participant.team_name)}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-bold text-gray-900">
+                                                                        {tournament.event_type === 'SOLO' ? participant.user_name : participant.team_name}
+                                                                    </div>
+                                                                    <div className="text-sm text-gray-600">
+                                                                        {tournament.event_type === 'SOLO'
+                                                                            ? `${participant.first_name || ''} ${participant.last_name || ''}`.trim()
+                                                                            : `${participant.member_count || 0} členov`}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => handleParticipantDecision(participantId, 'approve')}
+                                                                    className="px-3 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                                    disabled={decisionLoading !== null}
+                                                                >
+                                                                    {decisionLoading === `approve-${participantId}` ? 'Schvaľujem...' : 'Schváliť'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleParticipantDecision(participantId, 'deny')}
+                                                                    className="px-3 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                                                    disabled={decisionLoading !== null}
+                                                                >
+                                                                    {decisionLoading === `deny-${participantId}` ? 'Odmietam...' : 'Odmietnuť'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {acceptedParticipants.length === 0 ? (
                                     <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
                                         <div className="text-gray-500 text-lg">

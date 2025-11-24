@@ -34,8 +34,11 @@ function TournamentList() {
                 const events = Array.isArray(data) ? data : [];
 
                 // Fetch participant counts for all tournaments in parallel
+                // Exclude NEW state from homepage list
+                const visibleEvents = events.filter((event) => (event.event_state || '').toUpperCase() !== 'NEW');
+
                 const tournamentsWithCounts = await Promise.all(
-                    events.map(async (event) => {
+                    visibleEvents.map(async (event) => {
                         try {
                             const countResponse = await apiFetch(`/api/events/${event.event_ID}/participants/count`);
                             if (countResponse.ok) {

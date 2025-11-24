@@ -244,6 +244,53 @@ class EventMatchControllerTest extends TestCase
         ]);
     }
 
+    public function test_only_final_winner_gets_ranking_points(): void
+    {
+        $leader = User::factory()->create(['role' => 'USER']);
+        $event = Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
+            'event_type' => 'SOLO',
+            'event_state' => 'ONGOING',
+        ]);
+
+        $winner = User::factory()->create(['ranking' => 0]);
+        $loser = User::factory()->create(['ranking' => 0]);
+
+        $event->players()->attach([
+            $winner->user_ID => ['status' => 'ACCEPTED'],
+            $loser->user_ID => ['status' => 'ACCEPTED'],
+        ]);
+
+        $match = EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => $winner->user_ID,
+            'participant_B' => $loser->user_ID,
+            'participant_A_points' => 5,
+            'participant_B_points' => 2,
+            'round' => 1,
+        ]);
+
+        $this->actingAs($leader);
+
+        $response = $this->putJson("/api/matches/{$match->id}", [
+            'winner' => $winner->user_ID,
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('events', [
+            'event_ID' => $event->event_ID,
+            'event_state' => 'FINISHED',
+            'event_winner' => $winner->user_ID,
+        ]);
+
+        $winner->refresh();
+        $loser->refresh();
+
+        $this->assertSame(5, $winner->ranking, 'Winner should receive their total points as ranking');
+        $this->assertSame(0, $loser->ranking, 'Loser should not receive ranking points');
+    }
+
     /* ------------------------------------------------------------
      * UpdateEventMatch
      * ------------------------------------------------------------ */

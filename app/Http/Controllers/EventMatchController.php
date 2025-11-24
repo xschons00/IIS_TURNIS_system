@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\EventMatch;
+use App\Models\User;
+use App\Models\Team;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Concerns\ApiResponse;
@@ -166,6 +168,17 @@ class EventMatchController
 
         $match->refresh();
 
+        // Ensure winner gets at least 1 point in the current match
+        if ($match->winner) {
+            if ($match->winner === $match->participant_A && ($match->participant_A_points ?? 0) < 1) {
+                $match->update(['participant_A_points' => 1]);
+                $match->refresh();
+            } elseif ($match->winner === $match->participant_B && ($match->participant_B_points ?? 0) < 1) {
+                $match->update(['participant_B_points' => 1]);
+                $match->refresh();
+            }
+        }
+
         // If a winner is set/cleared, propagate to the next round bracket slot
         $this->propagateWinnerToNextMatch($match);
         // If bracket is complete, finish the event
@@ -291,6 +304,45 @@ class EventMatchController
         }
 
         $event->update($update);
+
+        $this->awardRankingPoints($event);
+    }
+
+    /**
+     * Award ranking points based on final match points when event finishes.
+     * Applies the total points accumulated in matches to participant ranking.
+     */
+    private function awardRankingPoints(Event $event): void
+    {
+        $type = strtoupper($event->event_type ?? '');
+        $matches = $event->matches()->get();
+        if ($matches->isEmpty()) {
+            return;
+        }
+
+        $finalRound = $matches->max('round');
+        $finalMatch = $matches->firstWhere('round', $finalRound);
+        if (! $finalMatch || ! $finalMatch->winner) {
+            return;
+        }
+
+        if ($type === 'SOLO') {
+            $winner = $event->players()->where('users.user_ID', $finalMatch->winner)->first();
+            if ($winner) {
+                $points = ParticipantsController::_CalculateTotalScore($event, $winner->user_ID);
+                if ($points > 0) {
+                    $winner->increment('ranking', $points);
+                }
+            }
+        } elseif ($type === 'TEAM') {
+            $winnerTeam = $event->teams()->where('teams.team_ID', $finalMatch->winner)->first();
+            if ($winnerTeam) {
+                $points = ParticipantsController::_CalculateTotalScore($event, $winnerTeam->team_ID);
+                if ($points > 0) {
+                    $winnerTeam->increment('ranking', $points);
+                }
+            }
+        }
     }
 
     // helper to calculate final score
