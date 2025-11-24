@@ -222,6 +222,30 @@ class EventsTableSeeder extends Seeder
             // Registration (or new) events should not have any recorded matches
             if (in_array($eventData['event_state'], ['REGISTRATION', 'NEW'], true)) {
                 $matches = [];
+                // keep status as REGISTERED for existing participants
+                if ($eventData['event_type'] === 'SOLO') {
+                    $pivot = [];
+                    foreach ($eventData['participants'] ?? [] as $p) {
+                        $user = User::where('email', $p['email'])->first();
+                        if (!$user) continue;
+                        $pivot[$user->user_ID] = [
+                            'final_placement' => null,
+                            'status' => 'ACCEPTED',
+                        ];
+                    }
+                    $event->players()->sync($pivot);
+                } elseif ($eventData['event_type'] === 'TEAM') {
+                    $pivot = [];
+                    foreach ($eventData['teams'] ?? [] as $t) {
+                        $team = Team::where('team_name', $t['team_name'])->first();
+                        if (!$team) continue;
+                        $pivot[$team->team_ID] = [
+                            'final_placement' => null,
+                            'status' => 'ACCEPTED',
+                        ];
+                    }
+                    $event->teams()->sync($pivot);
+                }
             }
 
             // Auto-generate simple matches for finished events if none provided

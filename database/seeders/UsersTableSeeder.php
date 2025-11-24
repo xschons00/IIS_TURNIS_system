@@ -18,7 +18,7 @@ class UsersTableSeeder extends Seeder
                 'user_name' => 'admin',
                 'first_name' => 'Admin',
                 'last_name' => 'User',
-                'email' => 'admin@a',
+                'email' => 'admin@digitick.test',
                 'password' => Hash::make('password'),
                 'faculty' => 'COMPUTER_SCIENCE',
                 'ranking' => null,
@@ -118,7 +118,7 @@ class UsersTableSeeder extends Seeder
 
         foreach ($users as $user) {
             User::updateOrCreate(
-                ['email' => $user['email']],
+                ['user_name' => $user['user_name']],
                 $user + ['email_verified_at' => now()]
             );
         }
