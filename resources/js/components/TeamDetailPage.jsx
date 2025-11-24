@@ -52,8 +52,8 @@ function TeamDetailPage() {
                 if (!teamResponse.ok) {
                     throw new Error('Tím nenájdený');
                 }
-                const { data: teamData } = await parseApiJson(teamResponse);
-                setTeam(teamData || null);
+                const { data: fetchedTeam } = await parseApiJson(teamResponse);
+                setTeam(fetchedTeam || null);
 
                 // Fetch team members
                 const membersResponse = await apiFetch(`/api/teams/${teamId}/members`);
@@ -76,7 +76,7 @@ function TeamDetailPage() {
                 // Check if current user is team leader
                 const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
                 setCurrentUser(loggedInUser?.user_ID ? loggedInUser : null);
-                const isLoggedLeader = loggedInUser.user_ID && teamData?.team_leader_id === loggedInUser.user_ID;
+                const isLoggedLeader = loggedInUser.user_ID && fetchedTeam?.team_leader_id === loggedInUser.user_ID;
                 setIsLeader(Boolean(isLoggedLeader));
 
                 const isMember = normalizedMembers.some((m) => m.user_ID === loggedInUser.user_ID);
@@ -288,7 +288,7 @@ function TeamDetailPage() {
 
             // Set current members as edit members
             setEditMembers([...members]);
-            setEditTeamName(teamData?.team_name || '');
+            setEditTeamName(team?.team_name || '');
             setTeamNameError(null);
             setShowEditModal(true);
         } catch (err) {

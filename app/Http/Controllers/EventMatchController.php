@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\EventMatch;
+use App\Models\User;
+use App\Models\Team;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Concerns\ApiResponse;
@@ -25,7 +27,7 @@ class EventMatchController
             return $this->respondWithMessage('Event not found', null, 404);
         }
 
-        $success = $this->CreateEmptyMatches($event);
+        $success = self::CreateEmptyMatches($event);
 
         if (!$success) {
             return $this->respondWithMessage('Failed to create matches. Check participant count.', null, 400);
@@ -37,24 +39,45 @@ class EventMatchController
     /**
      * helper to create empty matches for an event
      */
-    private function CreateEmptyMatches(Event $event): bool
+    public static function CreateEmptyMatches(Event $event): bool
     {
-        $participants = ParticipantsController::_GetParticipantCount($event);
+        $participants = ParticipantsController::_GetParticipantCount($event, onlyAccepted: true);
         $allowedPlayerCounts = [2, 4, 8, 16, 32];
 
         if (!in_array($participants, $allowedPlayerCounts, true)) {
             return false;
         }
 
+        // Get ordered participant IDs (accepted only)
+        if (strtoupper($event->event_type) === 'SOLO') {
+            $participantIds = $event->players()
+                ->wherePivot('status', 'ACCEPTED')
+                ->pluck('users.user_ID')
+                ->toArray();
+        } else {
+            $participantIds = $event->teams()
+                ->wherePivot('status', 'ACCEPTED')
+                ->pluck('teams.team_ID')
+                ->toArray();
+        }
+
+        if (count($participantIds) !== $participants) {
+            return false;
+        }
+
         $numMatches = (int) ($participants / 2);
         $eventRound = 1;
+        $currentRoundParticipants = $participantIds;
 
         while ($numMatches >= 1) {
             for ($i = 0; $i < $numMatches; $i++) {
+                $participantA = $eventRound === 1 ? ($currentRoundParticipants[$i * 2] ?? null) : null;
+                $participantB = $eventRound === 1 ? ($currentRoundParticipants[$i * 2 + 1] ?? null) : null;
+
                 EventMatch::create([
                     'event_ID' => $event->event_ID,
-                    'participant_A' => null,
-                    'participant_B' => null,
+                    'participant_A' => $participantA,
+                    'participant_B' => $participantB,
                     'participant_A_points' => 0,
                     'participant_B_points' => 0,
                     'round' => $eventRound,
@@ -65,6 +88,8 @@ class EventMatchController
 
             $eventRound++;
             $numMatches = (int) ($numMatches / 2);
+            // Placeholder participants for next rounds (winners will be filled later)
+            $currentRoundParticipants = array_fill(0, max(0, $numMatches * 2), null);
         }
 
         return true;
@@ -143,6 +168,22 @@ class EventMatchController
 
         $match->refresh();
 
+        // Ensure winner gets at least 1 point in the current match
+        if ($match->winner) {
+            if ($match->winner === $match->participant_A && ($match->participant_A_points ?? 0) < 1) {
+                $match->update(['participant_A_points' => 1]);
+                $match->refresh();
+            } elseif ($match->winner === $match->participant_B && ($match->participant_B_points ?? 0) < 1) {
+                $match->update(['participant_B_points' => 1]);
+                $match->refresh();
+            }
+        }
+
+        // If a winner is set/cleared, propagate to the next round bracket slot
+        $this->propagateWinnerToNextMatch($match);
+        // If bracket is complete, finish the event
+        $this->finalizeEventIfCompleted($match);
+
         return $this->respondWithMessage('Match updated', $match);
     }
 
@@ -160,6 +201,148 @@ class EventMatchController
         $match->delete();
 
         return $this->respondWithMessage('Match deleted');
+    }
+
+    /**
+     * Propagate winner of a match into the next round slot.
+     * Positions are determined by match order (ascending ID) within each round.
+     */
+    private function propagateWinnerToNextMatch(EventMatch $match): void
+    {
+        // Only propagate when we have a winner
+        $winnerId = $match->winner;
+        $eventId = $match->event_ID;
+
+        if (! $eventId) {
+            return;
+        }
+
+        $currentRound = (int) $match->round;
+        if ($currentRound <= 0) {
+            return;
+        }
+
+        $nextRound = $currentRound + 1;
+
+        // Determine index of current match within its round (by ID ordering)
+        $currentRoundMatches = EventMatch::where('event_ID', $eventId)
+            ->where('round', $currentRound)
+            ->orderBy('id')
+            ->get()
+            ->values();
+
+        $currentIndex = $currentRoundMatches->search(function ($m) use ($match) {
+            return $m->id === $match->id;
+        });
+
+        if ($currentIndex === false) {
+            return;
+        }
+
+        // Find the corresponding match in the next round
+        $nextRoundMatches = EventMatch::where('event_ID', $eventId)
+            ->where('round', $nextRound)
+            ->orderBy('id')
+            ->get()
+            ->values();
+
+        if ($nextRoundMatches->isEmpty()) {
+            return; // last round
+        }
+
+        $nextMatchIndex = intdiv($currentIndex, 2);
+        $slot = $currentIndex % 2 === 0 ? 'participant_A' : 'participant_B';
+
+        /** @var EventMatch|null $nextMatch */
+        $nextMatch = $nextRoundMatches->get($nextMatchIndex);
+        if (! $nextMatch) {
+            return;
+        }
+
+        if ($winnerId === null) {
+            // Clear slot if winner removed
+            $nextMatch->update([$slot => null]);
+            return;
+        }
+
+        $nextMatch->update([$slot => $winnerId]);
+
+        // Assign advancement point to winner for this match
+        $pointsField = $slot === 'participant_A' ? 'participant_A_points' : 'participant_B_points';
+        $nextMatch->update([$pointsField => max((int) ($nextMatch->$pointsField ?? 0), 1)]);
+    }
+
+    /**
+     * If all matches in the event have winners, mark event as finished and set winner for solo events.
+     */
+    private function finalizeEventIfCompleted(EventMatch $match): void
+    {
+        $event = Event::find($match->event_ID);
+        if (! $event || $event->event_state === 'FINISHED') {
+            return;
+        }
+
+        $matches = EventMatch::where('event_ID', $event->event_ID)->get();
+        if ($matches->isEmpty()) {
+            return;
+        }
+
+        // All matches must have a winner
+        if ($matches->contains(fn ($m) => $m->winner === null)) {
+            return;
+        }
+
+        $finalRound = $matches->max('round');
+        $finalMatch = $matches->firstWhere('round', $finalRound);
+        if (! $finalMatch || $finalMatch->winner === null) {
+            return;
+        }
+
+        $update = ['event_state' => 'FINISHED'];
+        if (strtoupper($event->event_type ?? '') === 'SOLO') {
+            $update['event_winner'] = $finalMatch->winner;
+        }
+
+        $event->update($update);
+
+        $this->awardRankingPoints($event);
+    }
+
+    /**
+     * Award ranking points based on final match points when event finishes.
+     * Applies the total points accumulated in matches to participant ranking.
+     */
+    private function awardRankingPoints(Event $event): void
+    {
+        $type = strtoupper($event->event_type ?? '');
+        $matches = $event->matches()->get();
+        if ($matches->isEmpty()) {
+            return;
+        }
+
+        $finalRound = $matches->max('round');
+        $finalMatch = $matches->firstWhere('round', $finalRound);
+        if (! $finalMatch || ! $finalMatch->winner) {
+            return;
+        }
+
+        if ($type === 'SOLO') {
+            $winner = $event->players()->where('users.user_ID', $finalMatch->winner)->first();
+            if ($winner) {
+                $points = ParticipantsController::_CalculateTotalScore($event, $winner->user_ID);
+                if ($points > 0) {
+                    $winner->increment('ranking', $points);
+                }
+            }
+        } elseif ($type === 'TEAM') {
+            $winnerTeam = $event->teams()->where('teams.team_ID', $finalMatch->winner)->first();
+            if ($winnerTeam) {
+                $points = ParticipantsController::_CalculateTotalScore($event, $winnerTeam->team_ID);
+                if ($points > 0) {
+                    $winnerTeam->increment('ranking', $points);
+                }
+            }
+        }
     }
 
     // helper to calculate final score

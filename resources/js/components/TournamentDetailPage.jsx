@@ -21,6 +21,13 @@ function TournamentDetailPage() {
     const [matches, setMatches] = useState([]);
     const [matchesLoading, setMatchesLoading] = useState(false);
     const [matchesError, setMatchesError] = useState(null);
+    const [isEventLeader, setIsEventLeader] = useState(false);
+    const [decisionLoading, setDecisionLoading] = useState(null);
+    const [matchActionLoading, setMatchActionLoading] = useState(null);
+    const [startLoading, setStartLoading] = useState(false);
+    const [leaveLoading, setLeaveLoading] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [advanceSelection, setAdvanceSelection] = useState(null);
 
     useEffect(() => {
         const fetchTournament = async () => {
@@ -32,6 +39,10 @@ function TournamentDetailPage() {
                 }
                 const { data } = await parseApiJson(response);
                 setTournament(data || null);
+                const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
+                const leaderCheck = loggedInUser.user_ID && (loggedInUser.user_ID === data?.event_leader_id || loggedInUser.role === 'ADMIN');
+                setIsEventLeader(Boolean(leaderCheck));
+                setCurrentUser(loggedInUser?.user_ID ? loggedInUser : null);
                 // Load contact (creator) info
                 if (data?.event_leader_id) {
                     try {
@@ -51,6 +62,7 @@ function TournamentDetailPage() {
             } catch (err) {
                 console.error('Error fetching tournament:', err);
                 setError(err.message);
+                setIsEventLeader(false);
             } finally {
                 setLoading(false);
             }
@@ -59,60 +71,60 @@ function TournamentDetailPage() {
         fetchTournament();
     }, [id]);
 
-    useEffect(() => {
-        const fetchParticipants = async () => {
-            if (!tournament) return;
+    const refreshParticipants = async () => {
+        if (!tournament) return;
 
-            try {
-                const response = await apiFetch(`/api/events/${id}/participants`, {
-                    credentials: 'include',
-                });
-                if (!response.ok) {
-                    throw new Error('Nepodarilo sa načítať účastníkov');
-                }
-                const { data } = await parseApiJson(response);
-                let participantsList = [];
-
-                if (data) {
-                    if (Array.isArray(data.participants)) {
-                        participantsList = data.participants;
-                    } else if (Array.isArray(data)) {
-                        participantsList = data;
-                    }
-                }
-
-                // For team tournaments, fetch member count for each team
-                if (tournament.event_type === 'TEAM' && participantsList.length > 0) {
-                    participantsList = await Promise.all(
-                        participantsList.map(async (participant) => {
-                            try {
-                                const countResponse = await apiFetch(`/api/teams/${participant.team_ID}/members/count`);
-                                if (countResponse.ok) {
-                                    const { data: countData } = await parseApiJson(countResponse);
-                                    return {
-                                        ...participant,
-                                        member_count: (countData?.members ?? 0)
-                                    };
-                                }
-                            } catch (err) {
-                                console.error(`Error fetching member count for team ${participant.team_ID}:`, err);
-                            }
-                            return {
-                                ...participant,
-                                member_count: 0
-                            };
-                        })
-                    );
-                }
-
-                setParticipants(participantsList);
-                setParticipantsError('');
-            } catch (err) {
-                console.error('Error fetching participants:', err);
-                setParticipantsError('Nepodarilo sa načítať účastníkov turnaja.');
+        try {
+            const response = await apiFetch(`/api/events/${id}/participants`, {
+                credentials: 'include',
+            });
+            if (!response.ok) {
+                throw new Error('Nepodarilo sa načítať účastníkov');
             }
-        };
+            const { data } = await parseApiJson(response);
+            let participantsList = [];
 
+            if (data) {
+                if (Array.isArray(data.participants)) {
+                    participantsList = data.participants;
+                } else if (Array.isArray(data)) {
+                    participantsList = data;
+                }
+            }
+
+            // For team tournaments, fetch member count for each team
+            if (tournament.event_type === 'TEAM' && participantsList.length > 0) {
+                participantsList = await Promise.all(
+                    participantsList.map(async (participant) => {
+                        try {
+                            const countResponse = await apiFetch(`/api/teams/${participant.team_ID}/members/count`);
+                            if (countResponse.ok) {
+                                const { data: countData } = await parseApiJson(countResponse);
+                                return {
+                                    ...participant,
+                                    member_count: (countData?.members ?? 0)
+                                };
+                            }
+                        } catch (err) {
+                            console.error(`Error fetching member count for team ${participant.team_ID}:`, err);
+                        }
+                        return {
+                            ...participant,
+                            member_count: 0
+                        };
+                    })
+                );
+            }
+
+            setParticipants(participantsList);
+            setParticipantsError('');
+        } catch (err) {
+            console.error('Error fetching participants:', err);
+            setParticipantsError('Nepodarilo sa načítať účastníkov turnaja.');
+        }
+    };
+
+    useEffect(() => {
         const fetchUserTeams = async () => {
                 if (!tournament || tournament.event_type !== 'TEAM') return;
 
@@ -135,36 +147,54 @@ function TournamentDetailPage() {
             }
         };
 
-        fetchParticipants();
+        refreshParticipants();
         fetchUserTeams();
     }, [tournament, id]);
 
-    useEffect(() => {
-        const fetchMatches = async () => {
-            if (!tournament) return;
-            setMatchesLoading(true);
-            setMatchesError(null);
-            setMatches([]);
-            try {
-                const response = await apiFetch(`/api/events/${id}/matches`);
-                if (!response.ok) {
-                    throw new Error('Nepodarilo sa načítať zápasy turnaja');
-                }
-                const { data } = await parseApiJson(response);
-                const matchesData = Array.isArray(data?.matches) ? data.matches : [];
-                setMatches(matchesData);
-            } catch (err) {
-                console.error('Error fetching matches:', err);
-                setMatchesError(err.message);
-            } finally {
-                setMatchesLoading(false);
+    const refreshMatches = async () => {
+        if (!tournament) return;
+        setMatchesLoading(true);
+        setMatchesError(null);
+        setMatches([]);
+        try {
+            const response = await apiFetch(`/api/events/${id}/matches`);
+            if (!response.ok) {
+                throw new Error('Nepodarilo sa načítať zápasy turnaja');
             }
-        };
+            const { data } = await parseApiJson(response);
+            const matchesData = Array.isArray(data?.matches) ? data.matches : [];
+            setMatches(matchesData);
+        } catch (err) {
+            console.error('Error fetching matches:', err);
+            setMatchesError(err.message);
+        } finally {
+            setMatchesLoading(false);
+        }
+    };
 
-        fetchMatches();
+    useEffect(() => {
+        refreshMatches();
     }, [tournament, id]);
 
-    const participantsCount = participants.length;
+    const participantStatus = (participant) => participant?.status || participant?.pivot?.status || 'ACCEPTED';
+    const acceptedParticipants = participants.filter((participant) => participantStatus(participant) === 'ACCEPTED');
+    const pendingParticipants = participants.filter((participant) => participantStatus(participant) === 'REQUESTED');
+    const participantsCount = acceptedParticipants.length;
+    const loggedUserId = currentUser?.user_ID;
+    const userRegistered = tournament?.event_type === 'SOLO'
+        ? participants.some((p) => p.user_ID === loggedUserId)
+        : false;
+    const teamRegistered = tournament?.event_type === 'TEAM'
+        ? participants.some((p) => userTeams.some((t) => t.team_ID === p.team_ID))
+        : false;
+    const isRegistered = Boolean(userRegistered || teamRegistered);
+    const allowedBracketSizes = [2, 4, 8, 16, 32];
+    const canStartTournament =
+        isEventLeader &&
+        tournament?.event_state === 'REGISTRATION' &&
+        allowedBracketSizes.includes(participantsCount) &&
+        participantsCount === Number(tournament?.max_participants || 0);
+    const canLeaveRegistration = isRegistered && tournament?.event_state === 'REGISTRATION';
 
     const participantName = (participantId) => {
         if (!participantId) return 'TBD';
@@ -208,11 +238,12 @@ function TournamentDetailPage() {
 
         return roundsArray;
     })();
+    const maxMatchesPerRound = rounds.reduce((max, r) => Math.max(max, r.matches.length), 0);
 
     const handleRegistration = async () => {
         if (!tournament) return;
 
-        const loggedInUser = JSON.parse(localStorage.getItem('logged_in_user') || '{}');
+        const loggedInUser = currentUser || JSON.parse(localStorage.getItem('logged_in_user') || '{}');
         if (!loggedInUser.user_ID) {
             alert('Musíte byť prihlásený, aby ste sa mohli zaregistrovať na turnaj');
             return;
@@ -240,7 +271,7 @@ function TournamentDetailPage() {
                     throw new Error(message || 'Registrácia zlyhala');
                 }
 
-                alert('Úspešne ste sa zaregistrovali na turnaj!');
+                alert('Žiadosť o účasť bola odoslaná. Počkajte na schválenie vedúceho turnaja.');
                 window.location.reload();
             } catch (err) {
                 console.error('Registration error:', err);
@@ -276,7 +307,7 @@ function TournamentDetailPage() {
                 throw new Error(message || 'Registrácia tímu zlyhala');
             }
 
-            alert('Úspešne ste zaregistrovali tím na turnaj!');
+            alert('Žiadosť o registráciu tímu bola odoslaná. Počkajte na schválenie vedúceho turnaja.');
             setShowTeamPopup(false);
             window.location.reload();
         } catch (err) {
@@ -284,6 +315,134 @@ function TournamentDetailPage() {
             alert(err.message || 'Registrácia zlyhala');
         } finally {
             setRegistering(false);
+        }
+    };
+
+    const handleLeaveRegistration = async () => {
+        if (!tournament) return;
+        try {
+            setLeaveLoading(true);
+            const response = await apiFetch(`/api/events/${id}/participants`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Nepodarilo sa odhlásiť');
+            }
+
+            alert('Úspešne ste sa odhlásili z turnaja');
+            await refreshParticipants();
+            await refreshMatches();
+        } catch (err) {
+            console.error('Leave registration error:', err);
+            alert(err.message || 'Odhlásenie zlyhalo');
+        } finally {
+            setLeaveLoading(false);
+        }
+    };
+
+    const handleParticipantDecision = async (participantId, action) => {
+        if (!tournament) return;
+
+        const isApprove = action === 'approve';
+        const url = isApprove
+            ? `/api/events/${id}/participants/${participantId}/approve`
+            : `/api/events/${id}/participants/${participantId}`;
+
+        try {
+            setDecisionLoading(`${action}-${participantId}`);
+            const response = await apiFetch(url, {
+                method: isApprove ? 'PUT' : 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Akcia zlyhala');
+            }
+
+            await refreshParticipants();
+        } catch (err) {
+            console.error('Participant decision error:', err);
+            alert(err.message || 'Akcia zlyhala');
+        } finally {
+            setDecisionLoading(null);
+        }
+    };
+
+    const handleSetWinner = async (matchId, participantId) => {
+        if (!isEventLeader || !matchId || !participantId) return;
+        try {
+            setMatchActionLoading(`${matchId}-${participantId}`);
+            const response = await apiFetch(`/api/matches/${matchId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ winner: participantId }),
+            });
+
+            if (!response.ok) {
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Nepodarilo sa uložiť víťaza');
+            }
+
+            await refreshMatches();
+        } catch (err) {
+            console.error('Set winner error:', err);
+            alert(err.message || 'Nepodarilo sa uložiť víťaza');
+        } finally {
+            setMatchActionLoading(null);
+            setAdvanceSelection(null);
+        }
+    };
+
+    const handleSelectForAdvance = (matchId, participantId) => {
+        if (!isEventLeader || !participantId) return;
+        const selectedKey = `${matchId}-${participantId}`;
+        if (advanceSelection?.key === selectedKey) {
+            setAdvanceSelection(null);
+        } else {
+            setAdvanceSelection({ matchId, participantId, key: selectedKey });
+        }
+    };
+
+    const handleStartTournament = async () => {
+        if (!tournament) return;
+        try {
+            setStartLoading(true);
+            const response = await apiFetch(`/api/events/${id}/start`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const { message } = await parseApiJson(response);
+                throw new Error(message || 'Nepodarilo sa spustiť turnaj');
+            }
+
+            alert('Turnaj bol spustený!');
+            window.location.reload();
+        } catch (err) {
+            console.error('Start tournament error:', err);
+            alert(err.message || 'Nepodarilo sa spustiť turnaj');
+        } finally {
+            setStartLoading(false);
         }
     };
 
@@ -396,13 +555,44 @@ function TournamentDetailPage() {
                             <div className={`px-6 py-2 border-2 rounded-lg font-bold mb-3 ${getStatusColor(tournament.event_state)}`}>
                                 {getStatusText(tournament.event_state)}
                             </div>
-                            {tournament.event_state === 'REGISTRATION' && (
+                            {tournament.event_state === 'REGISTRATION' && !isRegistered && (
                                 <button
                                     onClick={handleRegistration}
                                     className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-semibold rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all shadow-md whitespace-nowrap"
                                 >
                                     ✓ Registrovať sa na turnaj
                                 </button>
+                            )}
+                            {canLeaveRegistration && (
+                                <div className="mt-3">
+                                    <button
+                                        onClick={handleLeaveRegistration}
+                                        disabled={leaveLoading}
+                                        className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all shadow-md whitespace-nowrap disabled:opacity-50"
+                                    >
+                                        {leaveLoading ? 'Odhlašujem...' : 'Odhlásiť sa'}
+                                    </button>
+                                </div>
+                            )}
+                            {isEventLeader && tournament.event_state === 'REGISTRATION' && (
+                                <div className="mt-3">
+                                    <button
+                                        onClick={handleStartTournament}
+                                        disabled={!canStartTournament || startLoading}
+                                        className={`px-6 py-3 font-semibold rounded-lg shadow-md transition-all whitespace-nowrap ${
+                                            canStartTournament
+                                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        {startLoading ? 'Spúšťam...' : 'Spustiť turnaj'}
+                                    </button>
+                                    {!canStartTournament && (
+                                        <div className="text-xs text-gray-600 mt-1">
+                                            Turnaj je možné spustiť až po naplnení kapacity ({participantsCount}/{tournament.max_participants})
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -458,7 +648,14 @@ function TournamentDetailPage() {
                                 </div>
                                 <div className="flex justify-between py-2 border-b border-gray-200">
                                     <span className="text-gray-600">🎯 Kapacita</span>
-                                    <span className="font-bold text-blue-900">{participantsCount}/{tournament.max_participants} obsadených</span>
+                                    <div className="flex items-center gap-2 font-bold text-blue-900">
+                                        <span>{participantsCount}/{tournament.max_participants} obsadených</span>
+                                        {isEventLeader && pendingParticipants.length > 0 && (
+                                            <span className="text-sm text-yellow-700 font-semibold">
+                                                +{pendingParticipants.length} čaká na schválenie
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="flex justify-between py-2 border-b border-gray-200">
                                     <span className="text-gray-600">⚙️ Systém</span>
@@ -495,54 +692,86 @@ function TournamentDetailPage() {
                         ) : (
                             <div className="overflow-x-auto">
                                 <div className="flex gap-10 justify-center items-start min-w-full">
-                                    {rounds.map((round) => {
-                                        const remaining = rounds.length - round.round;
-                                        const offset = Math.max(0, ((2 ** remaining) - 1) * 30);
-                                        return (
-                                            <div
-                                                key={round.round}
-                                                className="flex-1 min-w-[220px] max-w-[240px]"
-                                                style={{ marginTop: offset }}
-                                            >
-                                                <div className="text-center font-bold text-blue-900 mb-4 px-3 py-2 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                                                    {round.round === rounds.length
-                                                        ? 'Finále'
-                                                        : round.round === rounds.length - 1
-                                                        ? 'Semifinále'
-                                                        : `Kolo ${round.round}`}
-                                                </div>
-                                                <div className="flex flex-col gap-6 items-stretch">
-                                                    {round.matches.map((match, idx) => {
-                                                        const isAWinner = match.winner && match.winner === match.participant_A;
-                                                        const isBWinner = match.winner && match.winner === match.participant_B;
-                                                        return (
-                                                            <div
-                                                                key={idx}
-                                                                className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-md min-h-[90px] flex flex-col justify-between"
-                                                            >
-                                                                <div
-                                                                    className={`flex justify-between items-center px-3 py-2 border-b border-blue-100 ${isAWinner ? 'bg-green-50 font-semibold text-green-800' : ''}`}
-                                                                >
-                                                                    <span className="truncate mr-2">{participantName(match.participant_A)}</span>
-                                                                    <span className="font-bold text-blue-900">
-                                                                        {match.participant_A_points ?? '-'}
-                                                                    </span>
-                                                                </div>
-                                                                <div
-                                                                    className={`flex justify-between items-center px-3 py-2 ${isBWinner ? 'bg-green-50 font-semibold text-green-800' : ''}`}
-                                                                >
-                                                                    <span className="truncate mr-2">{participantName(match.participant_B)}</span>
-                                                                    <span className="font-bold text-blue-900">
-                                                                        {match.participant_B_points ?? '-'}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                    {rounds.map((round) => (
+                                        <div
+                                            key={round.round}
+                                            className="flex flex-col gap-6 items-stretch min-w-[220px] max-w-[240px]"
+                                            style={{ minHeight: `${maxMatchesPerRound * 110}px` }}
+                                        >
+                                            <div className="text-left font-bold text-blue-900 mb-2 px-3 py-2 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                                                {round.round === rounds.length
+                                                    ? 'Finále'
+                                                    : round.round === rounds.length - 1
+                                                    ? 'Semifinále'
+                                                    : `Kolo ${round.round}`}
                                             </div>
-                                        );
-                                    })}
+                                            <div className="flex-1 flex flex-col justify-center gap-4">
+                                                {round.matches.map((match, idx) => {
+                                                    const matchId = match.id || match.match_ID;
+                                                    const isAWinner = match.winner && match.winner === match.participant_A;
+                                                    const isBWinner = match.winner && match.winner === match.participant_B;
+                                                    const canSetWinner = isEventLeader && tournament?.event_state !== 'FINISHED' && !match.winner;
+                                                    const isSelectedA = advanceSelection?.matchId === matchId && advanceSelection?.participantId === match.participant_A;
+                                                    const isSelectedB = advanceSelection?.matchId === matchId && advanceSelection?.participantId === match.participant_B;
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            className="border-2 border-blue-200 rounded-lg overflow-hidden bg-white shadow-md min-h-[90px] flex flex-col justify-between"
+                                                        >
+                                                            <div
+                                                                className={`flex justify-between items-center px-3 py-2 border-b border-blue-100 ${isAWinner ? 'bg-green-50 font-semibold text-green-800' : ''} ${isSelectedA ? 'ring-2 ring-blue-500' : ''}`}
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                                                                    disabled={!canSetWinner || !match.participant_A || matchesLoading}
+                                                                    onClick={() => handleSelectForAdvance(matchId, match.participant_A)}
+                                                                >
+                                                                    <span className="truncate mr-1">{participantName(match.participant_A)}</span>
+                                                                </button>
+                                                                {canSetWinner && match.participant_A && isSelectedA && (
+                                                                    <button
+                                                                        onClick={() => handleSetWinner(matchId, match.participant_A)}
+                                                                        className="ml-2 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                                        disabled={matchActionLoading !== null || matchesLoading}
+                                                                    >
+                                                                        {matchActionLoading === `${matchId}-${match.participant_A}` ? 'Ukladám...' : 'Posunúť'}
+                                                                    </button>
+                                                                )}
+                                                                <span className="font-bold text-blue-900">
+                                                                    {match.participant_A_points ?? '-'}
+                                                                </span>
+                                                            </div>
+                                                            <div
+                                                                className={`flex justify-between items-center px-3 py-2 ${isBWinner ? 'bg-green-50 font-semibold text-green-800' : ''} ${isSelectedB ? 'ring-2 ring-blue-500' : ''}`}
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex items-center gap-2 flex-1 min-w-0 text-left"
+                                                                    disabled={!canSetWinner || !match.participant_B || matchesLoading}
+                                                                    onClick={() => handleSelectForAdvance(matchId, match.participant_B)}
+                                                                >
+                                                                    <span className="truncate mr-1">{participantName(match.participant_B)}</span>
+                                                                </button>
+                                                                {canSetWinner && match.participant_B && isSelectedB && (
+                                                                    <button
+                                                                        onClick={() => handleSetWinner(matchId, match.participant_B)}
+                                                                        className="ml-2 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                                        disabled={matchActionLoading !== null || matchesLoading}
+                                                                    >
+                                                                        {matchActionLoading === `${matchId}-${match.participant_B}` ? 'Ukladám...' : 'Posunúť'}
+                                                                    </button>
+                                                                )}
+                                                                <span className="font-bold text-blue-900">
+                                                                    {match.participant_B_points ?? '-'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
@@ -557,66 +786,130 @@ function TournamentDetailPage() {
                             <div className="bg-red-50 border-2 border-red-200 rounded-lg p-8 text-center text-red-700">
                                 {participantsError}
                             </div>
-                        ) : participants.length === 0 ? (
-                            <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
-                                <div className="text-gray-500 text-lg">
-                                    Zatiaľ nie sú prihlásení žiadni {tournament.event_type === 'SOLO' ? 'účastníci' : 'tímy'}
-                                </div>
-                            </div>
-                        ) : tournament.event_type === 'SOLO' ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {participants.map((participant, index) => (
-                                    <div
-                                        key={index}
-                                        className="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 transition-colors cursor-pointer"
-                                        onClick={() => window.location.href = appUrl(`/players/${participant.user_ID}`)}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            {/* Player Avatar */}
-                                            <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                                                {getUserInitial(participant.user_name)}
-                                            </div>
-
-                                            {/* Player Details */}
-                                            <div className="flex-1">
-                                                <div className="font-bold text-blue-900 text-xl">
-                                                    {participant.user_name}
-                                                </div>
-                                                <div className="text-sm text-gray-600">
-                                                    {participant.first_name} {participant.last_name}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {participants.map((participant, index) => (
-                                    <div
-                                        key={index}
-                                        className="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 transition-colors cursor-pointer"
-                                        onClick={() => window.location.href = appUrl(`/teams/${participant.team_ID}`)}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            {/* Team Logo */}
-                                            <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md">
-                                                {getTeamInitials(participant.team_name)}
+                            <>
+                                {isEventLeader && tournament.event_state === 'REGISTRATION' && (
+                                    <div className="mb-6 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="font-bold text-yellow-800">
+                                                Čakajúce žiadosti ({pendingParticipants.length})
                                             </div>
+                                            {pendingParticipants.length === 0 && (
+                                                <span className="text-sm text-yellow-700">Žiadne nové žiadosti</span>
+                                            )}
+                                        </div>
+                                        {pendingParticipants.length > 0 && (
+                                            <div className="space-y-3">
+                                                {pendingParticipants.map((participant) => {
+                                                    const participantId = tournament.event_type === 'SOLO' ? participant.user_ID : participant.team_ID;
+                                                    return (
+                                                        <div
+                                                            key={participantId}
+                                                            className="flex items-center justify-between bg-white border-2 border-yellow-200 rounded-lg p-3"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-400 rounded-full flex items-center justify-center text-white font-bold text-sm shadow">
+                                                                    {tournament.event_type === 'SOLO'
+                                                                        ? getUserInitial(participant.user_name)
+                                                                        : getTeamInitials(participant.team_name)}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-bold text-gray-900">
+                                                                        {tournament.event_type === 'SOLO' ? participant.user_name : participant.team_name}
+                                                                    </div>
+                                                                    <div className="text-sm text-gray-600">
+                                                                        {tournament.event_type === 'SOLO'
+                                                                            ? `${participant.first_name || ''} ${participant.last_name || ''}`.trim()
+                                                                            : `${participant.member_count || 0} členov`}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => handleParticipantDecision(participantId, 'approve')}
+                                                                    className="px-3 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                                    disabled={decisionLoading !== null}
+                                                                >
+                                                                    {decisionLoading === `approve-${participantId}` ? 'Schvaľujem...' : 'Schváliť'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleParticipantDecision(participantId, 'deny')}
+                                                                    className="px-3 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                                                                    disabled={decisionLoading !== null}
+                                                                >
+                                                                    {decisionLoading === `deny-${participantId}` ? 'Odmietam...' : 'Odmietnuť'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
-                                            {/* Team Details */}
-                                            <div className="flex-1">
-                                                <div className="font-bold text-blue-900 text-xl">
-                                                    {participant.team_name}
-                                                </div>
-                                                <div className="text-sm text-gray-600">
-                                                    {participant.member_count || 0} členov
-                                                </div>
-                                            </div>
+                                {acceptedParticipants.length === 0 ? (
+                                    <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-8 text-center">
+                                        <div className="text-gray-500 text-lg">
+                                            Zatiaľ nie sú schválení žiadni {tournament.event_type === 'SOLO' ? 'účastníci' : 'tímy'}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                ) : tournament.event_type === 'SOLO' ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {acceptedParticipants.map((participant, index) => (
+                                            <div
+                                                key={index}
+                                                className="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 transition-colors cursor-pointer"
+                                                onClick={() => window.location.href = appUrl(`/players/${participant.user_ID}`)}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    {/* Player Avatar */}
+                                                    <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                                        {getUserInitial(participant.user_name)}
+                                                    </div>
+
+                                                    {/* Player Details */}
+                                                    <div className="flex-1">
+                                                        <div className="font-bold text-blue-900 text-xl">
+                                                            {participant.user_name}
+                                                        </div>
+                                                        <div className="text-sm text-gray-600">
+                                                            {participant.first_name} {participant.last_name}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {acceptedParticipants.map((participant, index) => (
+                                            <div
+                                                key={index}
+                                                className="border-2 border-blue-200 rounded-lg p-4 hover:bg-blue-50 transition-colors cursor-pointer"
+                                                onClick={() => window.location.href = appUrl(`/teams/${participant.team_ID}`)}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    {/* Team Logo */}
+                                                    <div className="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md">
+                                                        {getTeamInitials(participant.team_name)}
+                                                    </div>
+
+                                                    {/* Team Details */}
+                                                    <div className="flex-1">
+                                                        <div className="font-bold text-blue-900 text-xl">
+                                                            {participant.team_name}
+                                                        </div>
+                                                        <div className="text-sm text-gray-600">
+                                                            {participant.member_count || 0} členov
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

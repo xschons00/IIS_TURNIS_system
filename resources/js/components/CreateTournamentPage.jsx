@@ -27,6 +27,23 @@ function CreateTournamentPage() {
             return;
         }
 
+        // Validate date format (YYYY-MM-DD and real date within MySQL range)
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (!datePattern.test(eventDate)) {
+            setError('Zadajte dátum v tvare RRRR-MM-DD');
+            return;
+        }
+        const dateObj = new Date(eventDate);
+        if (Number.isNaN(dateObj.getTime()) || eventDate !== dateObj.toISOString().slice(0, 10)) {
+            setError('Zadajte platný dátum');
+            return;
+        }
+        const year = Number(eventDate.slice(0, 4));
+        if (year < 1000 || year > 9999) {
+            setError('Rok musí byť v rozsahu 1000 až 9999');
+            return;
+        }
+
         const maxParticipantsNumber = parseInt(maxParticipants, 10);
 
         if (Number.isNaN(maxParticipantsNumber)) {
@@ -34,8 +51,8 @@ function CreateTournamentPage() {
             return;
         }
 
-        if (![4, 8, 16, 32].includes(maxParticipantsNumber)) {
-            setError('Maximálny počet účastníkov musí byť 4, 8, 16 alebo 32');
+        if (![2, 4, 8, 16, 32].includes(maxParticipantsNumber)) {
+            setError('Maximálny počet účastníkov musí byť 2, 4, 8, 16 alebo 32');
             return;
         }
 
@@ -216,7 +233,7 @@ function CreateTournamentPage() {
                                     onChange={(e) => setMaxParticipants(e.target.value)}
                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
                                     placeholder="napr. 16"
-                                    min="4"
+                                    min="2"
                                     disabled={loading || success}
                                     required
                                 />

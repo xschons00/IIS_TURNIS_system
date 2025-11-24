@@ -31,7 +31,10 @@ class ParticipantsControllerTest extends TestCase
             'ranking' => null,
         ]);
 
-        $event->players()->attach([$user1->user_ID, $user2->user_ID]);
+        $event->players()->attach([
+            $user1->user_ID => ['status' => 'ACCEPTED'],
+            $user2->user_ID => ['status' => 'ACCEPTED'],
+        ]);
 
         $response = $this->getJson("/api/events/{$event->event_ID}/participants");
 
@@ -71,7 +74,10 @@ class ParticipantsControllerTest extends TestCase
         $team1 = Team::factory()->create(['team_name' => 'Team1', 'ranking' => null]);
         $team2 = Team::factory()->create(['team_name' => 'Team2', 'ranking' => null]);
 
-        $event->teams()->attach([$team1->team_ID, $team2->team_ID]);
+        $event->teams()->attach([
+            $team1->team_ID => ['status' => 'ACCEPTED'],
+            $team2->team_ID => ['status' => 'ACCEPTED'],
+        ]);
 
         $response = $this->getJson("/api/events/{$event->event_ID}/participants");
 
@@ -175,7 +181,7 @@ class ParticipantsControllerTest extends TestCase
         $event = Event::factory()->create(['event_type' => 'SOLO']);
         $user = User::factory()->create();
 
-        $event->players()->attach($user->user_ID);
+        $event->players()->attach($user->user_ID, ['status' => 'ACCEPTED']);
 
         $this->actingAs($user);
 
@@ -193,7 +199,7 @@ class ParticipantsControllerTest extends TestCase
         ]);
 
         $existingParticipant = User::factory()->create();
-        $event->players()->attach($existingParticipant->user_ID);
+        $event->players()->attach($existingParticipant->user_ID, ['status' => 'ACCEPTED']);
 
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -210,7 +216,7 @@ class ParticipantsControllerTest extends TestCase
         $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
         $event = Event::factory()->create(['event_type' => 'TEAM']);
 
-        $event->teams()->attach($team->team_ID);
+        $event->teams()->attach($team->team_ID, ['status' => 'ACCEPTED']);
 
         $this->actingAs($leader);
 
@@ -228,7 +234,7 @@ class ParticipantsControllerTest extends TestCase
         ]);
 
         $existingTeam = Team::factory()->create();
-        $event->teams()->attach($existingTeam->team_ID);
+        $event->teams()->attach($existingTeam->team_ID, ['status' => 'ACCEPTED']);
 
         $leader = User::factory()->create();
         $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
@@ -254,7 +260,7 @@ class ParticipantsControllerTest extends TestCase
     {
         $event = Event::factory()->create(['event_type' => 'SOLO']);
         $user = User::factory()->create();
-        $event->players()->attach($user->user_ID);
+        $event->players()->attach($user->user_ID, ['status' => 'ACCEPTED']);
 
         $this->actingAs($user);
 
@@ -288,7 +294,7 @@ class ParticipantsControllerTest extends TestCase
         $team = Team::factory()->create(['team_leader_id' => $leader->user_ID]);
         $event = Event::factory()->create(['event_type' => 'TEAM']);
 
-        $event->teams()->attach($team->team_ID);
+        $event->teams()->attach($team->team_ID, ['status' => 'ACCEPTED']);
 
         $this->actingAs($leader);
 
@@ -324,7 +330,10 @@ class ParticipantsControllerTest extends TestCase
         $playerA = User::factory()->create();
         $playerB = User::factory()->create();
 
-        $event->players()->attach([$playerA->user_ID, $playerB->user_ID]);
+        $event->players()->attach([
+            $playerA->user_ID => ['status' => 'ACCEPTED'],
+            $playerB->user_ID => ['status' => 'ACCEPTED'],
+        ]);
 
         EventMatch::factory()->create([
             'event_ID' => $event->event_ID,
@@ -364,7 +373,10 @@ class ParticipantsControllerTest extends TestCase
         $playerA = User::factory()->create();
         $playerB = User::factory()->create();
 
-        $event->players()->attach([$playerA->user_ID, $playerB->user_ID]);
+        $event->players()->attach([
+            $playerA->user_ID => ['status' => 'ACCEPTED'],
+            $playerB->user_ID => ['status' => 'ACCEPTED'],
+        ]);
 
         EventMatch::create([
             'event_ID' => $event->event_ID,
@@ -417,6 +429,130 @@ class ParticipantsControllerTest extends TestCase
             'user_ID' => $playerB->user_ID,
             'final_points' => 16,
             'final_placement' => 2,
+        ]);
+    }
+
+    public function test_event_leader_sees_pending_and_others_see_only_accepted(): void
+    {
+        $leader = User::factory()->create(['role' => 'USER']);
+        $event = Event::factory()->create([
+            'event_type' => 'SOLO',
+            'event_leader_id' => $leader->user_ID,
+        ]);
+
+        $accepted = User::factory()->create();
+        $pending = User::factory()->create();
+
+        $event->players()->attach($accepted->user_ID, ['status' => 'ACCEPTED']);
+        $event->players()->attach($pending->user_ID, ['status' => 'REQUESTED']);
+
+        $this->actingAs($leader);
+        $leaderResponse = $this->getJson("/api/events/{$event->event_ID}/participants");
+        $leaderResponse->assertStatus(200);
+        $leaderParticipants = $leaderResponse->json('data.participants');
+        $this->assertCount(2, $leaderParticipants);
+        $this->assertContains('REQUESTED', collect($leaderParticipants)->pluck('status')->all());
+
+        $otherUser = User::factory()->create(['role' => 'USER']);
+        $this->actingAs($otherUser);
+        $publicResponse = $this->getJson("/api/events/{$event->event_ID}/participants");
+        $publicResponse->assertStatus(200);
+        $publicParticipants = $publicResponse->json('data.participants');
+        $this->assertCount(1, $publicParticipants);
+        $this->assertEquals($accepted->user_ID, $publicParticipants[0]['user_ID']);
+    }
+
+    public function test_pending_not_counted_in_capacity(): void
+    {
+        $event = Event::factory()->create([
+            'event_type' => 'SOLO',
+            'max_participants' => 1,
+        ]);
+
+        $accepted = User::factory()->create();
+        $pending = User::factory()->create();
+
+        $event->players()->attach($accepted->user_ID, ['status' => 'ACCEPTED']);
+        $event->players()->attach($pending->user_ID, ['status' => 'REQUESTED']);
+
+        $response = $this->getJson("/api/events/{$event->event_ID}/participants/count");
+        $response->assertStatus(200)
+            ->assertJsonPath('data.participants', 1);
+    }
+
+    public function test_event_leader_can_approve_pending_participant(): void
+    {
+        $leader = User::factory()->create(['role' => 'USER']);
+        $event = Event::factory()->create([
+            'event_type' => 'SOLO',
+            'event_leader_id' => $leader->user_ID,
+            'max_participants' => 2,
+        ]);
+
+        $pending = User::factory()->create();
+        $event->players()->attach($pending->user_ID, ['status' => 'REQUESTED']);
+
+        $this->actingAs($leader);
+        $response = $this->putJson("/api/events/{$event->event_ID}/participants/{$pending->user_ID}/approve");
+
+        $response->assertStatus(200)
+            ->assertJson(['message' => 'Participant approved']);
+
+        $this->assertDatabaseHas('player_participants', [
+            'event_ID' => $event->event_ID,
+            'user_ID' => $pending->user_ID,
+            'status' => 'ACCEPTED',
+        ]);
+    }
+
+    public function test_event_leader_cannot_approve_when_capacity_full(): void
+    {
+        $leader = User::factory()->create(['role' => 'USER']);
+        $event = Event::factory()->create([
+            'event_type' => 'SOLO',
+            'event_leader_id' => $leader->user_ID,
+            'max_participants' => 1,
+        ]);
+
+        $accepted = User::factory()->create();
+        $pending = User::factory()->create();
+
+        $event->players()->attach($accepted->user_ID, ['status' => 'ACCEPTED']);
+        $event->players()->attach($pending->user_ID, ['status' => 'REQUESTED']);
+
+        $this->actingAs($leader);
+        $response = $this->putJson("/api/events/{$event->event_ID}/participants/{$pending->user_ID}/approve");
+
+        $response->assertStatus(409)
+            ->assertJson(['message' => 'Event is full']);
+
+        $this->assertDatabaseHas('player_participants', [
+            'event_ID' => $event->event_ID,
+            'user_ID' => $pending->user_ID,
+            'status' => 'REQUESTED',
+        ]);
+    }
+
+    public function test_event_leader_can_deny_pending_participant(): void
+    {
+        $leader = User::factory()->create(['role' => 'USER']);
+        $event = Event::factory()->create([
+            'event_type' => 'SOLO',
+            'event_leader_id' => $leader->user_ID,
+        ]);
+
+        $pending = User::factory()->create();
+        $event->players()->attach($pending->user_ID, ['status' => 'REQUESTED']);
+
+        $this->actingAs($leader);
+        $response = $this->deleteJson("/api/events/{$event->event_ID}/participants/{$pending->user_ID}");
+
+        $response->assertStatus(200)
+            ->assertJson(['message' => 'Participant denied']);
+
+        $this->assertDatabaseMissing('player_participants', [
+            'event_ID' => $event->event_ID,
+            'user_ID' => $pending->user_ID,
         ]);
     }
 }

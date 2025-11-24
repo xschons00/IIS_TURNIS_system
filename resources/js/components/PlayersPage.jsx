@@ -26,7 +26,7 @@ function PlayersPage() {
                 const { data } = await parseApiJson(response);
                 const playersData = Array.isArray(data) ? data : [];
 
-                // Precompute tournaments and wins from events/matches (solo events only)
+                // Precompute tournaments and wins from events/matches (solo events only, accepted participants)
                 const tournamentsMap = {};
                 const winsMap = {};
                 try {
@@ -36,23 +36,34 @@ function PlayersPage() {
                     const soloEvents = events.filter((event) => (event.event_type || '').toUpperCase() === 'SOLO');
 
                     for (const event of soloEvents) {
+                        // participants
+                        const participantsResponse = await apiFetch(`/api/events/${event.event_ID}/participants`);
+                        const { data: participantsData } = participantsResponse.ok
+                            ? await parseApiJson(participantsResponse)
+                            : { data: [] };
+                        const participants = Array.isArray(participantsData?.participants)
+                            ? participantsData.participants
+                            : Array.isArray(participantsData)
+                                ? participantsData
+                                : [];
+
+                        // tournaments count for accepted participants
+                        participants
+                            .filter((p) => (p.status || p.pivot?.status || 'ACCEPTED') === 'ACCEPTED')
+                            .forEach((p) => {
+                                tournamentsMap[p.user_ID] = (tournamentsMap[p.user_ID] || 0) + 1;
+                            });
+
                         const matchesResponse = await apiFetch(`/api/events/${event.event_ID}/matches`);
                         if (!matchesResponse.ok) continue;
                         const { data: matchesData } = await parseApiJson(matchesResponse);
                         const matches = Array.isArray(matchesData?.matches) ? matchesData.matches : [];
                         if (matches.length === 0) continue;
 
-                        const participantSet = new Set();
                         matches.forEach((match) => {
-                            if (match.participant_A) participantSet.add(match.participant_A);
-                            if (match.participant_B) participantSet.add(match.participant_B);
                             if (match.winner) {
                                 winsMap[match.winner] = (winsMap[match.winner] || 0) + 1;
                             }
-                        });
-
-                        participantSet.forEach((id) => {
-                            tournamentsMap[id] = (tournamentsMap[id] || 0) + 1;
                         });
                     }
                 } catch (err) {
