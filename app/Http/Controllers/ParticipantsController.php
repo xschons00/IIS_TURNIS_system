@@ -23,7 +23,7 @@ class ParticipantsController
      * route::get('/api/teams/{id}/members', [TeamMembersController::class, 'GetTeamMembers']);
      */
 
-    public function GetParticipants(int $id): JsonResponse
+    public function GetParticipants(Request $request, int $id): JsonResponse
     {
         $event = Event::find($id);
 
@@ -31,19 +31,49 @@ class ParticipantsController
             return $this->respondWithMessage('Event not found', null, 404);
         }
 
+        $user = $request->user();
+        $isEventLeader = $user && ($user->role === 'ADMIN' || $event->event_leader_id === $user->user_ID);
         $type = strtoupper($event->event_type ?? '');
 
         if ($type === 'SOLO') {
-            $participants = $event->players()->get([
+            $query = $event->players();
+            if (! $isEventLeader) {
+                $query->wherePivot('status', 'ACCEPTED');
+            }
+
+            $participants = $query->get([
                 'users.user_ID',
                 'users.user_name',
                 'users.first_name',
                 'users.last_name',
                 'users.faculty',
                 'users.ranking'
-            ]);
+            ])->map(function ($participant) {
+                return [
+                    'user_ID' => $participant->user_ID,
+                    'user_name' => $participant->user_name,
+                    'first_name' => $participant->first_name,
+                    'last_name' => $participant->last_name,
+                    'faculty' => $participant->faculty,
+                    'ranking' => $participant->ranking,
+                    'status' => $participant->pivot->status ?? 'ACCEPTED',
+                ];
+            })->values();
         } elseif ($type === 'TEAM') {
-            $participants = $event->teams()->get(['teams.team_ID', 'teams.team_name', 'teams.ranking']);
+            $query = $event->teams();
+            if (! $isEventLeader) {
+                $query->wherePivot('status', 'ACCEPTED');
+            }
+
+            $participants = $query->get(['teams.team_ID', 'teams.team_name', 'teams.ranking'])
+                ->map(function ($team) {
+                    return [
+                        'team_ID' => $team->team_ID,
+                        'team_name' => $team->team_name,
+                        'ranking' => $team->ranking,
+                        'status' => $team->pivot->status ?? 'ACCEPTED',
+                    ];
+                })->values();
         } else {
             return $this->respondWithMessage(
                 'Unknown event type',
@@ -82,7 +112,7 @@ class ParticipantsController
 
         $type = strtoupper($event->event_type ?? '');
 
-        $count = self::_GetParticipantCount($event);
+        $count = self::_GetParticipantCount($event, onlyAccepted: true);
 
         return $this->respondWithMessage(
             'Participant count retrieved',
@@ -95,14 +125,22 @@ class ParticipantsController
     }
 
     //helper functions to get participant count
-    public static function _GetParticipantCount(Event $event): int
+    public static function _GetParticipantCount(Event $event, bool $onlyAccepted = false): int
     {
         $type = strtoupper($event->event_type ?? '');
 
         if ($type === 'SOLO') {
-            return $event->players()->get()->count();
+            $query = $event->players();
+            if ($onlyAccepted) {
+                $query->wherePivot('status', 'ACCEPTED');
+            }
+            return $query->count();
         } elseif ($type === 'TEAM') {
-            return $event->teams()->get()->count();
+            $query = $event->teams();
+            if ($onlyAccepted) {
+                $query->wherePivot('status', 'ACCEPTED');
+            }
+            return $query->count();
         } else {
             return  0;
         }
@@ -133,7 +171,7 @@ class ParticipantsController
                 return $this->respondWithMessage('Player already registered', null, 409);
             }
 
-            if ($event->players()->count() >= $event->max_participants) {
+            if ($event->players()->wherePivot('status', 'ACCEPTED')->count() >= $event->max_participants) {
                 return $this->respondWithMessage('Event is full', null, 409);
             }
 
@@ -157,7 +195,7 @@ class ParticipantsController
                 return $this->respondWithMessage('Team already registered', null, 409);
             }
 
-            if ($event->teams()->count() >= $event->max_participants) {
+            if ($event->teams()->wherePivot('status', 'ACCEPTED')->count() >= $event->max_participants) {
                 return $this->respondWithMessage('Event is full', null, 409);
             }
 
@@ -235,6 +273,91 @@ class ParticipantsController
         return $this->respondWithMessage('Registration removed');
     }
 
+    public function ApproveParticipant(Request $request, int $id, int $participantId): JsonResponse
+    {
+        $event = Event::find($id);
+
+        if (! $event) {
+            return $this->respondWithMessage('Event not found', null, 404);
+        }
+
+        $type = strtoupper($event->event_type ?? '');
+
+        if ($type === 'SOLO') {
+            $participant = PlayerParticipant::where('event_ID', $event->event_ID)
+                ->where('user_ID', $participantId)
+                ->first();
+            $approveQuery = PlayerParticipant::where('event_ID', $event->event_ID)
+                ->where('user_ID', $participantId);
+        } elseif ($type === 'TEAM') {
+            $participant = TeamParticipant::where('event_ID', $event->event_ID)
+                ->where('team_ID', $participantId)
+                ->first();
+            $approveQuery = TeamParticipant::where('event_ID', $event->event_ID)
+                ->where('team_ID', $participantId);
+        } else {
+            return $this->respondWithMessage(
+                'Unknown event type',
+                ['event_type' => $event->event_type],
+                400
+            );
+        }
+
+        if (! $participant) {
+            return $this->respondWithMessage('Participant not found', null, 404);
+        }
+
+        if ($participant->status === 'ACCEPTED') {
+            return $this->respondWithMessage('Participant already approved', null, 200);
+        }
+
+        if (self::_GetParticipantCount($event, onlyAccepted: true) >= $event->max_participants) {
+            return $this->respondWithMessage('Event is full', null, 409);
+        }
+
+        $approveQuery->update(['status' => 'ACCEPTED']);
+
+        return $this->respondWithMessage('Participant approved', null, 200);
+    }
+
+    public function DenyParticipant(Request $request, int $id, int $participantId): JsonResponse
+    {
+        $event = Event::find($id);
+
+        if (! $event) {
+            return $this->respondWithMessage('Event not found', null, 404);
+        }
+
+        $type = strtoupper($event->event_type ?? '');
+
+        if ($type === 'SOLO') {
+            $participant = PlayerParticipant::where('event_ID', $event->event_ID)
+                ->where('user_ID', $participantId)
+                ->first();
+            $denyQuery = PlayerParticipant::where('event_ID', $event->event_ID)
+                ->where('user_ID', $participantId);
+        } elseif ($type === 'TEAM') {
+            $participant = TeamParticipant::where('event_ID', $event->event_ID)
+                ->where('team_ID', $participantId)
+                ->first();
+            $denyQuery = TeamParticipant::where('event_ID', $event->event_ID)
+                ->where('team_ID', $participantId);
+        } else {
+            return $this->respondWithMessage(
+                'Unknown event type',
+                ['event_type' => $event->event_type],
+                400
+            );
+        }
+
+        if (! $participant) {
+            return $this->respondWithMessage('Participant not found', null, 404);
+        }
+
+        $denyQuery->delete();
+
+        return $this->respondWithMessage('Participant denied', null, 200);
+    }
 
 
      // helper to calculate final score

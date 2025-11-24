@@ -54,6 +54,23 @@ class EventsTableSeeder extends Seeder
                 ],
             ],
             [
+                'event_name' => 'Closed Quartet Cup',
+                'description' => 'Rýchly 4-hráčový turnaj, registrácia je plná.',
+                'event_date' => '2025-12-05',
+                'location' => 'Aula Minor',
+                'event_type' => 'SOLO',
+                'leader_email' => 'admin@digitick.test',
+                'max_participants' => 4,
+                'event_state' => 'REGISTRATION',
+                'participants' => [
+                    ['email' => 'lena.andrejova@example.com', 'final_placement' => null],
+                    ['email' => 'marek.varga@example.com', 'final_placement' => null],
+                    ['email' => 'katarina.svobodova@example.com', 'final_placement' => null],
+                    ['email' => 'sofia.kralova@example.com', 'final_placement' => null],
+                ],
+                'matches' => [],
+            ],
+            [
                 'event_name' => 'Faculty League Finals',
                 'description' => 'Finále tímovej ligy medzi jednotlivými fakultami.',
                 'event_date' => '2025-12-15',
@@ -200,22 +217,109 @@ class EventsTableSeeder extends Seeder
             //
             EventMatch::where('event_ID', $event->event_ID)->delete();
 
-            foreach ($eventData['matches'] ?? [] as $m) {
+            $matches = $eventData['matches'] ?? [];
 
-                $userA = User::where('email', $m['participant_A'])->first();
-                $userB = User::where('email', $m['participant_B'])->first();
-                if (!$userA || !$userB) continue;
+            // Registration (or new) events should not have any recorded matches
+            if (in_array($eventData['event_state'], ['REGISTRATION', 'NEW'], true)) {
+                $matches = [];
+            }
 
-                $winnerId = optional(User::where('email', $m['winner'])->first())->user_ID;
+            // Auto-generate simple matches for finished events if none provided
+            if ($eventData['event_state'] === 'FINISHED' && empty($matches)) {
+                $eventDate = Carbon::parse($eventData['event_date'] . ' 10:00:00');
+                if ($eventData['event_type'] === 'SOLO') {
+                    $participants = $event->players()->orderBy('player_participants.final_placement')->get();
+                } else {
+                    $participants = $event->teams()->orderBy('team_participants.final_placement')->get();
+                }
 
-                EventMatch::create([
-                    'event_ID' => $event->event_ID,
-                    'participant_A' => $userA->user_ID,
-                    'participant_B' => $userB->user_ID,
-                    'round' => $m['round'],
-                    'time' => Carbon::parse($m['time']),
-                    'winner' => $winnerId,
-                ]);
+                if ($participants->count() >= 2) {
+                    // Semis (if 3+ participants)
+                    if ($participants->count() >= 3) {
+                        $matches[] = [
+                            'participant_A' => $participants[0],
+                            'participant_B' => $participants[2],
+                            'round' => 1,
+                            'time' => $eventDate->copy()->addMinutes(0),
+                            'winner' => $participants[0],
+                        ];
+                        $matches[] = [
+                            'participant_A' => $participants[1],
+                            'participant_B' => $participants[2],
+                            'round' => 1,
+                            'time' => $eventDate->copy()->addMinutes(90),
+                            'winner' => $participants[1],
+                        ];
+                        $eventDate = $eventDate->copy()->addHours(3);
+                    }
+
+                    // Final
+                    $matches[] = [
+                        'participant_A' => $participants[0],
+                        'participant_B' => $participants[1],
+                        'round' => ($participants->count() >= 3) ? 2 : 1,
+                        'time' => $eventDate->copy(),
+                        'winner' => $participants[0],
+                    ];
+                }
+            }
+
+            foreach ($matches as $m) {
+                if ($eventData['event_type'] === 'SOLO') {
+                    $userA = $m['participant_A'] instanceof User
+                        ? $m['participant_A']
+                        : User::where('email', $m['participant_A'])->first();
+                    $userB = $m['participant_B'] instanceof User
+                        ? $m['participant_B']
+                        : User::where('email', $m['participant_B'])->first();
+
+                    if (!$userA || !$userB) {
+                        continue;
+                    }
+
+                    $winnerUser = $m['winner'] instanceof User
+                        ? $m['winner']
+                        : User::where('email', $m['winner'])->first();
+
+                    $time = $m['time'] ?? ($eventData['event_date'] . ' 10:00:00');
+                    $timeCarbon = $time instanceof Carbon ? $time : Carbon::parse($time);
+
+                    EventMatch::create([
+                        'event_ID' => $event->event_ID,
+                        'participant_A' => $userA->user_ID,
+                        'participant_B' => $userB->user_ID,
+                        'round' => $m['round'],
+                        'time' => $timeCarbon,
+                        'winner' => optional($winnerUser)->user_ID,
+                    ]);
+                } else {
+                    $teamA = $m['participant_A'] instanceof Team
+                        ? $m['participant_A']
+                        : Team::where('team_name', $m['participant_A'])->first();
+                    $teamB = $m['participant_B'] instanceof Team
+                        ? $m['participant_B']
+                        : Team::where('team_name', $m['participant_B'])->first();
+
+                    if (!$teamA || !$teamB) {
+                        continue;
+                    }
+
+                    $winnerTeam = $m['winner'] instanceof Team
+                        ? $m['winner']
+                        : Team::where('team_name', $m['winner'])->first();
+
+                    $time = $m['time'] ?? ($eventData['event_date'] . ' 10:00:00');
+                    $timeCarbon = $time instanceof Carbon ? $time : Carbon::parse($time);
+
+                    EventMatch::create([
+                        'event_ID' => $event->event_ID,
+                        'participant_A' => $teamA->team_ID,
+                        'participant_B' => $teamB->team_ID,
+                        'round' => $m['round'],
+                        'time' => $timeCarbon,
+                        'winner' => optional($winnerTeam)->team_ID,
+                    ]);
+                }
             }
         }
     }

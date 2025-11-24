@@ -38,7 +38,9 @@ class EventMatchControllerTest extends TestCase
         ]);
 
         $participants = User::factory()->count(3)->create();
-        $event->players()->attach($participants->pluck('user_ID'));
+        $event->players()->attach(
+            $participants->pluck('user_ID')->mapWithKeys(fn ($id) => [$id => ['status' => 'ACCEPTED']])->toArray()
+        );
 
         $this->actingAs($leader);
 
@@ -58,7 +60,9 @@ class EventMatchControllerTest extends TestCase
         ]);
 
         $players = User::factory()->count(8)->create();
-        $event->players()->attach($players->pluck('user_ID'));
+        $event->players()->attach(
+            $players->pluck('user_ID')->mapWithKeys(fn ($id) => [$id => ['status' => 'ACCEPTED']])->toArray()
+        );
 
         $this->actingAs($leader);
 
@@ -156,6 +160,88 @@ class EventMatchControllerTest extends TestCase
                          'round'    => $match->round,
                      ],
                  ]);
+    }
+
+    public function test_setting_winner_propagates_to_next_round(): void
+    {
+        $leader = User::factory()->create(['role' => 'USER']);
+        $event = Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
+            'event_type' => 'SOLO',
+        ]);
+
+        $players = User::factory()->count(4)->create();
+        $event->players()->attach(
+            $players->pluck('user_ID')->mapWithKeys(fn ($id) => [$id => ['status' => 'ACCEPTED']])->toArray()
+        );
+
+        $match1 = EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => $players[0]->user_ID,
+            'participant_B' => $players[1]->user_ID,
+            'round' => 1,
+        ]);
+        EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => $players[2]->user_ID,
+            'participant_B' => $players[3]->user_ID,
+            'round' => 1,
+        ]);
+        $final = EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => null,
+            'participant_B' => null,
+            'round' => 2,
+        ]);
+
+        $this->actingAs($leader);
+
+        $response = $this->putJson("/api/matches/{$match1->id}", [
+            'winner' => $players[0]->user_ID,
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('event_matches', [
+            'id' => $final->id,
+            'participant_A' => $players[0]->user_ID,
+        ]);
+    }
+
+    public function test_tournament_finishes_when_all_winners_set(): void
+    {
+        $leader = User::factory()->create(['role' => 'USER']);
+        $event = Event::factory()->create([
+            'event_leader_id' => $leader->user_ID,
+            'event_type' => 'SOLO',
+            'event_state' => 'ONGOING',
+        ]);
+
+        $players = User::factory()->count(2)->create();
+        $event->players()->attach(
+            $players->pluck('user_ID')->mapWithKeys(fn ($id) => [$id => ['status' => 'ACCEPTED']])->toArray()
+        );
+
+        $match = EventMatch::factory()->create([
+            'event_ID' => $event->event_ID,
+            'participant_A' => $players[0]->user_ID,
+            'participant_B' => $players[1]->user_ID,
+            'round' => 1,
+        ]);
+
+        $this->actingAs($leader);
+
+        $response = $this->putJson("/api/matches/{$match->id}", [
+            'winner' => $players[0]->user_ID,
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('events', [
+            'event_ID' => $event->event_ID,
+            'event_state' => 'FINISHED',
+            'event_winner' => $players[0]->user_ID,
+        ]);
     }
 
     /* ------------------------------------------------------------

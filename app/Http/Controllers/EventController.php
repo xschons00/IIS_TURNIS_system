@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Event;
+use App\Models\EventMatch;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Concerns\ApiResponse;
+use App\Http\Controllers\ParticipantsController;
+use App\Http\Controllers\EventMatchController;
+use Illuminate\Support\Facades\DB;
 
 
 class EventController 
@@ -112,5 +116,53 @@ class EventController
         }
 
         return $this->respondWithMessage('Event not found', null, 404);
+    }
+
+    /**
+     * Start tournament (event leader/admin).
+     * Sets state to ONGOING and generates empty bracket matches.
+     */
+    public function StartEvent(int $id): JsonResponse
+    {
+        $event = Event::find($id);
+
+        if (! $event) {
+            return $this->respondWithMessage('Event not found', null, 404);
+        }
+
+        if (in_array($event->event_state, ['ONGOING', 'FINISHED'], true)) {
+            return $this->respondWithMessage('Event already started', $event, 400);
+        }
+
+        $participantCount = ParticipantsController::_GetParticipantCount($event, onlyAccepted: true);
+        $allowed = [2, 4, 8, 16, 32];
+        if (! in_array($participantCount, $allowed, true)) {
+            return $this->respondWithMessage('Invalid participant count to start event', null, 400);
+        }
+
+        // reset existing matches before creating new bracket
+        EventMatch::where('event_ID', $event->event_ID)->delete();
+
+        $success = EventMatchController::CreateEmptyMatches($event);
+        if (! $success) {
+            return $this->respondWithMessage('Failed to create matches. Check participant count.', null, 400);
+        }
+
+        $this->removePendingParticipants($event);
+
+        $event->update(['event_state' => 'ONGOING']);
+
+        return $this->respondWithMessage('Event started', $event);
+    }
+
+    private function removePendingParticipants(Event $event): void
+    {
+        DB::transaction(function () use ($event) {
+            if (strtoupper($event->event_type ?? '') === 'SOLO') {
+                $event->players()->wherePivot('status', 'REQUESTED')->detach();
+            } else {
+                $event->teams()->wherePivot('status', 'REQUESTED')->detach();
+            }
+        });
     }
 }

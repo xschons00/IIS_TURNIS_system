@@ -34,8 +34,8 @@ function CreateTournamentPage() {
             return;
         }
 
-        if (![4, 8, 16, 32].includes(maxParticipantsNumber)) {
-            setError('Maximálny počet účastníkov musí byť 4, 8, 16 alebo 32');
+        if (![2, 4, 8, 16, 32].includes(maxParticipantsNumber)) {
+            setError('Maximálny počet účastníkov musí byť 2, 4, 8, 16 alebo 32');
             return;
         }
 
@@ -216,7 +216,7 @@ function CreateTournamentPage() {
                                     onChange={(e) => setMaxParticipants(e.target.value)}
                                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-gray-900"
                                     placeholder="napr. 16"
-                                    min="4"
+                                    min="2"
                                     disabled={loading || success}
                                     required
                                 />
