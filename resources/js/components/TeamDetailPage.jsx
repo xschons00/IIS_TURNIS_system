@@ -288,7 +288,7 @@ function TeamDetailPage() {
 
             // Set current members as edit members
             setEditMembers([...members]);
-            setEditTeamName(teamData?.team_name || '');
+            setEditTeamName(team?.team_name || '');
             setTeamNameError(null);
             setShowEditModal(true);
         } catch (err) {
